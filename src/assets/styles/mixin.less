@@ -1,0 +1,22 @@
+.flex-row (@position: center) {
+  display: flex;
+  justify-content: @position;
+  align-items: center; 
+}
+
+.flex-column (@position: center) {
+  .flex-row(@position);
+  flex-direction: column;
+}
+
+.position-center (@position: absolute) {
+  position: @position;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.border-radius (@radius: 5px, @color: red) {
+  border: 1px solid @color;
+  border-radius: @radius;
+}
