@@ -7,7 +7,7 @@ vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动�
 ## 安装
 
 ```bash
-npm install echarts-linkage
+npm install vue-echarts-linkage
 ```
 
 ## 使用案例
