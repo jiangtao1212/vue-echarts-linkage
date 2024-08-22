@@ -1,6 +1,6 @@
 {
-  "name": "@baosight/vue-echarts-linkage",
-  "version": "0.0.3-beta.4",
+  "name": "vue-echarts-linkage",
+  "version": "0.0.1",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -22,7 +22,11 @@
     "./dist/style.css": "./dist/style.css"
   },
   "publishConfig": {
-    "registry": "http://10.25.101.14:10032/repository/pc-npm/"
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jiangtao1212/vue-echarts-linkage.git"
   },
   "scripts": {
     "dev": "vite",
@@ -34,7 +38,6 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@baosight/vue-echarts-linkage": "0.0.3-beta.4",
     "@element-plus/icons-vue": "^2.3.1",
     "@vueuse/core": "^10.11.0",
     "axios": "^1.7.3",

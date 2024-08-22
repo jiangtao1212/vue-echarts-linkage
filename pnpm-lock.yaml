@@ -1,7 +1,6 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@baosight/vue-echarts-linkage': 0.0.3-beta.4
   '@element-plus/icons-vue': ^2.3.1
   '@rushstack/eslint-patch': ^1.8.0
   '@tsconfig/node20': ^20.1.4
@@ -33,7 +32,6 @@ specifiers:
   vue-tsc: ^2.0.21
 
 dependencies:
-  '@baosight/vue-echarts-linkage': 0.0.3-beta.4_typescript@5.4.5
   '@element-plus/icons-vue': 2.3.1_vue@3.4.34
   '@vueuse/core': 10.11.0_vue@3.4.34
   axios: 1.7.3
@@ -392,23 +390,6 @@ packages:
       '@babel/helper-string-parser': 7.24.8
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
-
-  /@baosight/vue-echarts-linkage/0.0.3-beta.4_typescript@5.4.5:
-    resolution: {integrity: sha512-dOvONzHIqbnlVm8wRYVYkDfJgIuAuywDu1gnF0xDK3uolFC8rR5H1hL1HL7yvRlZHWBC38kL/vtBJNYRWubKWw==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.4.34
-      '@vueuse/core': 10.11.0_vue@3.4.34
-      axios: 1.7.3
-      echarts: 5.5.1
-      element-plus: 2.7.8_vue@3.4.34
-      pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
-      vue: 3.4.34_typescript@5.4.5
-      vue-router: 4.4.0_vue@3.4.34
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: false
 
   /@ctrl/tinycolor/3.6.1:
     resolution: {integrity: sha512-SITSV6aIXsuVNV3f3O0f2n/cgyEDWoSqtZMYiAmcsYHydcKrOz3gUxB/iXd/Qf08+IZX4KpgNbvUdMBmWz+kcA==}

@@ -6,8 +6,8 @@ import VueEchartsLinkage from '@/components/echartsLinkage/index.vue';
 /**
  * 1.按需引入组件
  * ...
- * import { VueEchartsLinkage } from '@baosight/vue-echarts-linkage';
- * import "@baosight/vue-echarts-linkage/dist/style.css";
+ * import { VueEchartsLinkage } from 'vue-echarts-linkage';
+ * import "vue-echarts-linkage/dist/style.css";
  */
 export { VueEchartsLinkage };
 
@@ -16,8 +16,8 @@ export { VueEchartsLinkage };
  * 这里默认导出一个vue支持的install方法
  * 可以在main.ts中使用以下方式全局导入组件
  *
- * import VueEchartsLinkage from '@baosight/vue-echarts-linkage';
- * import "@baosight/vue-echarts-linkage/dist/style.css";
+ * import VueEchartsLinkage from 'vue-echarts-linkage';
+ * import "vue-echarts-linkage/dist/style.css";
  * .....
  * app.use(VueEchartsLinkage);
  */

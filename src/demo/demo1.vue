@@ -6,16 +6,17 @@
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <EchartsLinkag ref="echartsLinkageRef" />
+  <VueEchartsLinkage ref="echartsLinkageRef" />
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
-import EchartsLinkag from "@/components/echartsLinkage/index.vue";
+import { VueEchartsLinkage } from 'vue-echarts-linkage';
+import "vue-echarts-linkage/dist/style.css";
 import type { OneDataType } from 'echartsLinkageType';
 
-const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
+const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
 let seriesType = 'line' as 'line' | 'bar';
 
 // 新增按钮
