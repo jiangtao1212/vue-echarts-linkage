@@ -7,7 +7,21 @@ vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动�
 ## 安装
 
 ```bash
+# 安装依赖
 npm install vue-echarts-linkage
+or
+pnpm install vue-echarts-linkage
+
+# 全局安装组件
+import VueEchartsLinkage from "vue-echarts-linkage";
+import "vue-echarts-linkage/dist/style.css";
+...
+const app = createApp(App);
+app.use(VueEchartsLinkage);
+
+# 按需引入组件
+import { VueEchartsLinkage } from "vue-echarts-linkage";
+import "vue-echarts-linkage/dist/style.css";
 ```
 
 ## 使用案例
@@ -157,3 +171,19 @@ onMounted(() => {
 </style>
 
 ```
+
+### 发布到npm中
+
+**注：** npm中配置的是淘宝镜像地址，不想修改配置地址，所以临时使用npm官方地址进行版本发布
+
+```bash
+# 1.登录到npm官方地址
+npm login --registry=https://registry.npmjs.org
+
+# 2.验证登录状态
+npm whoami --registry=https://registry.npmjs.org
+
+# 3.发布新版本到npm
+npm publish --registry=https://registry.npmjs.org
+```
+

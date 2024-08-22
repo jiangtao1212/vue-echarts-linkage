@@ -28,6 +28,7 @@ specifiers:
   vite-plugin-dts: ^4.0.3
   vite-plugin-static-copy: ^1.0.6
   vue: ^3.4.29
+  vue-echarts-linkage: ^0.0.1
   vue-router: ^4.3.3
   vue-tsc: ^2.0.21
 
@@ -39,6 +40,7 @@ dependencies:
   element-plus: 2.7.8_vue@3.4.34
   pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
   vue: 3.4.34_typescript@5.4.5
+  vue-echarts-linkage: registry.npmjs.org/vue-echarts-linkage/0.0.1_typescript@5.4.5
   vue-router: 4.4.0_vue@3.4.34
 
 devDependencies:
@@ -3899,4 +3901,24 @@ packages:
     resolution: {integrity: sha512-uzgraf4njmmHAbEUxMJ8Oxg+P3fT04O+9p7gY+wJRVxo8Ge+KmYv0WJev945EH4wFuc4OY2NLXz46FZrWS9xJg==}
     dependencies:
       tslib: 2.3.0
+    dev: false
+
+  registry.npmjs.org/vue-echarts-linkage/0.0.1_typescript@5.4.5:
+    resolution: {integrity: sha512-Jsc0hVZyms6O9HO6UVddabseHzke/AQ9obX9rQubcMmM6ghuKwFitcMByBKuLZaKV7R6tw2/m5f01l3FrvbRPg==, registry: https://registry.npmmirror.com/, tarball: https://registry.npmjs.org/vue-echarts-linkage/-/vue-echarts-linkage-0.0.1.tgz}
+    id: registry.npmjs.org/vue-echarts-linkage/0.0.1
+    name: vue-echarts-linkage
+    version: 0.0.1
+    dependencies:
+      '@element-plus/icons-vue': 2.3.1_vue@3.4.34
+      '@vueuse/core': 10.11.0_vue@3.4.34
+      axios: 1.7.3
+      echarts: 5.5.1
+      element-plus: 2.7.8_vue@3.4.34
+      pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
+      vue: 3.4.34_typescript@5.4.5
+      vue-router: 4.4.0_vue@3.4.34
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - debug
+      - typescript
     dev: false
