@@ -7,16 +7,6 @@
  * @Description: 类型定义
  */
 
-/**
- * @description 组件props类型
- * @property {number} [cols=1] - 列数
- * @property {number} [echartsMaxCount=7] - Echarts最大数量
- */
-export type PropsType = {
-  cols?: number;
-  echartsMaxCount?: number;
-}
-
 declare module "echartsLinkageType" {
   interface ExposedMethods {
     addEchart: (data: OneDataType) => void;

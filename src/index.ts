@@ -1,7 +1,7 @@
 import type { App } from 'vue'
 import './assets/main.css'
 import 'virtual:uno.css'
-import VueEchartsLinkage from '@/components/echartsLinkage/index.vue';
+import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
 
 /**
  * 1.按需引入组件

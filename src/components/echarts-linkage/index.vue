@@ -15,7 +15,16 @@ import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSe
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType } from 'echartsLinkageType';
-import type { PropsType } from './types/index';
+
+/**
+ * @description 组件props类型
+ * @property {number} [cols=1] - 列数
+ * @property {number} [echartsMaxCount=7] - Echarts最大数量
+ */
+ export type PropsType = {
+  cols?: number;
+  echartsMaxCount?: number;
+}
 
 // 定义 props
 const props = withDefaults(defineProps<PropsType>(), {
