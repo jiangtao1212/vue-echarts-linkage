@@ -41,7 +41,8 @@ import "vue-echarts-linkage/dist/style.css";
     </div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <EchartsLinkag ref="echartsLinkageRef" />
+  <!-- 可自定义配置显示列数和最大图表数 -->
+  <EchartsLinkag ref="echartsLinkageRef"  :cols="2" :echarts-max-count="10" />
 </template>
 ```
 

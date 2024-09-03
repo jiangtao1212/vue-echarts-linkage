@@ -6,7 +6,7 @@
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <!-- 自定义配置列数为2，最大图表数为10 -->
+  <!-- 自定义配置显示列数为2，最大图表数为10 -->
   <VueEchartsLinkage ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" />
 </template>
 
