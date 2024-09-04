@@ -100,6 +100,7 @@ const initLisener = () => {
 
 const init = () => {
   initLisener();
+  addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {

@@ -140,12 +140,24 @@ const deleteEchart = async (id: string) => {
  * @param oneDataType 
  */
 const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
+
+  // 判断series是否已存在，存在则不新增
+  const judgeSeriesExist = (echart: seriesIdDataType, oneData: OneDataType) => {
+    let isExist = false;
+    isExist = echart.data.some((item) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
+    return isExist;
+  }
+
   if (dataAbout.data.length < 1) {
     ElMessage.warning('请先添加1个echart图表！');
     return;
   }
   dataAbout.currentHandleChartId = id;
   const index = dataAbout.data.findIndex((item) => item.id === id);
+  if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
+    ElMessage.warning('该子项已存在，请选择其他子项！');
+    return;
+  }
   if (dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
     dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData };
   } else {
@@ -247,10 +259,6 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   return myChart;
 }
 
-const addOption = () => {
-  // getXAxisData();
-}
-
 // 初始化echarts
 const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
@@ -267,6 +275,8 @@ const initEcharts = () => {
 const getDataLength = () => {
   return dataAbout.data.length;
 }
+
+
 
 // 获取最大的id序号 --- 导出
 const getMaxEchartsIdSeq = () => {
