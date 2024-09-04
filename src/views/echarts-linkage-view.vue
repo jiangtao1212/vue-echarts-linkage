@@ -1,7 +1,7 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
-    <el-button type="primary" @click="addLotLinkageBtnClick()">批量新增echarts实例</el-button>
+    <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
     <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
@@ -33,19 +33,14 @@ const addLinkageBtnClick = () => {
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
 
-// 新增空白echarts
-const addLinkageBtnClick1 = () => {
-  echartsLinkageRef.value!.addEchart();
-}
-
 // 批量新增空白echarts
-const addLotLinkageBtnClick = () => {
-  for (let i = 0; i < 8; i++) {
-    addLinkageBtnClick1();
+const addLotEmptyLinkageBtnClick = () => {
+  for (let i = 0; i < 10; i++) {
+    echartsLinkageRef.value!.addEchart();
   }
 }
 
-// 批量更新按钮
+// 批量更新按钮 //todo: 待实现
 const updateAllLinkageBtnClick = () => {
 
 }

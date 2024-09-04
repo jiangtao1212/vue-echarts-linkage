@@ -34,6 +34,7 @@ import "vue-echarts-linkage/dist/style.css";
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
+    <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
     <div class="drag-rect drag-rect-line" draggable="true">
@@ -68,6 +69,13 @@ const addLinkageBtnClick = () => {
     markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
+}
+
+// 批量新增空白echarts
+const addLotEmptyLinkageBtnClick = () => {
+  for (let i = 0; i < 10; i++) {
+    echartsLinkageRef.value!.addEchart();
+  }
 }
 
 // 新增line-series按钮
