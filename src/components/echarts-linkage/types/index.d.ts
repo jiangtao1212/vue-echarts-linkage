@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-04 15:48:03
+ * @LastEditTime: 2024-09-04 17:41:59
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -14,6 +14,8 @@ declare module "echartsLinkageType" {
     deleteEchart: (id: string) => void;
     getDataLength: () => number;
     getMaxEchartsIdSeq: () => number;
+    getAllDistinctSeriesTagInfo: () => Array<seriesTagType>;
+    updateAllEcharts: (data: { [key: string]: Array<number[]> }) => void;
   }
 
   type OneDataType = {
@@ -37,4 +39,7 @@ declare module "echartsLinkageType" {
     currentHandleChartId: string;
     restoreClickBool: Boolean;
   }
+
+  // 系列的标签信息
+  type seriesTagType = Pick<OneDataType, 'name' | 'customData'>;
 }

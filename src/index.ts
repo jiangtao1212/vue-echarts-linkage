@@ -2,6 +2,7 @@ import type { App } from 'vue'
 import './assets/main.css'
 import 'virtual:uno.css'
 import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
+export { type ExposedMethods, type OneDataType, type seriesIdDataType, type DataAboutType, type seriesTagType  } from 'echartsLinkageType';
 
 /**
  * 1.按需引入组件

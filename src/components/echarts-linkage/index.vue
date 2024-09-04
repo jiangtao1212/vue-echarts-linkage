@@ -14,7 +14,7 @@ import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType } from 'echartsLinkageType';
+import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seriesTagType } from 'echartsLinkageType';
 
 /**
  * @description 组件props类型
@@ -167,25 +167,6 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   initEcharts();
 }
 
-/**
- * @description 更新echarts
- * @param id echarts id
- * @param oneDataType 
- * // todo: 待完善
- */
-const updateEchart = async (id: string, oneDataType: OneDataType) => {
-  if (dataAbout.data.length < 1) {
-    ElMessage.warning('请先添加1个echart图表！');
-    return;
-  }
-  dataAbout.currentHandleChartId = id;
-  const index = dataAbout.data.findIndex((item) => item.id === id);
-  dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData });
-
-  await nextTick();
-  initEcharts();
-}
-
 // 监听，赋值最大的id序号
 const getMaxId = () => {
   let max = 0;
@@ -272,11 +253,38 @@ const initEcharts = () => {
 }
 
 // 获取数据总数 --- 导出
-const getDataLength = () => {
+const getDataLength = (): number => {
   return dataAbout.data.length;
 }
 
+// 获取所有不重复系列的标签信息 --- 导出
+const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
+  const res: Array<seriesTagType> = [];
+  dataAbout.data.forEach((echart: seriesIdDataType) => {
+    echart.data.forEach((series: OneDataType) => {
+      res.push({
+        name: series.name,
+        customData: series.customData,
+      })
+    });
+  });
+  return res;
+}
 
+//todo: 待完善，更新单个echarts
+const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) => {
+
+}
+
+//todo: 待测试，传入所有显示子项数据，更新所有echarts
+const updateAllEcharts = (data: { [key: string]: Array<number[]> }) => {
+  dataAbout.data.forEach((echart: seriesIdDataType) => {
+    echart.data.forEach((series: OneDataType) => {
+      data[series.customData] && (series.seriesData = data[series.customData]);
+    });
+  });
+  initEcharts();
+}
 
 // 获取最大的id序号 --- 导出
 const getMaxEchartsIdSeq = () => {
@@ -290,6 +298,8 @@ const exposedMethods: ExposedMethods = {
   deleteEchart,
   getDataLength,
   getMaxEchartsIdSeq,
+  getAllDistinctSeriesTagInfo,
+  updateAllEcharts,
 };
 defineExpose(exposedMethods);
 
