@@ -1,6 +1,8 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
+    <el-button type="primary" @click="addLotLinkageBtnClick()">批量新增echarts实例</el-button>
+    <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
@@ -21,6 +23,7 @@ let seriesType = 'line' as 'line' | 'bar';
 // 新增按钮
 const addLinkageBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1300);
+  console.log(seriesData);
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
@@ -28,6 +31,23 @@ const addLinkageBtnClick = () => {
     markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
+}
+
+// 新增空白echarts
+const addLinkageBtnClick1 = () => {
+  echartsLinkageRef.value!.addEchart();
+}
+
+// 批量新增空白echarts
+const addLotLinkageBtnClick = () => {
+  for (let i = 0; i < 8; i++) {
+    addLinkageBtnClick1();
+  }
+}
+
+// 批量更新按钮
+const updateAllLinkageBtnClick = () => {
+
 }
 
 // 新增line-series按钮
@@ -52,6 +72,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
 }
 
+// 监听拖拽事件
 const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;

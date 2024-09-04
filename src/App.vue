@@ -7,9 +7,9 @@ import Demo2 from "@/demo/demo2.vue";
 </script>
 
 <template>
-  <!-- <EchartsLinkageView /> -->
+  <EchartsLinkageView />
   <!-- <Demo1 /> -->
-  <Demo2 />
+  <!-- <Demo2 /> -->
 </template>
 
 <style scoped></style>

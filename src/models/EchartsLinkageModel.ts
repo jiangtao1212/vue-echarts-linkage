@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-08-22 09:53:53
+ * @LastEditTime: 2024-09-04 15:22:13
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -146,6 +146,9 @@ export class EchartsLinkageModel {
   setXAxisData = () => {
     const xAxisData = [];
     const seriesData = this.seriesOptionArray[0].seriesData;
+    if (seriesData.length === 0) { 
+      return;
+    }
     const end = seriesData[seriesData.length - 1][0];
     for (let i = 0; i <= end; i++) {
       xAxisData.push(i);

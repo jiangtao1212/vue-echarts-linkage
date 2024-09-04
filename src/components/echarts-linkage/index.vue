@@ -21,7 +21,7 @@ import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType } fro
  * @property {number} [cols=1] - 列数
  * @property {number} [echartsMaxCount=7] - Echarts最大数量
  */
- export type PropsType = {
+export type PropsType = {
   cols?: number;
   echartsMaxCount?: number;
 }
@@ -96,7 +96,7 @@ const setStyleProperty = () => {
 /**
  * @description 新增echart, id最大序号自增操作 --- 导出
  */
-const addEchart = async (oneDataType: OneDataType) => {
+const addEchart = async (oneDataType?: OneDataType) => {
   const echartsMaxCount = props.echartsMaxCount;
   if (dataAbout.data.length >= echartsMaxCount) {
     ElMessage.warning(`最多只能添加${echartsMaxCount}个echarts！`);
@@ -104,6 +104,13 @@ const addEchart = async (oneDataType: OneDataType) => {
   }
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
+  if (!oneDataType || !oneDataType.seriesData || oneDataType.seriesData.length < 1) {
+    oneDataType = {
+      name: '',
+      type: 'line',
+      seriesData: [],
+    }
+  }
   dataAbout.data.push(
     {
       id,
@@ -130,7 +137,7 @@ const deleteEchart = async (id: string) => {
 /**
  * @description 新增echarts系列
  * @param id echarts id
- * @param seriesOption 
+ * @param oneDataType 
  */
 const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   if (dataAbout.data.length < 1) {
@@ -139,7 +146,30 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   }
   dataAbout.currentHandleChartId = id;
   const index = dataAbout.data.findIndex((item) => item.id === id);
+  if (dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
+    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData };
+  } else {
+    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData });
+  }
+  await nextTick();
+  initEcharts();
+}
+
+/**
+ * @description 更新echarts
+ * @param id echarts id
+ * @param oneDataType 
+ * // todo: 待完善
+ */
+const updateEchart = async (id: string, oneDataType: OneDataType) => {
+  if (dataAbout.data.length < 1) {
+    ElMessage.warning('请先添加1个echart图表！');
+    return;
+  }
+  dataAbout.currentHandleChartId = id;
+  const index = dataAbout.data.findIndex((item) => item.id === id);
   dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData });
+
   await nextTick();
   initEcharts();
 }
@@ -215,6 +245,10 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   myChart.group = groupName;
   myChart.resize();
   return myChart;
+}
+
+const addOption = () => {
+  // getXAxisData();
 }
 
 // 初始化echarts
