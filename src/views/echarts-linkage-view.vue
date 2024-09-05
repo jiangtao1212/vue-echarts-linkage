@@ -8,7 +8,8 @@
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" @drop-echart="dropEchart" />
+  <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
+  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" :empty-echart-count="8"  @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
@@ -23,7 +24,6 @@ let seriesType = 'line' as 'line' | 'bar';
 // 新增按钮
 const addLinkageBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1300);
-  console.log(seriesData);
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
@@ -98,7 +98,6 @@ const initLisener = () => {
 
 const init = () => {
   initLisener();
-  addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {
@@ -137,7 +136,7 @@ onMounted(() => {
 }
 </style>
 <style scoped lang="less">
-.el-button+.el-button {
+.el-button {
   margin-left: 0;
 }
 </style>

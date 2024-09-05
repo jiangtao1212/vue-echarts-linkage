@@ -35,15 +35,14 @@ import "vue-echarts-linkage/dist/style.css";
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
     <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
+    <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
-    <div class="drag-rect drag-rect-line" draggable="true">
-      <span>可拖拽进line-series图表</span>
-    </div>
+    <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <!-- 可自定义配置显示列数和最大图表数 -->
-  <EchartsLinkag ref="echartsLinkageRef"  :cols="2" :echarts-max-count="10" />
+  <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
+  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" :empty-echart-count="8"  @drop-echart="dropEchart" />
 </template>
 ```
 
@@ -53,8 +52,8 @@ import "vue-echarts-linkage/dist/style.css";
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
-import EchartsLinkag from "@/components/echartsLinkage/index.vue";
-import type { OneDataType } from 'echartsLinkageType';
+import EchartsLinkag from "@/components/echarts-linkage/index.vue";
+import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
@@ -76,6 +75,16 @@ const addLotEmptyLinkageBtnClick = () => {
   for (let i = 0; i < 10; i++) {
     echartsLinkageRef.value!.addEchart();
   }
+}
+
+// 批量更新按钮
+const updateAllLinkageBtnClick = () => {
+  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  const res: { [key: string]: Array<number[]> } = {};
+  allDistinctSeriesTagInfo.forEach(item => {
+    item.seriesData = RandomUtil.getSeriesData(1000);
+  });
+  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }
 
 // 新增line-series按钮
@@ -100,10 +109,15 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
 }
 
+// 拖拽回调事件
+const dropEchart = (data: dropEchartType) => {
+  addLinkageSeriesCommon(seriesType, data.id);
+}
+
+// 监听拖拽事件
 const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
-  const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
 
   dragRectLine.addEventListener('dragstart', (e: DragEvent) => {
     console.log("dragstart");
@@ -116,17 +130,6 @@ const initLisener = () => {
     seriesType = 'bar';
     e.dataTransfer!.setData('text', "123");
     e.dataTransfer!.dropEffect = 'move';
-  });
-  echartsLinkageContainer.addEventListener('dragover', (e: DragEvent) => {
-    e.preventDefault();
-  });
-  echartsLinkageContainer.addEventListener('drop', (e: DragEvent) => {
-    e.preventDefault();
-    console.log("drop");
-    const data = e.dataTransfer!.getData('text');
-    // console.log(e);
-    const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
-    addLinkageSeriesCommon(seriesType, id);
   });
 }
 
@@ -143,6 +146,99 @@ onMounted(() => {
 - style
 
 ```less
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { RandomUtil } from "@/utils/index";
+import EchartsLinkag from "@/components/echarts-linkage/index.vue";
+import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
+
+const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
+let seriesType = 'line' as 'line' | 'bar';
+
+// 新增按钮
+const addLinkageBtnClick = () => {
+  const seriesData = RandomUtil.getSeriesData(1300);
+  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+  const oneDataType: OneDataType = {
+    name: `新增图表${maxEchartsIdSeq + 1}`,
+    type: 'line', seriesData: seriesData,
+    markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
+  };
+  echartsLinkageRef.value!.addEchart(oneDataType);
+}
+
+// 批量新增空白echarts
+const addLotEmptyLinkageBtnClick = () => {
+  for (let i = 0; i < 10; i++) {
+    echartsLinkageRef.value!.addEchart();
+  }
+}
+
+// 批量更新按钮
+const updateAllLinkageBtnClick = () => {
+  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  const res: { [key: string]: Array<number[]> } = {};
+  allDistinctSeriesTagInfo.forEach(item => {
+    item.seriesData = RandomUtil.getSeriesData(1000);
+  });
+  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
+// 新增line-series按钮
+const addLinkageLineSeriesBtnClick = () => {
+  seriesType = 'line';
+  addLinkageSeriesCommon(seriesType);
+}
+
+// 新增bar-series按钮
+const addLinkageBarSeriesBtnClick = () => {
+  seriesType = 'bar';
+  addLinkageSeriesCommon(seriesType);
+}
+
+// 新增series按钮
+const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
+  const seriesData = RandomUtil.getSeriesData(1300);
+  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+  id = id || 'echart' + maxEchartsIdSeq;
+  const random = Math.floor(Math.random() * 100);
+  const oneDataType: OneDataType = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
+  echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
+}
+
+// 拖拽回调事件
+const dropEchart = (data: dropEchartType) => {
+  addLinkageSeriesCommon(seriesType, data.id);
+}
+
+// 监听拖拽事件
+const initLisener = () => {
+  const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
+  const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
+
+  dragRectLine.addEventListener('dragstart', (e: DragEvent) => {
+    console.log("dragstart");
+    seriesType = 'line';
+    e.dataTransfer!.setData('text', "123");
+    e.dataTransfer!.dropEffect = 'move';
+  });
+  dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
+    console.log("dragstart");
+    seriesType = 'bar';
+    e.dataTransfer!.setData('text', "123");
+    e.dataTransfer!.dropEffect = 'move';
+  });
+}
+
+const init = () => {
+  initLisener();
+}
+
+onMounted(() => {
+  init();
+});
+</script>
+
 <style scoped lang="less">
 .btn-container {
   height: 5vh;
@@ -174,11 +270,10 @@ onMounted(() => {
 }
 </style>
 <style scoped lang="less">
-.el-button+.el-button {
+.el-button {
   margin-left: 0;
 }
 </style>
-
 ```
 
 ### 发布到npm中

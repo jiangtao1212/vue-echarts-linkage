@@ -20,10 +20,12 @@ import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seri
  * @description 组件props类型
  * @property {number} [cols=1] - 列数
  * @property {number} [echartsMaxCount=7] - Echarts最大数量
+ * @property {number} [emptyEchartCount] - 初始化空白echarts数量
  */
 export type PropsType = {
   cols?: number;
   echartsMaxCount?: number;
+  emptyEchartCount?: number;
 }
 
 // 定义 props
@@ -114,12 +116,11 @@ const addEchart = async (oneDataType?: OneDataType) => {
       seriesData: [],
     }
   }
-  dataAbout.data.push(
-    {
-      id,
-      markLineArray: oneDataType.markLineArray,
-      data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
-    });
+  dataAbout.data.push({
+    id,
+    markLineArray: oneDataType.markLineArray,
+    data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
+  });
   setStyleProperty();
   await nextTick();
   initEcharts();
@@ -244,6 +245,14 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   return myChart;
 }
 
+// 初始化空白echarts
+const initEmptyEcharts = () => {
+  if (!props.emptyEchartCount) return;
+  for (let i = 0; i < props.emptyEchartCount; i++) {
+    addEchart();
+  }
+}
+
 // 初始化echarts
 const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
@@ -346,7 +355,7 @@ watch(() => dataAbout.data.length, () => {
 
 onMounted(() => {
   initLisener();
-  initEcharts();
+  initEmptyEcharts();
 });
 
 onBeforeUnmount(() => {
