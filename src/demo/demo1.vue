@@ -14,7 +14,7 @@ import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import { VueEchartsLinkage } from 'vue-echarts-linkage';
 import "vue-echarts-linkage/dist/style.css";
-import type { OneDataType } from 'echartsLinkageType';
+// import type { OneDataType } from 'echartsLinkageType';
 
 const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
 let seriesType = 'line' as 'line' | 'bar';
@@ -23,7 +23,7 @@ let seriesType = 'line' as 'line' | 'bar';
 const addLinkageBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1300);
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-  const oneDataType: OneDataType = {
+  const oneDataType: any = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
     type: 'line', seriesData: seriesData,
     markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
@@ -49,7 +49,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
-  const oneDataType: OneDataType = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
+  const oneDataType: any = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
 }
 

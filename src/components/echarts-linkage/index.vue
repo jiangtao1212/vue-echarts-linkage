@@ -7,14 +7,14 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, reactive, onMounted, nextTick, computed, watch } from 'vue';
+import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount } from 'vue';
 import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seriesTagType } from 'echartsLinkageType';
+import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seriesTagType, dropEchartType } from './types/index';
 
 /**
  * @description 组件props类型
@@ -43,6 +43,8 @@ const validateCols = (value: number) => {
 // 验证 props
 validateCols(props.cols);
 
+const emit = defineEmits(['drop-echart']);
+
 // 定义数据
 const dataAbout = reactive({
   groupName: 'group1', // 组名
@@ -50,6 +52,7 @@ const dataAbout = reactive({
   data: [] as Array<seriesIdDataType>, // 所有echarts数据
   currentHandleChartId: '', // 当前操作的echart图表id
   restoreClickBool: false, // 监听restore是否触发点击
+  isAllUpdate: false, // 是否全部更新
 }) as DataAboutType;
 
 /**
@@ -196,9 +199,10 @@ const judgeEchartInstance = (id: string) => {
       Promise.resolve().then(() => debouncedFn());
     });
   }
-  if (dataAbout.restoreClickBool) { // 监听 restore 按钮是否触发点击
-    needHandle = true;
-  }
+  // 监听 restore 按钮是否触发点击 ---> 原因：解决点击restore按钮后，只有最后一个图表显示，其他图表不显示的问题
+  dataAbout.restoreClickBool && (needHandle = true);
+  // 监听是否全部更新操作 --- 原因：解决点击restore按钮后，只有最后一次操作的图表数据更新，其他图表实例没有变化被过滤掉导致数据不更新的问题
+  dataAbout.isAllUpdate && (needHandle = true);
   return { myChart, needHandle };
 }
 
@@ -252,6 +256,32 @@ const initEcharts = () => {
   echarts.connect(groupName);
 }
 
+// 拖拽移动事件
+const dragoverEchart = (e: DragEvent) => {
+  e.preventDefault();
+}
+
+// 接收拖拽事件
+const dropEchart = (e: DragEvent) => {
+  e.preventDefault();
+  const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
+  emit('drop-echart', { id } as dropEchartType);
+}
+
+// 监听拖拽事件
+const initLisener = () => {
+  const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
+  echartsLinkageContainer.addEventListener('dragover', dragoverEchart);
+  echartsLinkageContainer.addEventListener('drop', dropEchart);
+}
+
+// 移除拖动事件监听
+const removeLisener = () => {
+  const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
+  echartsLinkageContainer.removeEventListener('dragover', dragoverEchart);
+  echartsLinkageContainer.removeEventListener('drop', dropEchart);
+}
+
 // 获取数据总数 --- 导出
 const getDataLength = (): number => {
   return dataAbout.data.length;
@@ -262,9 +292,10 @@ const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
   const res: Array<seriesTagType> = [];
   dataAbout.data.forEach((echart: seriesIdDataType) => {
     echart.data.forEach((series: OneDataType) => {
-      res.push({
+      series.name && res.push({
         name: series.name,
         customData: series.customData,
+        seriesData: [],
       })
     });
   });
@@ -276,14 +307,19 @@ const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) =
 
 }
 
-//todo: 待测试，传入所有显示子项数据，更新所有echarts
-const updateAllEcharts = (data: { [key: string]: Array<number[]> }) => {
+// 传入所有显示子项数据，更新所有echarts
+const updateAllEcharts = async (newAllSeriesdata: Array<seriesTagType>) => {
+  console.log(newAllSeriesdata);
   dataAbout.data.forEach((echart: seriesIdDataType) => {
-    echart.data.forEach((series: OneDataType) => {
-      data[series.customData] && (series.seriesData = data[series.customData]);
+    echart.data.forEach((series: OneDataType, index: number) => {
+      const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
+      newSeriesData && (series.seriesData = newSeriesData);
     });
   });
+  dataAbout.isAllUpdate = true; // 标记全部更新
   initEcharts();
+  await nextTick();
+  dataAbout.isAllUpdate = false; // 标记全部更新完成
 }
 
 // 获取最大的id序号 --- 导出
@@ -309,8 +345,15 @@ watch(() => dataAbout.data.length, () => {
 });
 
 onMounted(() => {
+  initLisener();
   initEcharts();
 });
+
+onBeforeUnmount(() => {
+  removeLisener();
+  echarts.dispose(dataAbout.groupName);
+});
+
 
 </script>
 <style scoped lang='less'>

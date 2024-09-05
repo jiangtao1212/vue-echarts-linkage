@@ -8,14 +8,14 @@
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
-  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" />
+  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType } from 'echartsLinkageType';
+import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
@@ -40,9 +40,14 @@ const addLotEmptyLinkageBtnClick = () => {
   }
 }
 
-// 批量更新按钮 //todo: 待实现
+// 批量更新按钮
 const updateAllLinkageBtnClick = () => {
-
+  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  const res: { [key: string]: Array<number[]> } = {};
+  allDistinctSeriesTagInfo.forEach(item => {
+    item.seriesData = RandomUtil.getSeriesData(1000);
+  });
+  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }
 
 // 新增line-series按钮
@@ -67,11 +72,15 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
 }
 
+// 拖拽回调事件
+const dropEchart = (data: dropEchartType) => {
+  addLinkageSeriesCommon(seriesType, data.id);
+}
+
 // 监听拖拽事件
 const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
-  const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
 
   dragRectLine.addEventListener('dragstart', (e: DragEvent) => {
     console.log("dragstart");
@@ -84,17 +93,6 @@ const initLisener = () => {
     seriesType = 'bar';
     e.dataTransfer!.setData('text', "123");
     e.dataTransfer!.dropEffect = 'move';
-  });
-  echartsLinkageContainer.addEventListener('dragover', (e: DragEvent) => {
-    e.preventDefault();
-  });
-  echartsLinkageContainer.addEventListener('drop', (e: DragEvent) => {
-    e.preventDefault();
-    console.log("drop");
-    const data = e.dataTransfer!.getData('text');
-    // console.log(e);
-    const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
-    addLinkageSeriesCommon(seriesType, id);
   });
 }
 
