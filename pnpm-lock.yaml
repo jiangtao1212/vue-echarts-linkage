@@ -28,7 +28,7 @@ specifiers:
   vite-plugin-dts: ^4.0.3
   vite-plugin-static-copy: ^1.0.6
   vue: ^3.4.29
-  vue-echarts-linkage: ^0.0.2-beta.1
+  vue-echarts-linkage: ^0.0.2
   vue-router: ^4.3.3
   vue-tsc: ^2.0.21
 
@@ -40,7 +40,7 @@ dependencies:
   element-plus: 2.7.8_vue@3.4.34
   pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
   vue: 3.4.34_typescript@5.4.5
-  vue-echarts-linkage: 0.0.2-beta.1_typescript@5.4.5
+  vue-echarts-linkage: 0.0.2_typescript@5.4.5
   vue-router: 4.4.0_vue@3.4.34
 
 devDependencies:
@@ -3799,8 +3799,8 @@ packages:
     dependencies:
       vue: 3.4.34_typescript@5.4.5
 
-  /vue-echarts-linkage/0.0.1_typescript@5.4.5:
-    resolution: {integrity: sha512-Jsc0hVZyms6O9HO6UVddabseHzke/AQ9obX9rQubcMmM6ghuKwFitcMByBKuLZaKV7R6tw2/m5f01l3FrvbRPg==}
+  /vue-echarts-linkage/0.0.2_typescript@5.4.5:
+    resolution: {integrity: sha512-xkx2IWwit5b9IttpPzvMmXJoT4d7nRijFljsm4ZS1LgoMDKIzfHUu82FYHYw6T+OSaK7ycdRa8AsCrrIHJjEHw==}
     dependencies:
       '@element-plus/icons-vue': 2.3.1_vue@3.4.34
       '@vueuse/core': 10.11.0_vue@3.4.34
@@ -3809,24 +3809,6 @@ packages:
       element-plus: 2.7.8_vue@3.4.34
       pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
       vue: 3.4.34_typescript@5.4.5
-      vue-router: 4.4.0_vue@3.4.34
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: false
-
-  /vue-echarts-linkage/0.0.2-beta.1_typescript@5.4.5:
-    resolution: {integrity: sha512-k/OFg66r2tt6rIMBZsH5d/vBbSzcwUzxxrLls52HSqM1d437gDr+mDUEzU7B2mV8FzFdd0fD8be2Pk7Zj6hiDw==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.4.34
-      '@vueuse/core': 10.11.0_vue@3.4.34
-      axios: 1.7.3
-      echarts: 5.5.1
-      element-plus: 2.7.8_vue@3.4.34
-      pinia: 2.2.0_ipfigp3gpp6s2476x7jmjgfmmq
-      vue: 3.4.34_typescript@5.4.5
-      vue-echarts-linkage: 0.0.1_typescript@5.4.5
       vue-router: 4.4.0_vue@3.4.34
     transitivePeerDependencies:
       - '@vue/composition-api'

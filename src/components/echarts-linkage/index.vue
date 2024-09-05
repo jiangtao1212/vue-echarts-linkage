@@ -130,7 +130,7 @@ const addEchart = async (oneDataType?: OneDataType) => {
  * @param index 索引
  */
 const deleteEchart = async (id: string) => {
-  const index = dataAbout.data.findIndex((item) => item.id === id);
+  const index = dataAbout.data.findIndex((item: seriesIdDataType) => item.id === id);
   dataAbout.data.splice(index, 1);
   setStyleProperty();
   await nextTick();
@@ -147,7 +147,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   // 判断series是否已存在，存在则不新增
   const judgeSeriesExist = (echart: seriesIdDataType, oneData: OneDataType) => {
     let isExist = false;
-    isExist = echart.data.some((item) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
+    isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
     return isExist;
   }
 
@@ -156,7 +156,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return;
   }
   dataAbout.currentHandleChartId = id;
-  const index = dataAbout.data.findIndex((item) => item.id === id);
+  const index = dataAbout.data.findIndex((item: seriesIdDataType) => item.id === id);
   if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
@@ -173,7 +173,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 // 监听，赋值最大的id序号
 const getMaxId = () => {
   let max = 0;
-  dataAbout.data.forEach((item) => {
+  dataAbout.data.forEach((item: seriesIdDataType) => {
     const id = parseInt(item.id.substring(6));
     max = id > max ? id : max;
   });
@@ -226,7 +226,7 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
     return myChart;
   }
   const seriesData: SeriesOptionType[] = [];
-  dataArray.data.forEach((item) => {
+  dataArray.data.forEach((item: OneDataType) => {
     seriesData.push({
       type: item.type,
       name: item.name,
@@ -249,7 +249,7 @@ const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
   const groupName: string = dataAbout.groupName;
   echarts.dispose(groupName);
-  dataAbout.data.forEach((item, index) => {
+  dataAbout.data.forEach((item: seriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
   dataAbout.restoreClickBool = false;

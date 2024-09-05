@@ -14,7 +14,6 @@ import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import { VueEchartsLinkage } from 'vue-echarts-linkage';
 import "vue-echarts-linkage/dist/style.css";
-// import type { OneDataType } from 'echartsLinkageType';
 
 const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
 let seriesType = 'line' as 'line' | 'bar';
