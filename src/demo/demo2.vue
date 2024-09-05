@@ -15,9 +15,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
-import { VueEchartsLinkage } from 'vue-echarts-linkage';
+import { VueEchartsLinkage, type OneDataType, type seriesTagType, type dropEchartType  } from 'vue-echarts-linkage';
 import "vue-echarts-linkage/dist/style.css";
-import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
 
 const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
 let seriesType = 'line' as 'line' | 'bar';
