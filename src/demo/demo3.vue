@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-06 10:05:35
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-06 10:07:23
+ * @LastEditTime: 2024-09-06 10:16:17
  * @FilePath: \vue-echarts-linkage\src\demo\demo3.vue
  * @Description: 添加测试自定义新增空白echarts实例（一个echarts内多series）
 -->
@@ -24,10 +24,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
-import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
+import { VueEchartsLinkage, type OneDataType, type seriesTagType, type dropEchartType  } from 'vue-echarts-linkage';
+import "vue-echarts-linkage/dist/style.css";
 
-const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
+const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
 let seriesType = 'line' as 'line' | 'bar';
 
 // 新增按钮

@@ -109,45 +109,39 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   }
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
+  let markLineArray: number[] = []; // 标线数组
+  let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
-    oneDataType = {
-      name: '',
-      type: 'line',
-      seriesData: [],
-    }
-    dataAbout.data.push({
-      id,
-      markLineArray: oneDataType.markLineArray,
-      data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
-    });
+    oneDataType = setOneData('', 'line', [], '', []) as OneDataType;
+    markLineArray = [];
+    dataAll = [{ ...oneDataType }];
   } else if (Array.isArray(oneDataType)) {
     const data: OneDataType[] = [];
     oneDataType.forEach((item: OneDataType) => {
-      data.push({ name: item.name, type: item.type, seriesData: item.seriesData });
+      data.push({ ...item });
     });
-    dataAbout.data.push({
-      id,
-      markLineArray: oneDataType[0].markLineArray,
-      data: data,
-    });
+    markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
+    dataAll = data;
   } else {
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
-      oneDataType = {
-        name: oneDataType.name,
-        type: 'line',
-        seriesData: [],
-      }
+      oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
-    dataAbout.data.push({
-      id,
-      markLineArray: oneDataType.markLineArray,
-      data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
-    });
+    markLineArray = oneDataType.markLineArray || [],
+    dataAll = [{ ...oneDataType }];
   }
+  dataAbout.data.push({
+    id,
+    markLineArray,
+    data: dataAll,
+  });
   setStyleProperty();
   await nextTick();
   initEcharts();
 };
+
+const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
+  return { name, type, seriesData, customData, markLineArray };
+}
 
 /**
  * @description 根据索引删除echarts
@@ -186,9 +180,9 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return;
   }
   if (dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
-    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData };
+    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, customData: oneDataType.customData };
   } else {
-    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData });
+    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, customData: oneDataType.customData });
   }
   await nextTick();
   initEcharts();
@@ -246,7 +240,7 @@ const addChartLegendSelectChangedEvent = (myChart: EChartsType) => {
       console.log(params);
       console.log(dataAbout.data);
       dataAbout.data.forEach((echart: seriesIdDataType, index: number) => {
-        const isEqual = echart.data.map((series: OneDataType) => series.name).every((item, index) => item === names[index]);
+        const isEqual = echart.data.map((series: OneDataType) => series.name).every((item: string, index: number) => item === names[index]);
         // if (isEqual) {
         //   const 
 
@@ -368,7 +362,6 @@ const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) =
 
 // 传入所有显示子项数据，更新所有echarts
 const updateAllEcharts = async (newAllSeriesdata: Array<seriesTagType>) => {
-  console.log(newAllSeriesdata);
   dataAbout.data.forEach((echart: seriesIdDataType) => {
     echart.data.forEach((series: OneDataType, index: number) => {
       const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);

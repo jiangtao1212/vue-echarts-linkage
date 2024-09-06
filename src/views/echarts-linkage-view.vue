@@ -43,6 +43,7 @@ const addLotEmptyLinkageBtnClick = () => {
         name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
         type: 'line',
         seriesData: [],
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
       };
       oneDataTypeArray.push(oneDataType);
     }
@@ -53,7 +54,6 @@ const addLotEmptyLinkageBtnClick = () => {
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
-  console.log('allDistinctSeriesTagInfo', allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
   allDistinctSeriesTagInfo.forEach(item => {
     item.seriesData = RandomUtil.getSeriesData(1000);
