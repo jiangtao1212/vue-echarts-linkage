@@ -1,8 +1,7 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
-    <el-button type="primary" @click="addLinkageSeriesBtnClick()">新增echarts实例-多series</el-button>
-    <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
+    <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增空白echarts实例-多series</el-button>
     <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
@@ -32,22 +31,6 @@ const addLinkageBtnClick = () => {
     markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
-}
-
-const addLinkageSeriesBtnClick = () => {
-  const oneDataTypeArray: OneDataType[] = [];
-  for (let i = 0; i < 6; i++) {
-    const seriesData = RandomUtil.getSeriesData(1300);
-    const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-    const oneDataType: OneDataType = {
-      name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
-      type: 'line',
-      seriesData: seriesData,
-      // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
-    };
-    oneDataTypeArray.push(oneDataType);
-  }
-  echartsLinkageRef.value!.addEchart(oneDataTypeArray);
 }
 
 // 批量新增空白echarts，携带legend数据
