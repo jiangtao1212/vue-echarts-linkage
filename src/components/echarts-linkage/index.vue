@@ -283,6 +283,7 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
   console.log(dataArray.data);
   const option: EChartsOption = echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id)).setCustomSeriesMarkLine().getResultOption();
+  console.log("option", option);
   myChart.setOption(option);
   myChart.group = groupName;
   myChart.resize();

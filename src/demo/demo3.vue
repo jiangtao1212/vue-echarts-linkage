@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-06 10:05:35
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-06 10:16:17
+ * @LastEditTime: 2024-09-06 14:06:07
  * @FilePath: \vue-echarts-linkage\src\demo\demo3.vue
  * @Description: 添加测试自定义新增空白echarts实例（一个echarts内多series）
 -->
@@ -18,7 +18,7 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" @drop-echart="dropEchart" />
+  <VueEchartsLinkage ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">

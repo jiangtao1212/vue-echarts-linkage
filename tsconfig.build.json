@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/index.ts", "src/components/**/*", "src/utils/*", "src/models/*"],
+  "include": ["src/index.ts", "src/components/**/*", "src/components/**/**/*", "src/utils/*", "src/models/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

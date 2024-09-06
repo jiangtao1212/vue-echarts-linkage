@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-05 15:48:58
+ * @LastEditTime: 2024-09-06 15:06:23
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -33,6 +33,7 @@ export type EchartsLinkageModelType = {
   segment?: number,
 }
 
+const colors = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3'];
 // 折线图表模板
 const optionTemplate: EChartsOption = {
   tooltip: { trigger: 'axis', },
@@ -42,8 +43,8 @@ const optionTemplate: EChartsOption = {
     left: '1%',
     right: '2%',
     // top: '1%',
-    bottom: '1%',
-    containLabel: true, // 包含刻度标签
+    bottom: '10%',
+    // containLabel: true, // 包含刻度标签
   },
   toolbox: {
     show: true,
@@ -88,6 +89,9 @@ const optionTemplate: EChartsOption = {
     {
       type: 'value',  //y轴为值类型
       show: true,
+      axisLine: {
+        show: true,
+      },
     }
   ],
   series: []
@@ -119,7 +123,7 @@ export class EchartsLinkageModel {
   private segment = 50; // 图表分段数
   private xAxisInterval = 1; // x轴刻度标签显示间隔
   private offsetNum = 40; // Y轴偏移量
-  // private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
+  private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
   private gridTopInit = 40; // 上方边距
   private xAxisData: Array<number> = []; // x轴数据
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
@@ -178,16 +182,17 @@ export class EchartsLinkageModel {
       current.push({ 
         name: '', type: 'value', show: true, 
         position: 'left', offset: offset, alignTicks: true, 
+        axisLine: { show: true },
         nameTextStyle: { align: 'right', padding: [0, 10, 0, 0] },
       });
     });
     this.optionTemplate.yAxis = current;
-    // const showYCount = current.filter((item: any) => item.show === true).length;
-    // if (showYCount === 1) {
-    //   (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit;
-    // } else {
-    //   (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
-    // }
+    const showYCount = current.filter((item: any) => item.show === true).length;
+    if (showYCount === 1) {
+      (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit;
+    } else {
+      (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
+    }
   }
 
   // 组装option
