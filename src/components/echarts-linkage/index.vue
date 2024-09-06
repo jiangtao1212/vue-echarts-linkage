@@ -101,7 +101,7 @@ const setStyleProperty = () => {
 /**
  * @description 新增echart, id最大序号自增操作 --- 导出
  */
-const addEchart = async (oneDataType?: OneDataType) => {
+const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   const echartsMaxCount = props.echartsMaxCount;
   if (dataAbout.data.length >= echartsMaxCount) {
     ElMessage.warning(`最多只能添加${echartsMaxCount}个echarts！`);
@@ -109,18 +109,41 @@ const addEchart = async (oneDataType?: OneDataType) => {
   }
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
-  if (!oneDataType || !oneDataType.seriesData || oneDataType.seriesData.length < 1) {
+  if (!oneDataType) {
     oneDataType = {
       name: '',
       type: 'line',
       seriesData: [],
     }
+    dataAbout.data.push({
+      id,
+      markLineArray: oneDataType.markLineArray,
+      data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
+    });
+  } else if (Array.isArray(oneDataType)) {
+    const data: OneDataType[] = [];
+    oneDataType.forEach((item: OneDataType) => {
+      data.push({ name: item.name, type: item.type, seriesData: item.seriesData });
+    });
+    dataAbout.data.push({
+      id,
+      markLineArray: oneDataType[0].markLineArray,
+      data: data,
+    });
+  } else {
+    if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
+      oneDataType = {
+        name: oneDataType.name,
+        type: 'line',
+        seriesData: [],
+      }
+    }
+    dataAbout.data.push({
+      id,
+      markLineArray: oneDataType.markLineArray,
+      data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
+    });
   }
-  dataAbout.data.push({
-    id,
-    markLineArray: oneDataType.markLineArray,
-    data: [{ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData }],
-  });
   setStyleProperty();
   await nextTick();
   initEcharts();
@@ -199,6 +222,8 @@ const judgeEchartInstance = (id: string) => {
     myChart.on('restore', () => {
       Promise.resolve().then(() => debouncedFn());
     });
+    // 监听legend图例点击事件
+    addChartLegendSelectChangedEvent(myChart);
   }
   // 监听 restore 按钮是否触发点击 ---> 原因：解决点击restore按钮后，只有最后一个图表显示，其他图表不显示的问题
   dataAbout.restoreClickBool && (needHandle = true);
@@ -206,6 +231,31 @@ const judgeEchartInstance = (id: string) => {
   dataAbout.isAllUpdate && (needHandle = true);
   return { myChart, needHandle };
 }
+
+// 新增echarts的图例点击监听事件 //todo: 待完善
+const addChartLegendSelectChangedEvent = (myChart: EChartsType) => {
+  myChart.on('legendselectchanged', function (params: any) {
+
+    const name = params.name; // 图例名称
+    const selected = params.selected;
+    const names = Object.keys(selected);
+    if (names.length > 0 && names.includes(name)) {
+      console.log(myChart);
+      const id = myChart.id;
+      // const connectedCharts = echarts.getMap().get(groupName);
+      console.log(params);
+      console.log(dataAbout.data);
+      dataAbout.data.forEach((echart: seriesIdDataType, index: number) => {
+        const isEqual = echart.data.map((series: OneDataType) => series.name).every((item, index) => item === names[index]);
+        // if (isEqual) {
+        //   const 
+
+        // }
+      });
+    }
+  });
+}
+
 
 // 监听 restore 事件，使用防抖函数
 const debouncedFn = useDebounceFn(() => {

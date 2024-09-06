@@ -1,6 +1,7 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
+    <el-button type="primary" @click="addLinkageSeriesBtnClick()">新增echarts实例-多series</el-button>
     <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
     <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
@@ -9,7 +10,7 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" :empty-echart-count="8"  @drop-echart="dropEchart" />
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
@@ -33,16 +34,43 @@ const addLinkageBtnClick = () => {
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
 
-// 批量新增空白echarts
+const addLinkageSeriesBtnClick = () => {
+  const oneDataTypeArray: OneDataType[] = [];
+  for (let i = 0; i < 6; i++) {
+    const seriesData = RandomUtil.getSeriesData(1300);
+    const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+    const oneDataType: OneDataType = {
+      name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
+      type: 'line',
+      seriesData: seriesData,
+      // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
+    };
+    oneDataTypeArray.push(oneDataType);
+  }
+  echartsLinkageRef.value!.addEchart(oneDataTypeArray);
+}
+
+// 批量新增空白echarts，携带legend数据
 const addLotEmptyLinkageBtnClick = () => {
-  for (let i = 0; i < 10; i++) {
-    echartsLinkageRef.value!.addEchart();
+  for (let i = 0; i < 3; i++) {
+    const oneDataTypeArray: OneDataType[] = [];
+    for (let i = 0; i < 6; i++) {
+      const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+      const oneDataType: OneDataType = {
+        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
+        type: 'line',
+        seriesData: [],
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    echartsLinkageRef.value!.addEchart(oneDataTypeArray);
   }
 }
 
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  console.log('allDistinctSeriesTagInfo', allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
   allDistinctSeriesTagInfo.forEach(item => {
     item.seriesData = RandomUtil.getSeriesData(1000);
@@ -98,6 +126,7 @@ const initLisener = () => {
 
 const init = () => {
   initLisener();
+  addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {

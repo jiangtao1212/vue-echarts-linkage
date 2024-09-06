@@ -9,7 +9,7 @@
 
 
 export interface ExposedMethods {
-  addEchart: (data?: OneDataType) => void;
+  addEchart: (data?: OneDataType | OneDataType[]) => void;
   addEchartSeries: (id: string, data: OneDataType) => void;
   deleteEchart: (id: string) => void;
   getDataLength: () => number;
