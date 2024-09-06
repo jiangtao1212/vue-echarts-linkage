@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-06 15:06:23
+ * @LastEditTime: 2024-09-06 17:37:53
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -27,13 +27,16 @@ export type SeriesOptionType = {
 /**
  * @param {Array<Array<number>>} originData - 原始数据
  * @param {number} segment - 图表分段数
+ * @param {Array<string>} colors - 颜色数组
  */
 export type EchartsLinkageModelType = {
   seriesOptionArray: Array<SeriesOptionType>,
   segment?: number,
+  echartsColors?: Array<string>,
 }
 
-const colors = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3'];
+// 颜色数组
+const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
 // 折线图表模板
 const optionTemplate: EChartsOption = {
   tooltip: { trigger: 'axis', },
@@ -44,7 +47,7 @@ const optionTemplate: EChartsOption = {
     right: '2%',
     // top: '1%',
     bottom: '10%',
-    // containLabel: true, // 包含刻度标签
+    // containLabel: true, // 包含刻度标签, 如果这里使用的话，echarts自身的适配的效果并不好，grid的left适配会出现问题
   },
   toolbox: {
     show: true,
@@ -125,6 +128,7 @@ export class EchartsLinkageModel {
   private offsetNum = 40; // Y轴偏移量
   private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
   private gridTopInit = 40; // 上方边距
+  private echartsColors = ECHARTS_COLORS; // 颜色数组
   private xAxisData: Array<number> = []; // x轴数据
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
   private optionTemplate: EChartsOption = optionTemplate; // 折线图表模板
@@ -135,6 +139,7 @@ export class EchartsLinkageModel {
     console.log(param);
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment || 50;
+    this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.init();
     console.groupEnd();
   }
@@ -182,10 +187,11 @@ export class EchartsLinkageModel {
       current.push({ 
         name: '', type: 'value', show: true, 
         position: 'left', offset: offset, alignTicks: true, 
-        axisLine: { show: true },
+        axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
         nameTextStyle: { align: 'right', padding: [0, 10, 0, 0] },
       });
     });
+    // console.log("current", current);
     this.optionTemplate.yAxis = current;
     const showYCount = current.filter((item: any) => item.show === true).length;
     if (showYCount === 1) {
@@ -195,8 +201,22 @@ export class EchartsLinkageModel {
     }
   }
 
+  // setLegend = () => {
+  //   this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+  //     const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
+  //     current.push({ 
+  //       name: '', type: 'value', show: true, 
+  //       position: 'left', offset: offset, alignTicks: true, 
+  //       axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
+  //       nameTextStyle: { align: 'right', padding: [0, 10, 0, 0] },
+  //     });
+  //   });
+  //   this.optionTemplate.legend = current;
+  // }
+
   // 组装option
   setResultOption = () => {
+    const _that = this;
     // 合并参数
     function addOneSeries(option: EChartsOption, param: SeriesOptionType, yAxisIndex: number): EChartsOption {
       const defaultParams = {
@@ -224,6 +244,8 @@ export class EchartsLinkageModel {
         smooth: defaultParams.smooth,
         symbol: 'none',
         yAxisIndex: yAxisIndex,
+        lineStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
+        itemStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
         data: defaultParams.seriesData,
       } as echarts.SeriesOption);
       return option;

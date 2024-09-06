@@ -26,6 +26,7 @@ export type PropsType = {
   cols?: number;
   echartsMaxCount?: number;
   emptyEchartCount?: number;
+  echartsColors?: string[];
 }
 
 // 定义 props
@@ -66,6 +67,7 @@ const getEchartsLikageModel = (data: SeriesOptionType[]) => {
   const echartsLinkageModel = new EchartsLinkageModel({
     seriesOptionArray: data,
     segment: 50,
+    echartsColors: (!props.echartsColors || props.echartsColors.length < 1) ? null : props.echartsColors,
     minMarkLine: 1,
     maxMarkLine: 5,
   } as EchartsLinkageModelType);

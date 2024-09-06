@@ -9,7 +9,7 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" @drop-echart="dropEchart" />
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'blue']" @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
