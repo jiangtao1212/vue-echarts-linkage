@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-06 17:37:53
+ * @LastEditTime: 2024-09-09 10:58:08
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -22,6 +22,8 @@ export type SeriesOptionType = {
   name?: string, // 图表名称
   smooth?: true,
   seriesData: Array<Array<number>>, // 数据系列
+  xAxisName?: string, // x轴名称
+  yAxisName?: string, // y轴名称
 }
 
 /**
@@ -82,6 +84,7 @@ const optionTemplate: EChartsOption = {
   }],
   xAxis: [{
     type: 'category',
+    name: '',
     axisLabel: {
       show: true,
       interval: 1, // 控制刻度标签显示间隔
@@ -92,6 +95,11 @@ const optionTemplate: EChartsOption = {
     {
       type: 'value',  //y轴为值类型
       show: true,
+      nameLocation: 'center',
+      nameTextStyle: {
+        padding: [0, 10, 0, 50],
+        align: 'right',
+      },
       axisLine: {
         show: true,
       },
@@ -157,16 +165,20 @@ export class EchartsLinkageModel {
     return this.xAxisInterval;
   }
 
-  // 获取x轴数据 --- 这里数据是从0开始的
+  // 获取x轴数据 --- 如果有多个series，则从第一个开始获取，如果没有则往下一个series中获取
   setXAxisData = () => {
     const xAxisData = [];
-    const seriesData = this.seriesOptionArray[0].seriesData;
-    if (seriesData.length === 0) {
-      return;
-    }
-    const end = seriesData[seriesData.length - 1][0];
-    for (let i = 0; i <= end; i++) {
-      xAxisData.push(i);
+    for (let i = 0; i < this.seriesOptionArray.length; i++) {
+      const seriesData = this.seriesOptionArray[i].seriesData;
+      if (seriesData.length === 0) {
+        continue;
+      } else {
+        const end = seriesData[seriesData.length - 1][0];
+        for (let j = 0; j <= end; j++) {
+          xAxisData.push(j);
+        }
+        break;
+      }
     }
     this.xAxisData = xAxisData;
     return this.xAxisData;
@@ -176,6 +188,8 @@ export class EchartsLinkageModel {
   initOptionTemplate = () => {
     const xAxis = this.optionTemplate.xAxis as Array<any>;
     xAxis[0].data = this.setXAxisData();
+    xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
+    xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
     xAxis[0].axisLabel.interval = this.setXAxisInterval();
   }
 
@@ -184,11 +198,12 @@ export class EchartsLinkageModel {
     const current: Array<any> = [];
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
-      current.push({ 
-        name: '', type: 'value', show: true, 
-        position: 'left', offset: offset, alignTicks: true, 
+      current.push({
+        name: item.yAxisName || '',
+        type: 'value', show: item.seriesData.length > 0 ? true : false, // 注：只有当数据不为空时才显示Y轴
+        position: 'left', offset: offset, alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
-        nameTextStyle: { align: 'right', padding: [0, 10, 0, 0] },
+        nameTextStyle: { align: 'center', padding: [0, 0, 0, 0], color: '#000' },
       });
     });
     // console.log("current", current);
@@ -200,19 +215,6 @@ export class EchartsLinkageModel {
       (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
     }
   }
-
-  // setLegend = () => {
-  //   this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
-  //     const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
-  //     current.push({ 
-  //       name: '', type: 'value', show: true, 
-  //       position: 'left', offset: offset, alignTicks: true, 
-  //       axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
-  //       nameTextStyle: { align: 'right', padding: [0, 10, 0, 0] },
-  //     });
-  //   });
-  //   this.optionTemplate.legend = current;
-  // }
 
   // 组装option
   setResultOption = () => {
@@ -255,7 +257,7 @@ export class EchartsLinkageModel {
       this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
         resOption = addOneSeries(resOption, item, index);
       });
-      
+
     } else { // 单个series
       resOption = addOneSeries(resOption, this.seriesOptionArray[0], 0);
     }

@@ -9,7 +9,7 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" @drop-echart="dropEchart" />
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" :segment="150" @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
@@ -37,13 +37,15 @@ const addLinkageBtnClick = () => {
 const addLotEmptyLinkageBtnClick = () => {
   for (let i = 0; i < 3; i++) {
     const oneDataTypeArray: OneDataType[] = [];
-    for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 6; j++) {
       const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
       const oneDataType: OneDataType = {
-        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
+        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
         type: 'line',
         seriesData: [],
-        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
       };
       oneDataTypeArray.push(oneDataType);
     }

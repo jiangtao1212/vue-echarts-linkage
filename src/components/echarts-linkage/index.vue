@@ -27,12 +27,14 @@ export type PropsType = {
   echartsMaxCount?: number;
   emptyEchartCount?: number;
   echartsColors?: string[];
+  segment?: number;
 }
 
 // 定义 props
 const props = withDefaults(defineProps<PropsType>(), {
   cols: 1,
   echartsMaxCount: 7,
+  segment: 50,
 });
 
 // 自定义验证函数
@@ -66,8 +68,8 @@ const dataAbout = reactive({
 const getEchartsLikageModel = (data: SeriesOptionType[]) => {
   const echartsLinkageModel = new EchartsLinkageModel({
     seriesOptionArray: data,
-    segment: 50,
-    echartsColors: (!props.echartsColors || props.echartsColors.length < 1) ? null : props.echartsColors,
+    segment: props.segment,
+    echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     minMarkLine: 1,
     maxMarkLine: 5,
   } as EchartsLinkageModelType);
@@ -278,6 +280,8 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
       type: item.type,
       name: item.name,
       seriesData: item.seriesData,
+      xAxisName: item.xAxisName,
+      yAxisName: item.yAxisName,
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesData);

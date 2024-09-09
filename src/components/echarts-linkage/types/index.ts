@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-05 13:43:00
+ * @LastEditTime: 2024-09-09 09:27:41
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -22,6 +22,8 @@ export type OneDataType = {
   name: string;
   type: 'line' | 'bar';
   seriesData: Array<number[]>;
+  xAxisName?: string;
+  yAxisName?: string;
   markLineArray?: Array<number>;
   customData?: any;
 }
