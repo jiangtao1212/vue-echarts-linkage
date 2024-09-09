@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-09 10:58:08
+ * @LastEditTime: 2024-09-09 16:10:28
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -68,7 +68,7 @@ const optionTemplate: EChartsOption = {
       saveAsImage: {},
       myDeleteButton: {
         show: true,
-        title: '删除',
+        title: `删除`,
         icon: 'path://M554.6496 512.0512l255.744-255.6928a30.1056 30.1056 0 1 0-42.6496-42.5984L512 469.4528 256.256 213.6064a30.1568 30.1568 0 1 0-42.6496 42.6496l255.744 255.6928-255.744 255.7952a30.1056 30.1056 0 1 0 42.6496 42.6496L512 554.6496l255.744 255.744a30.1568 30.1568 0 1 0 42.6496-42.6496l-255.744-255.6928z',
         onclick: (e: any) => {
           // console.log(e);
@@ -85,10 +85,10 @@ const optionTemplate: EChartsOption = {
   xAxis: [{
     type: 'category',
     name: '',
-    axisLabel: {
-      show: true,
-      interval: 1, // 控制刻度标签显示间隔
-    },
+    // axisLabel: {
+    //   show: true,
+    //   interval: 1, // 控制刻度标签显示间隔
+    // },
     data: [],
   }],
   yAxis: [
@@ -131,7 +131,7 @@ const lineSeriesMarkLineTemplate = {
 // 联动图表模型 ----------- 实体类
 export class EchartsLinkageModel {
   private seriesOptionArray: Array<SeriesOptionType>; // 原始数据
-  private segment = 50; // 图表分段数
+  private segment; // 图表分段数
   private xAxisInterval = 1; // x轴刻度标签显示间隔
   private offsetNum = 40; // Y轴偏移量
   private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
@@ -146,7 +146,7 @@ export class EchartsLinkageModel {
     console.groupCollapsed('EchartsLinkageModel')
     console.log(param);
     this.seriesOptionArray = param.seriesOptionArray;
-    this.segment = param.segment || 50;
+    this.segment = param.segment;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.init();
     console.groupEnd();
@@ -161,6 +161,7 @@ export class EchartsLinkageModel {
 
   // 设置x轴刻度标签显示间隔
   setXAxisInterval = () => {
+    if (!this.segment) return false;
     this.xAxisInterval = this.segment - 1;
     return this.xAxisInterval;
   }
@@ -190,26 +191,45 @@ export class EchartsLinkageModel {
     xAxis[0].data = this.setXAxisData();
     xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
     xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
-    xAxis[0].axisLabel.interval = this.setXAxisInterval();
+    // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
+    this.setXAxisInterval() && (xAxis[0].axisLabel.interval = { show: true, interval: this.xAxisInterval });
   }
 
   // 设置y轴 //todo: 这里可以考虑优化，后期使用自定义legend来显示隐藏Y轴
   setYAxis = () => {
     const current: Array<any> = [];
+    const yAxisShowArray: Array<boolean> = [];
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
+      const show = item.seriesData.length > 0 ? true : false;
+      yAxisShowArray.push(show);
       current.push({
         name: item.yAxisName || '',
-        type: 'value', show: item.seriesData.length > 0 ? true : false, // 注：只有当数据不为空时才显示Y轴
-        position: 'left', offset: offset, alignTicks: true,
+        type: 'value',
+        show, // 注：只有当数据不为空时才显示Y轴
+        position: 'left',
+        offset: offset,  // todo: 这里需要优化，最好是没数据的隐藏Y轴，并且offset
+        alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
-        nameTextStyle: { align: 'center', padding: [0, 0, 0, 0], color: '#000' },
+        nameTextStyle: { align: 'center', padding: 0, color: '#000' },
+        axisLabel: { margin: 2 },
       });
     });
+    // 计算Y轴的偏移量
+    current.forEach((item: any, index: number) => {
+      const count = yAxisShowArray.reduce((pre, cur, currentIndex) => {
+        if (currentIndex <= index) {
+          pre = pre + (cur ? 1 : 0);
+        }
+        return pre;
+      }, 0);
+      item.offset = count === 0 ? 0 : this.offsetNum * (count - 1);
+    });
+
     // console.log("current", current);
     this.optionTemplate.yAxis = current;
     const showYCount = current.filter((item: any) => item.show === true).length;
-    if (showYCount === 1) {
+    if (showYCount === 0 || showYCount === 1) {
       (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit;
     } else {
       (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
@@ -310,6 +330,40 @@ export class EchartsLinkageModel {
       }
     } else {
       console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /**
+   * 设置toolbox中相关工具的title语言类型
+   * @param lang 语言类型，zh-cn | en (中文 | 英文)，默认中文
+   * @returns 
+   */
+  setLanguage = (lang: 'zh-cn' | 'en') => {
+    const feature = (this.resultOption?.toolbox as any).feature;
+    feature.dataZoom.title = { zoom: `${lang === 'zh-cn' ? '区域缩放' : 'Zoom'}`, back: `${lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset'}` };
+    feature.restore.title = `${lang === 'zh-cn' ? '还原' : 'Restore'}`;
+    feature.saveAsImage.title = `${lang === 'zh-cn' ? '保存为图片' : 'Save as Image'}`;
+    feature.myDeleteButton.title = `${lang === 'zh-cn' ? '删除' : 'Delete'}`;
+    return this;
+  }
+
+  /**
+   * @description 统一设置所有echarts实例grid的left值对齐
+   * 当前echarts中没有Y轴显示时，grid的left值设置默认值，无需对齐
+   * 最大显示数量maxShowYCount为0时，grid的left值设置默认值，无需对齐
+   * 其他情况，grid的left值设置： 默认值 + 最大显示数量-1的偏移量
+   * @param maxShowYCount 各个图表中Y轴的最大显示数量
+   */
+  setGridLeftAlign = (maxShowYCount: number) => {
+    let showYCount = 0;
+    this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+      item.seriesData.length > 0 && showYCount++;
+    });
+    if (showYCount === 0 ||maxShowYCount === 0) {
+      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit;
+    } else {
+      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (maxShowYCount - 1);
     }
     return this;
   }

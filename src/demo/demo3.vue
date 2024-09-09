@@ -1,12 +1,3 @@
-<!--
- * @Author: jiangtao 1106950092@qq.com
- * @Date: 2024-09-06 10:05:35
- * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-09 12:03:38
- * @FilePath: \vue-echarts-linkage\src\demo\demo3.vue
- * @Description: 添加测试自定义新增空白echarts实例（一个echarts内多series）
--->
-
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
@@ -18,7 +9,10 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <VueEchartsLinkage ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" :segment="100" @drop-echart="dropEchart" />
+  <VueEchartsLinkage ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
+    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" language="zh-cn"
+    grid-align
+    @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
@@ -46,12 +40,15 @@ const addLinkageBtnClick = () => {
 const addLotEmptyLinkageBtnClick = () => {
   for (let i = 0; i < 3; i++) {
     const oneDataTypeArray: OneDataType[] = [];
-    for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 6; j++) {
       const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
       const oneDataType: OneDataType = {
-        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 100)}`,
+        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
         type: 'line',
         seriesData: [],
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
       };
       oneDataTypeArray.push(oneDataType);
     }
@@ -62,10 +59,13 @@ const addLotEmptyLinkageBtnClick = () => {
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
-  console.log('allDistinctSeriesTagInfo', allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach(item => {
-    item.seriesData = RandomUtil.getSeriesData(1000);
+  allDistinctSeriesTagInfo.forEach((item: seriesTagType, index: number) => {
+    if (index >= 11) {
+      item.seriesData = [];
+    } else {
+      item.seriesData = RandomUtil.getSeriesData(1000);
+    }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }

@@ -9,7 +9,10 @@
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" :segment="150" @drop-echart="dropEchart" />
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
+    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" language="zh-cn"
+    grid-align
+    @drop-echart="dropEchart" />
 </template>
 
 <script setup lang="ts">
@@ -57,8 +60,12 @@ const addLotEmptyLinkageBtnClick = () => {
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
   const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach(item => {
-    item.seriesData = RandomUtil.getSeriesData(1000);
+  allDistinctSeriesTagInfo.forEach((item: seriesTagType, index: number) => {
+    if (index >= 8) {
+      item.seriesData = [];
+    } else {
+      item.seriesData = RandomUtil.getSeriesData(1000);
+    }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }

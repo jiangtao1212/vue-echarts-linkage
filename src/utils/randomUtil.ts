@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-20 13:51:03
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-08-22 09:56:12
+ * @LastEditTime: 2024-09-09 14:50:07
  * @FilePath: \vue-echarts-linkage\src\utils\randomUtil.ts
  * @Description: 随机数相关工具
  */
@@ -13,10 +13,10 @@
  * @param count 数据条数
  * @returns 组装的随机数据
  */
-const getSeriesData = (count = 1000) => {
+const getSeriesData = (count = 1000, min = 1, max = 10000) => {
   const seriesData = [];
   for (let i = 0; i < count; i++) {
-    seriesData.push([i + 1, Math.floor(Math.random() * 1000) + 1]);
+    seriesData.push([i + 1, Math.floor(Math.random() * max) + 1]);
   }
   return seriesData;
 }

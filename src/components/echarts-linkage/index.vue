@@ -28,13 +28,16 @@ export type PropsType = {
   emptyEchartCount?: number;
   echartsColors?: string[];
   segment?: number;
+  language?: 'zh-cn' | 'en-us';
+  gridAlign?: boolean, // 多echarts图表是否对齐
 }
 
 // 定义 props
 const props = withDefaults(defineProps<PropsType>(), {
   cols: 1,
   echartsMaxCount: 7,
-  segment: 50,
+  language: 'zh-cn',
+  gridAlign: false,
 });
 
 // 自定义验证函数
@@ -202,6 +205,21 @@ const getMaxId = () => {
   dataAbout.maxEchartsIdSeq = max;
 };
 
+// 计算当前显示的echarts中y轴数量的最大值
+const computerMaxShowYCount = () => {
+  const showYCountArray: Array<number> = [];
+  dataAbout.data.forEach((item: seriesIdDataType) => {
+    const data = item.data;
+    let showYCount = 0;
+    data.forEach((item: OneDataType) => {
+      showYCount += item.seriesData.length > 0 ? 1 : 0;
+    });
+    showYCountArray.push(showYCount);
+  });
+  const max = Math.max(...showYCountArray);
+  return max;
+}
+
 /**
  * @description 判断当前echart实例是否存在，并且当前实例不在操作，则返回实例和是否需要操作
  * @param id echarts id
@@ -288,7 +306,12 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   // 添加自定义标记线
   dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
   console.log(dataArray.data);
-  const option: EChartsOption = echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id)).setCustomSeriesMarkLine().getResultOption();
+  // 各种处理
+  echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
+  .setCustomSeriesMarkLine()
+  .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
+  props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
+  const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
   myChart.setOption(option);
   myChart.group = groupName;
@@ -309,6 +332,7 @@ const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
   const groupName: string = dataAbout.groupName;
   echarts.dispose(groupName);
+  if (props.gridAlign) {}
   dataAbout.data.forEach((item: seriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
