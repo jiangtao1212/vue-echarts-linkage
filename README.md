@@ -1,11 +1,48 @@
 # vue-echarts-linkage
 
-## 介绍
+## 1. 介绍
 
 vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动组件，可以实现多个图表之间的联动。
 
-## 安装
+组件基于版本
 
+```javascript
+"dependencies": {
+  "@element-plus/icons-vue": "^2.3.1",
+  "@vueuse/core": "^10.11.0",
+  "echarts": "^5.5.1",
+  "element-plus": "^2.7.8",
+  "vue": "^3.4.29",
+  ...
+},
+"devDependencies": {
+  "@rushstack/eslint-patch": "^1.8.0",
+  "@tsconfig/node20": "^20.1.4",
+  "@types/node": "^20.14.5",
+  "@vitejs/plugin-vue": "^5.0.5",
+  "@vitejs/plugin-vue-jsx": "^4.0.0",
+  "@vue/eslint-config-prettier": "^9.0.0",
+  "@vue/eslint-config-typescript": "^13.0.0",
+  "@vue/tsconfig": "^0.5.1",
+  "eslint": "^8.57.0",
+  "eslint-plugin-vue": "^9.23.0",
+  "less": "^4.2.0",
+  "npm-run-all2": "^6.2.0",
+  "prettier": "^3.2.5",
+  "typescript": "~5.4.0",
+  "unocss": "^0.61.9",
+  "unplugin-auto-import": "^0.18.2",
+  "unplugin-vue-components": "^0.27.3",
+  "vite": "^5.3.1",
+  "vite-plugin-dts": "^4.0.3",
+  "vite-plugin-static-copy": "^1.0.6",
+  "vue-tsc": "^2.0.21"
+}
+```
+
+## 2. 安装及使用组件
+
+### 2.1 安装组件
 ```bash
 # 安装依赖
 npm install vue-echarts-linkage
@@ -24,270 +61,60 @@ import { VueEchartsLinkage } from "vue-echarts-linkage";
 import "vue-echarts-linkage/dist/style.css";
 ```
 
-## 使用案例
-
-### Vue3 + TypeScript + Element Plus 项目中使用
-
-- template
+### 2.2 使用组件
 
 ```html
 <template>
-  <div class="btn-container">
-    <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
-    <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增echarts实例</el-button>
-    <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
-    <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
-    <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
-    <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
-    <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
-  </div>
-  <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="2" :echarts-max-count="10" :empty-echart-count="8"  @drop-echart="dropEchart" />
+  ...
+  <VueEchartsLinkage 
+    ref="echartsLinkageRef" 
+    :cols="1" 
+    :echarts-max-count="10"
+    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" 
+    language="zh-cn"
+    grid-align
+    @drop-echart="dropEchart" />
 </template>
 ```
 
-- script
-
-```typescript
-<script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { RandomUtil } from "@/utils/index";
-import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
-
-const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
-let seriesType = 'line' as 'line' | 'bar';
-
-// 新增按钮
-const addLinkageBtnClick = () => {
-  const seriesData = RandomUtil.getSeriesData(1300);
-  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-  const oneDataType: OneDataType = {
-    name: `新增图表${maxEchartsIdSeq + 1}`,
-    type: 'line', seriesData: seriesData,
-    markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
-  };
-  echartsLinkageRef.value!.addEchart(oneDataType);
-}
-
-// 批量新增空白echarts
-const addLotEmptyLinkageBtnClick = () => {
-  for (let i = 0; i < 10; i++) {
-    echartsLinkageRef.value!.addEchart();
-  }
-}
-
-// 批量更新按钮
-const updateAllLinkageBtnClick = () => {
-  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
-  const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach(item => {
-    item.seriesData = RandomUtil.getSeriesData(1000);
-  });
-  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
-}
-
-// 新增line-series按钮
-const addLinkageLineSeriesBtnClick = () => {
-  seriesType = 'line';
-  addLinkageSeriesCommon(seriesType);
-}
-
-// 新增bar-series按钮
-const addLinkageBarSeriesBtnClick = () => {
-  seriesType = 'bar';
-  addLinkageSeriesCommon(seriesType);
-}
-
-// 新增series按钮
-const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
-  const seriesData = RandomUtil.getSeriesData(1300);
-  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-  id = id || 'echart' + maxEchartsIdSeq;
-  const random = Math.floor(Math.random() * 100);
-  const oneDataType: OneDataType = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
-  echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
-}
-
+```javascript
+import { VueEchartsLinkage, type OneDataType, type seriesTagType, type dropEchartType  } from 'vue-echarts-linkage';
+import "vue-echarts-linkage/dist/style.css";
+...
+const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
+...
 // 拖拽回调事件
 const dropEchart = (data: dropEchartType) => {
-  addLinkageSeriesCommon(seriesType, data.id);
+  // 处理拖拽回调后逻辑
+  ...
 }
-
-// 监听拖拽事件
-const initLisener = () => {
-  const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
-  const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
-
-  dragRectLine.addEventListener('dragstart', (e: DragEvent) => {
-    console.log("dragstart");
-    seriesType = 'line';
-    e.dataTransfer!.setData('text', "123");
-    e.dataTransfer!.dropEffect = 'move';
-  });
-  dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
-    console.log("dragstart");
-    seriesType = 'bar';
-    e.dataTransfer!.setData('text', "123");
-    e.dataTransfer!.dropEffect = 'move';
-  });
-}
-
-const init = () => {
-  initLisener();
-}
-
-onMounted(() => {
-  init();
-});
-</script>
 ```
 
-- style
+## 3. 组件属性
+| 属性名 | 类型 | 说明 | 默认值 |
+| --- | --- | --- | --- |
+| cols | `number` | 自定义配置的显示列数 | 1，即单列 |
+| echarts-max-count | `number` | 允许的最大图表数 | 7 |
+| empty-echart-count | `number` | 初始化生成的空白图表数 | — |
+| echarts-colors | `string[]` | legend、series和对应Y轴颜色数组  | ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'] |
+| language | `zh-cn / en-us` | 语言设置，目前只支持中文（zh-cn）和英文（en-us）  | zh-cn，即中文 |
+| grid-align | `boolean` | 多echarts图表是否对齐 | false |
 
-```less
-<script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { RandomUtil } from "@/utils/index";
-import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
+## 4. 组件事件
+| 事件名 | 说明 | 参数 |
+| --- | --- | --- |
+| drop-echart | 拖拽图表回调事件，返回当前拖拽的图表id(data.id) | `(data: dropEchartType)` |
 
-const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
-let seriesType = 'line' as 'line' | 'bar';
-
-// 新增按钮
-const addLinkageBtnClick = () => {
-  const seriesData = RandomUtil.getSeriesData(1300);
-  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-  const oneDataType: OneDataType = {
-    name: `新增图表${maxEchartsIdSeq + 1}`,
-    type: 'line', seriesData: seriesData,
-    markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
-  };
-  echartsLinkageRef.value!.addEchart(oneDataType);
-}
-
-// 批量新增空白echarts
-const addLotEmptyLinkageBtnClick = () => {
-  for (let i = 0; i < 10; i++) {
-    echartsLinkageRef.value!.addEchart();
-  }
-}
-
-// 批量更新按钮
-const updateAllLinkageBtnClick = () => {
-  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
-  const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach(item => {
-    item.seriesData = RandomUtil.getSeriesData(1000);
-  });
-  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
-}
-
-// 新增line-series按钮
-const addLinkageLineSeriesBtnClick = () => {
-  seriesType = 'line';
-  addLinkageSeriesCommon(seriesType);
-}
-
-// 新增bar-series按钮
-const addLinkageBarSeriesBtnClick = () => {
-  seriesType = 'bar';
-  addLinkageSeriesCommon(seriesType);
-}
-
-// 新增series按钮
-const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
-  const seriesData = RandomUtil.getSeriesData(1300);
-  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
-  id = id || 'echart' + maxEchartsIdSeq;
-  const random = Math.floor(Math.random() * 100);
-  const oneDataType: OneDataType = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
-  echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
-}
-
-// 拖拽回调事件
-const dropEchart = (data: dropEchartType) => {
-  addLinkageSeriesCommon(seriesType, data.id);
-}
-
-// 监听拖拽事件
-const initLisener = () => {
-  const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
-  const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
-
-  dragRectLine.addEventListener('dragstart', (e: DragEvent) => {
-    console.log("dragstart");
-    seriesType = 'line';
-    e.dataTransfer!.setData('text', "123");
-    e.dataTransfer!.dropEffect = 'move';
-  });
-  dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
-    console.log("dragstart");
-    seriesType = 'bar';
-    e.dataTransfer!.setData('text', "123");
-    e.dataTransfer!.dropEffect = 'move';
-  });
-}
-
-const init = () => {
-  initLisener();
-}
-
-onMounted(() => {
-  init();
-});
-</script>
-
-<style scoped lang="less">
-.btn-container {
-  height: 5vh;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  column-gap: 10px;
-
-  .drag-rect {
-    border-radius: 10px;
-    padding: 8px 15px;
-    background-image: linear-gradient(to right, #4286f4, #00b4d8);
-    border: 1px solid #00b4d8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    span {
-      color: #fff;
-      font-size: 14px;
-      line-height: 14px;
-    }
-  }
-}
-
-.echarts-linkage-container {
-  width: 100vw;
-  height: 95vh;
-}
-</style>
-<style scoped lang="less">
-.el-button {
-  margin-left: 0;
-}
-</style>
-```
-
-### 发布到npm中
-
-**注：** npm中配置的是淘宝镜像地址，不想修改配置地址，所以临时使用npm官方地址进行版本发布
-
-```bash
-# 1.登录到npm官方地址
-npm login --registry=https://registry.npmjs.org
-
-# 2.验证登录状态
-npm whoami --registry=https://registry.npmjs.org
-
-# 3.发布新版本到npm
-npm publish --registry=https://registry.npmjs.org
-```
-
+## 5. 组件方法
+| 方法名 | 说明 | 参数 |
+| --- | --- | --- |
+| addEchart | 添加一个echarts图表 | `(data?: OneDataType / OneDataType[]) => void` |
+| addEchartSeries | 新增echarts系列，一般配置拖拽回调事件（@drop-echart）使用 | `(id: string, data: OneDataType) => void` |
+| deleteEchart | 根据echarts的id删除echarts | `(id: string) => Promise<void>` |
+| getDataLength | 获取数据总数 | `() => number` |
+| getMaxEchartsIdSeq | 获取最大的id序号 | `() => number` |
+| getAllDistinctSeriesTagInfo | 获取所有不重复系列的标签信息 | `() => Array<seriesTagType>` |
+| getAllSeriesTagInfo, | 获取所有系列的标签信息 | `() => Array<{ id: string; series: Array<seriesTagType>; }>` |
+| updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<seriesTagType>) => Promise<void>` |
+| clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
+| replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |

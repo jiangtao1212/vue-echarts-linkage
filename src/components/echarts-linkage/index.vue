@@ -21,6 +21,10 @@ import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seri
  * @property {number} [cols=1] - 列数
  * @property {number} [echartsMaxCount=7] - Echarts最大数量
  * @property {number} [emptyEchartCount] - 初始化空白echarts数量
+ * @property {string[]} [echartsColors] - echarts颜色数组
+ * @property {number} [segment=5] - 标线分段数
+ * @property {string} [language='zh-cn'] - 语言
+ * @property {boolean} [gridAlign=false] - 多echarts图表是否对齐
  */
 export type PropsType = {
   cols?: number;
@@ -128,13 +132,13 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
       data.push({ ...item });
     });
     markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
-    dataAll = data;
+      dataAll = data;
   } else {
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
     markLineArray = oneDataType.markLineArray || [],
-    dataAll = [{ ...oneDataType }];
+      dataAll = [{ ...oneDataType }];
   }
   dataAbout.data.push({
     id,
@@ -308,8 +312,8 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
   console.log(dataArray.data);
   // 各种处理
   echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
-  .setCustomSeriesMarkLine()
-  .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
+    .setCustomSeriesMarkLine()
+    .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
@@ -320,9 +324,9 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
 }
 
 // 初始化空白echarts
-const initEmptyEcharts = () => {
-  if (!props.emptyEchartCount) return;
-  for (let i = 0; i < props.emptyEchartCount; i++) {
+const initEmptyEcharts = (count: number) => {
+  if (!count || count < 1) return;
+  for (let i = 0; i < count; i++) {
     addEchart();
   }
 }
@@ -332,7 +336,6 @@ const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
   const groupName: string = dataAbout.groupName;
   echarts.dispose(groupName);
-  if (props.gridAlign) {}
   dataAbout.data.forEach((item: seriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
@@ -376,7 +379,8 @@ const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
   const res: Array<seriesTagType> = [];
   dataAbout.data.forEach((echart: seriesIdDataType) => {
     echart.data.forEach((series: OneDataType) => {
-      series.name && res.push({
+      const isExist = res.some(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData));
+      series.name && !isExist && res.push({
         name: series.name,
         customData: series.customData,
         seriesData: [],
@@ -384,6 +388,48 @@ const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
     });
   });
   return res;
+}
+
+// 获取所有echarts实例各个系列的标签信息 --- 导出
+const getAllSeriesTagInfo = (): Array<{ id: string, series: Array<seriesTagType> }> => {
+  const res: Array<{ id: string, series: Array<seriesTagType> }> = [];
+  dataAbout.data.forEach((echart: seriesIdDataType) => {
+    const oneEchartInfo: { id: string, series: Array<seriesTagType> } = { id: echart.id, series: [] };
+    echart.data.forEach((series: OneDataType) => {
+      oneEchartInfo.series.push({
+        name: series.name,
+        customData: series.customData,
+        seriesData: [],
+      })
+    });
+    res.push(oneEchartInfo);
+  });
+  return res;
+}
+
+/**
+ * @description 清空所有echarts数据 --- 导出 
+ * @param mode 'clear' | 'delete'， 清空 | 删除，说明：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例
+ */
+const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
+  const count = dataAbout.data.length;
+  dataAbout.data = [];
+  dataAbout.maxEchartsIdSeq = 0;
+  setStyleProperty();
+  await nextTick();
+  initEcharts();
+  await nextTick();
+  mode === 'clear' && initEmptyEcharts(count);
+}
+
+// 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 --- 导出
+const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
+  const date1 = new Date().getTime();
+  console.log("replaceAllEchartsData start", date1);
+  await clearAllEchartsData('delete');
+  newDataArray.forEach((item: OneDataType[]) => {
+    addEchart(item);
+  });
 }
 
 //todo: 待完善，更新单个echarts
@@ -418,7 +464,10 @@ const exposedMethods: ExposedMethods = {
   getDataLength,
   getMaxEchartsIdSeq,
   getAllDistinctSeriesTagInfo,
+  getAllSeriesTagInfo,
   updateAllEcharts,
+  clearAllEchartsData,
+  replaceAllEchartsData,
 };
 defineExpose(exposedMethods);
 
@@ -429,7 +478,7 @@ watch(() => dataAbout.data.length, () => {
 
 onMounted(() => {
   initLisener();
-  initEmptyEcharts();
+  props.emptyEchartCount && initEmptyEcharts(props.emptyEchartCount);
 });
 
 onBeforeUnmount(() => {

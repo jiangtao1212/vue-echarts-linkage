@@ -15,7 +15,10 @@ export interface ExposedMethods {
   getDataLength: () => number;
   getMaxEchartsIdSeq: () => number;
   getAllDistinctSeriesTagInfo: () => Array<seriesTagType>;
+  getAllSeriesTagInfo: () => Array<{ id: string, series: Array<seriesTagType> }>;
   updateAllEcharts: (newAllSeriesdata: Array<seriesTagType>) => void;
+  clearAllEchartsData: () => void;
+  replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
 }
 
 export type OneDataType = {

@@ -26,7 +26,7 @@ export default defineConfig({
     viteStaticCopy({ // 复制文件到打包目录下
       targets: [
         {
-          src: 'src/components/echartsLinkage/readme.md',
+          src: 'src/components/echarts-linkage/readme.md',
           dest: ''
         }
       ]

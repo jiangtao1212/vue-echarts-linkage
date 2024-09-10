@@ -3,6 +3,8 @@
     <el-button type="primary" @click="addLinkageBtnClick()">新增echarts实例</el-button>
     <el-button type="primary" @click="addLotEmptyLinkageBtnClick()">批量新增空白echarts实例-多series</el-button>
     <el-button type="primary" @click="updateAllLinkageBtnClick()">批量更新echarts实例</el-button>
+    <el-button type="primary" @click="clearAllEchartsData()">批量清除echarts实例数据</el-button>
+    <el-button type="primary" @click="replaceAllEchartsData()">批量替换echarts实例数据</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick()">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick()">新增bar-series</el-button>
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
@@ -59,15 +61,43 @@ const addLotEmptyLinkageBtnClick = () => {
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
   allDistinctSeriesTagInfo.forEach((item: seriesTagType, index: number) => {
-    if (index >= 8) {
+    if (index >= 18) {
       item.seriesData = [];
     } else {
       item.seriesData = RandomUtil.getSeriesData(1000);
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
+// 批量清除echarts实例数据
+const clearAllEchartsData = () => {
+  echartsLinkageRef.value?.clearAllEchartsData();
+}
+
+// 批量替换echarts实例数据
+const replaceAllEchartsData = () => {
+  const res: Array<OneDataType[]> = [];
+  for (let i = 0; i < 4; i++) {
+    const oneDataTypeArray: OneDataType[] = [];
+    for (let j = 0; j < 5; j++) {
+      const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+      const oneDataType: OneDataType = {
+        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    res.push(oneDataTypeArray);
+  }
+  echartsLinkageRef.value?.replaceAllEchartsData(res);
 }
 
 // 新增line-series按钮

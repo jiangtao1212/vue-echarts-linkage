@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-09 16:10:28
+ * @LastEditTime: 2024-09-10 16:05:22
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -41,7 +41,7 @@ export type EchartsLinkageModelType = {
 const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
 // 折线图表模板
 const optionTemplate: EChartsOption = {
-  tooltip: { trigger: 'axis', },
+  tooltip: { trigger: 'axis', confine: true },
   legend: { left: 200, top: 8 },
   grid: {
     show: true,
@@ -311,7 +311,7 @@ export class EchartsLinkageModel {
    * @returns this 链式调用
    */
   setCustomSeriesMarkLine = () => {
-    (this.resultOption.series as LineSeriesOption[])[0].markLine = this.lineSeriesMarkLineTemplate;
+    (this.resultOption.series as LineSeriesOption[]).length > 0 && ((this.resultOption.series as LineSeriesOption[])[0].markLine = this.lineSeriesMarkLineTemplate);
     return this;
   }
 
