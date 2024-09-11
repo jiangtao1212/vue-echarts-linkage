@@ -73,6 +73,7 @@ import "vue-echarts-linkage/dist/style.css";
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'skyblue']" 
     language="zh-cn"
     grid-align
+    ...
     @drop-echart="dropEchart" />
 </template>
 ```
@@ -101,6 +102,7 @@ const dropEchart = (data: dropEchartType) => {
 | grid-align | `boolean` | 多echarts图表是否对齐 | false |
 | theme | `light / dark` | 主题，light为浅色，dark为深色 | light |
 | background | `string` | 背景色，一般配合主题使用 | — |
+| is-linkage | `boolean` | 是否联动 | true，即联动 |
 
 ## 4. 组件事件
 | 事件名 | 说明 | 参数 |

@@ -36,6 +36,7 @@ export type PropsType = {
   gridAlign?: boolean, // 多echarts图表是否对齐
   theme?: 'light' | 'dark', // 主题
   background?: string, // 背景色
+  isLinkage?: boolean, // 是否联动
 }
 
 // 定义 props
@@ -45,6 +46,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   language: 'zh-cn',
   gridAlign: false,
   theme: 'light',
+  isLinkage: true, // 默认联动
 });
 
 // 自定义验证函数
@@ -344,7 +346,7 @@ const initEcharts = () => {
     initOneEcharts(item, groupName);
   });
   dataAbout.restoreClickBool = false;
-  echarts.connect(groupName);
+  props.isLinkage && echarts.connect(groupName); // 联动
 }
 
 // 拖拽移动事件
