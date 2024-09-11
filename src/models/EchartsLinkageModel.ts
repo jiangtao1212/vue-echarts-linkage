@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-10 16:05:22
+ * @LastEditTime: 2024-09-11 10:56:43
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -211,7 +211,7 @@ export class EchartsLinkageModel {
         offset: offset,  // todo: 这里需要优化，最好是没数据的隐藏Y轴，并且offset
         alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
-        nameTextStyle: { align: 'center', padding: 0, color: '#000' },
+        nameTextStyle: { align: 'center', padding: 0 },
         axisLabel: { margin: 2 },
       });
     });
@@ -365,6 +365,16 @@ export class EchartsLinkageModel {
     } else {
       (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (maxShowYCount - 1);
     }
+    return this;
+  }
+
+  /**
+   * 设置背景色
+   * @param color 背景色
+   * @returns 
+   */
+  setBackgroundColor = (color: string) => {
+    color && (this.resultOption.backgroundColor = color);
     return this;
   }
 

@@ -34,6 +34,8 @@ export type PropsType = {
   segment?: number;
   language?: 'zh-cn' | 'en-us';
   gridAlign?: boolean, // 多echarts图表是否对齐
+  theme?: 'light' | 'dark', // 主题
+  background?: string, // 背景色
 }
 
 // 定义 props
@@ -42,6 +44,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   echartsMaxCount: 7,
   language: 'zh-cn',
   gridAlign: false,
+  theme: 'light',
 });
 
 // 自定义验证函数
@@ -237,7 +240,7 @@ const judgeEchartInstance = (id: string) => {
     needHandle = dataAbout.currentHandleChartId === id ? true : false; // 判断当前实例是否在操作
   } else { // 实例不存在
     needHandle = true;
-    myChart = echarts.init(element);
+    myChart = echarts.init(element, props.theme);
     // 监听 restore 事件
     myChart.on('restore', () => {
       Promise.resolve().then(() => debouncedFn());
@@ -315,6 +318,7 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
+  props.background && echartsLinkageModel.setBackgroundColor(props.background) // 设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
   myChart.setOption(option);

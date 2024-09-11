@@ -99,6 +99,8 @@ const dropEchart = (data: dropEchartType) => {
 | echarts-colors | `string[]` | legend、series和对应Y轴颜色数组  | ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'] |
 | language | `zh-cn / en-us` | 语言设置，目前只支持中文（zh-cn）和英文（en-us）  | zh-cn，即中文 |
 | grid-align | `boolean` | 多echarts图表是否对齐 | false |
+| theme | `light / dark` | 主题，light为浅色，dark为深色 | light |
+| background | `string` | 背景色，一般配合主题使用 | — |
 
 ## 4. 组件事件
 | 事件名 | 说明 | 参数 |
