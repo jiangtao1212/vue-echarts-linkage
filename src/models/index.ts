@@ -1,1 +1,1 @@
-export { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "./EchartsLinkageModel";
+export { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "./echarts-linkage-model/index";

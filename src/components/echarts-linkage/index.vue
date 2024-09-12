@@ -154,7 +154,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   await nextTick();
   initEcharts();
 };
-
+// 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
   return { name, type, seriesData, customData, markLineArray };
 }
@@ -260,7 +260,6 @@ const judgeEchartInstance = (id: string) => {
 // 新增echarts的图例点击监听事件 //todo: 待完善
 const addChartLegendSelectChangedEvent = (myChart: EChartsType) => {
   myChart.on('legendselectchanged', function (params: any) {
-
     const name = params.name; // 图例名称
     const selected = params.selected;
     const names = Object.keys(selected);
