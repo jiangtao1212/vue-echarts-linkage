@@ -25,6 +25,9 @@ import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seri
  * @property {number} [segment=5] - 标线分段数
  * @property {string} [language='zh-cn'] - 语言
  * @property {boolean} [gridAlign=false] - 多echarts图表是否对齐
+ * @property {string} [theme='light'] - 主题
+ * @property {string} [background] - 背景色
+ * @property {boolean} [isLinkage=true] - 是否联动, 默认为true
  */
 export type PropsType = {
   cols?: number;

@@ -16,7 +16,6 @@
     grid-align
     theme="light"
     background="skyblue"
-    :is-linkage="false"
     @drop-echart="dropEchart" />
 </template>
 
