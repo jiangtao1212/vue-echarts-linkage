@@ -1,7 +1,10 @@
 <template>
   <div class='echarts-linkage-container'>
     <div class="main-container">
-      <div v-for="item in dataAbout.data" :key="item.id" :id="item.id" class="echarts-container"></div>
+      <div v-for="(item, index) in dataAbout.data" :key="item.id" class="echarts-container">
+        <div :id="item.id" class="h-100% w-100%"></div>
+        <Drag :data="dragDataComputed(index)" :group="item.id" />
+      </div>
     </div>
   </div>
 </template>
@@ -15,6 +18,7 @@ import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSe
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seriesTagType, dropEchartType } from './types/index';
+import Drag from "@/components/drag/index.vue";
 
 /**
  * @description 组件props类型
@@ -74,6 +78,16 @@ const dataAbout = reactive({
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
 }) as DataAboutType;
+
+// 拖拽传入的数据
+const dragDataComputed = (number: number) => {
+  const res: string[] = [];
+  const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
+  originData.forEach((item: OneDataType) => {
+      res.push(item.name);
+  });
+  return res;
+};
 
 /**
  * @description 获取 EchartsLinkageModel 类实例
@@ -357,7 +371,8 @@ const dragoverEchart = (e: DragEvent) => {
 }
 
 // 接收拖拽事件
-const dropEchart = (e: DragEvent) => {
+const dropEchart = (e: any) => {
+  if (e.target.localName !== 'canvas') return; // 防止拖拽组件在操作时触发echarts的drop事件
   e.preventDefault();
   const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
   emit('drop-echart', { id } as dropEchartType);
@@ -525,6 +540,17 @@ onBeforeUnmount(() => {
       width: var(--item-width);
       border: 1px solid #ccc;
       border-radius: 10px;
+      position: relative;
+
+      .drag-container {
+        position: absolute;
+        top: 5px;
+        right: 15%;
+        padding: 2px;
+        .border-radius(5px, #6b72800d);
+        box-shadow: 3px 3px 5px #e8e8e8, -3px 3px 5px #e8e8e8;
+        z-index: 20;
+      }
     }
   }
 }

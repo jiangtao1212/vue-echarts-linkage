@@ -9,6 +9,8 @@ declare module 'vue' {
   export interface GlobalComponents {
     Drag: typeof import('./src/components/drag/index.vue')['default']
     EchartsLinkage: typeof import('./src/components/echarts-linkage/index.vue')['default']
+    ElButton: typeof import('element-plus/es')['ElButton']
+    ElPopover: typeof import('element-plus/es')['ElPopover']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
     IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']

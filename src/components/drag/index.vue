@@ -2,13 +2,14 @@
   <div class="drag-container">
     <div class="main">
       <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
-        class="flex flex-col gap-1  bg-gray-500/5 rounded"
-        :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', width: '20px' }"
-        v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost" group="people"
+        class="flex flex-col gap-1  bg-gray-500/5 rounded drag-column"
+        :data-info="data.value.length > 0 ? data.value[0].name : ''"
+        :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
+        v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost" :group="group"
         @update="onUpdate" @add="onAdd" @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move"
         @change="change">
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
-          class="cursor-move h-5 line-height-5 bg-gray-500/5 rounded pl-5px pr-5px text-2.5 flex justify-center items-center"
+          class="cursor-move h-5 line-height-5 bg-gray-500/5 rounded pl-5px pr-5px text-2.7 flex justify-center items-center"
           :class="item.isShow ? '' : 'vague'" @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
           <el-popover placement="right" :width="80"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
@@ -45,6 +46,10 @@ const props = defineProps({
   colors: {
     type: Array<string>,
     default: ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'],
+  },
+  group: {
+    type: String,
+    default: 'people',
   }
 });
 
@@ -405,7 +410,7 @@ defineExpose(exposedMethods);
 watch(() => props.data, (newVal, oldVal) => { // TAG: 这里有问题，第二次触发，打印的newVal和oldVal都是同一个数组，原因是父级对数组进行了push操作，并没有改变数组的地址，所以这里虽然会触发watch，但newVal和oldVal都是同一个数组。
   // 解决方法：在父级使用JSON.stringify()对数组进行赋值，这里数组地址就改变了，newVal和oldVal就不会是同一个数组了。
   // console.log('watch', newVal, oldVal);
-  if (oldVal.length === 0 && newVal.length > 0) { // 首次添加数据
+  if ((!oldVal || oldVal?.length === 0) && newVal.length > 0) { // 初始化数据
     dataAbout.list = newVal.map((item, index) => {
       return { key: (index + 1).toString(), value: [{ name: item, id: (index + 1).toString(), isShow: true }] };
     });
@@ -415,7 +420,7 @@ watch(() => props.data, (newVal, oldVal) => { // TAG: 这里有问题，第二�
     dataAbout.list.push({ key: index.toString(), value: [{ name: newVal[index - 1], id: index.toString(), isShow: true }] });
   }
   // console.log('dataAbout.list', dataAbout.list);
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 onMounted(() => {
   // 监听拖动事件
@@ -440,6 +445,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   flex-wrap: wrap;
   gap: 5px;
+
+  .drag-column,
+  .drag-column>div {
+    z-index: 10;
+  }
+
+  .drag-column::after {
+    content: attr(data-info);
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin-top: -20px;
+    opacity: 0;
+    z-index: 1;
+  }
 
   .cursor-move {
 
