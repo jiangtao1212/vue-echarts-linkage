@@ -15,7 +15,6 @@
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn"
     grid-align
     theme="light"
-    background="skyblue"
     @drop-echart="dropEchart" />
 </template>
 

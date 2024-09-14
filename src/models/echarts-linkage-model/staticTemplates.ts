@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-12 09:15:56
+ * @LastEditTime: 2024-09-14 13:34:56
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -14,7 +14,7 @@ export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1
 // 折线图表模板
 export const optionTemplate: EChartsOption = {
   tooltip: { trigger: 'axis', confine: true },
-  legend: { left: 200, top: 8 },
+  legend: { left: 45, top: 8 },
   grid: {
     show: true,
     left: '1%',
