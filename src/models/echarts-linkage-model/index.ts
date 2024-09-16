@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-12 09:17:11
+ * @LastEditTime: 2024-09-16 15:09:48
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -19,13 +19,29 @@ import {
 import { ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil } from "@/utils/index";
 
+/**
+ * @description 图表数据类型
+ * @param type 图表类型, maybe 'line' or 'bar', default is 'line'
+ * @param name 图表名称
+ * @param smooth 是否平滑曲线
+ * @param seriesData 数据系列
+ * @param xAxisName x轴名称
+ * @param yAxisName y轴名称
+ * @param yAxisShow y轴是否显示
+ * @param seriesShow series是否显示
+ * @param seriesYAxisIndex series的y轴索引
+ */
 export type SeriesOptionType = {
   type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
   name?: string, // 图表名称
   smooth?: true,
   seriesData: Array<Array<number>>, // 数据系列
+  seriesDataCache: Array<Array<number>>, // 缓存数据系列
   xAxisName?: string, // x轴名称
   yAxisName?: string, // y轴名称
+  yAxisShow?: boolean; // y轴是否显示
+  seriesShow?: boolean; // series是否显示
+  seriesYAxisIndex?: number; // series的y轴索引
 }
 
 /**
@@ -112,7 +128,7 @@ export class EchartsLinkageModel {
     const yAxisShowArray: Array<boolean> = [];
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
-      const show = item.seriesData.length > 0 ? true : false;
+      const show = item.seriesData.length > 0 && (item.yAxisShow === undefined || item.yAxisShow === true) ? true : false;
       yAxisShowArray.push(show);
       current.push({
         name: item.yAxisName || '',
@@ -176,10 +192,10 @@ export class EchartsLinkageModel {
         type: defaultParams.type,
         smooth: defaultParams.smooth,
         symbol: 'none',
-        yAxisIndex: yAxisIndex,
+        yAxisIndex: (param.seriesYAxisIndex || param.seriesYAxisIndex === 0) ? param.seriesYAxisIndex : yAxisIndex,
         lineStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
         itemStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
-        data: defaultParams.seriesData,
+        data: defaultParams.seriesShow === false ? [] : defaultParams.seriesData,
       } as echarts.SeriesOption);
       return option;
     }

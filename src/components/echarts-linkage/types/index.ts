@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-09 09:27:41
+ * @LastEditTime: 2024-09-16 17:18:38
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -25,10 +25,14 @@ export type OneDataType = {
   name: string;
   type: 'line' | 'bar';
   seriesData: Array<number[]>;
+  seriesDataCache?: Array<number[]>;
   xAxisName?: string;
   yAxisName?: string;
   markLineArray?: Array<number>;
   customData?: any;
+  yAxisShow?: boolean;
+  seriesShow?: boolean;
+  seriesYAxisIndex?: number;
 }
 
 export type seriesIdDataType = {
@@ -44,6 +48,7 @@ export type DataAboutType = {
   currentHandleChartId: string;
   restoreClickBool: Boolean;
   isAllUpdate: Boolean;
+  currentMaxShowYCount: number;
 }
 
 // 系列的标签信息

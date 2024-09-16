@@ -1,9 +1,10 @@
 <template>
   <div class='echarts-linkage-container'>
     <div class="main-container">
-      <div v-for="(item, index) in dataAbout.data" :key="item.id" class="echarts-container">
+      <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container">
         <div :id="item.id" class="h-100% w-100%"></div>
-        <Drag :data="dragDataComputed(index)" :group="item.id" />
+        <Drag :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id" :group="item.id"
+          @update="(data) => update(data, index)" @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
     </div>
   </div>
@@ -77,6 +78,7 @@ const dataAbout = reactive({
   currentHandleChartId: '', // 当前操作的echart图表id
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
+  currentMaxShowYCount: 0, // 当前显示的echarts中最大Y轴数量
 }) as DataAboutType;
 
 // 拖拽传入的数据
@@ -84,10 +86,77 @@ const dragDataComputed = (number: number) => {
   const res: string[] = [];
   const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
   originData.forEach((item: OneDataType) => {
-      res.push(item.name);
+    res.push(item.name);
   });
   return res;
 };
+
+// 拖拽更新数据
+const update = async (data: Array<any>, echartsIndex: number) => {
+  console.groupCollapsed('update');
+  console.log('data', data);
+  const max = Math.max(...data.map(item => item.value.length));
+  const yAxisShowData = packageYAxisShowData(data);
+  const seriesOpacityData = packageSeriesOpacityData(data);
+  const seriesyAxisIndexData = packageSeriesyAxisIndexData(data);
+  dataAbout.currentHandleChartId = dataAbout.data[echartsIndex].id;
+  dataAbout.data[echartsIndex].data.forEach((item: OneDataType, index: number) => {
+    item.yAxisShow = yAxisShowData[index];
+    item.seriesShow = seriesOpacityData[index];
+    item.seriesYAxisIndex = seriesyAxisIndexData[index];
+  });
+  console.log('dataAbout.data', dataAbout.data);
+  console.groupEnd();
+  initEcharts();
+  await nextTick();
+}
+
+// 删除数据项
+const deleteItem = (data: Array<any>, number: number, echartsIndex: number) => {
+  // echartsRef.value?.deleteYAxis(number);
+  // echartsRef.value?.deleteSeries(number);
+  // const option = echartsRef.value?.getOption();
+  // console.log('option', option);
+  // update(data);
+  console.log('deleteItem', data, number);
+}
+
+// 组装yAxisShowData --- 各个Y轴的显示状态
+const packageYAxisShowData = (data: Array<any>): boolean[] => {
+  const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
+  // dataAbout.yAxisShowData = yAxisShowData;
+  // console.log('legendShowData', dataAbout.yAxisShowData);
+  console.log('yAxisShowData', yAxisShowData);
+  return yAxisShowData;
+}
+
+// 组装seriesOpacityData --- 各个series的透明度
+const packageSeriesOpacityData = (data: Array<any>): boolean[] => {
+  const seriesOpacityData = new Array(data.length).fill(0);
+  data.forEach((item, index) => {
+    item.value.forEach((subItem: any, subIndex: number) => {
+      seriesOpacityData[+subItem.id - 1] = subItem.isShow;
+    });
+  });
+  // dataAbout.seriesOpacityData = seriesOpacityData;
+  // console.log('seriesOpacityData', dataAbout.seriesOpacityData);
+  console.log('seriesOpacityData', seriesOpacityData);
+  return seriesOpacityData;
+}
+
+// 组装seriesyAxisIndexData --- 各个series的yAxisIndex，用于关联Y轴
+const packageSeriesyAxisIndexData = (data: Array<any>): number[] => {
+  const seriesyAxisIndexData = new Array(data.length).fill(0);
+  data.forEach((item, index) => {
+    item.value.forEach((subItem: any, subIndex: number) => {
+      seriesyAxisIndexData[+subItem.id - 1] = index;
+    });
+  });
+  // dataAbout.seriesyAxisIndexData = seriesyAxisIndexData;
+  // console.log('seriesyAxisIndexData', dataAbout.seriesyAxisIndexData);
+  console.log('seriesyAxisIndexData', seriesyAxisIndexData);
+  return seriesyAxisIndexData;
+}
 
 /**
  * @description 获取 EchartsLinkageModel 类实例
@@ -173,7 +242,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
 };
 // 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
-  return { name, type, seriesData, customData, markLineArray };
+  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray };
 }
 
 /**
@@ -213,9 +282,9 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return;
   }
   if (dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
-    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, customData: oneDataType.customData };
+    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData };
   } else {
-    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, customData: oneDataType.customData });
+    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData });
   }
   await nextTick();
   initEcharts();
@@ -238,7 +307,7 @@ const computerMaxShowYCount = () => {
     const data = item.data;
     let showYCount = 0;
     data.forEach((item: OneDataType) => {
-      showYCount += item.seriesData.length > 0 ? 1 : 0;
+      showYCount += item.yAxisShow === false ? 0 : 1;
     });
     showYCountArray.push(showYCount);
   });
@@ -257,6 +326,17 @@ const judgeEchartInstance = (id: string) => {
   let needHandle = false;
   if (myChart) { // 实例存在
     needHandle = dataAbout.currentHandleChartId === id ? true : false; // 判断当前实例是否在操作
+
+    // 比较当前echarts是否小于所有echarts中y轴数量的最大值，如果小于则需要更新
+    const lastMaxShowYCount: number = dataAbout.currentMaxShowYCount; // 计算当前显示的echarts中y轴数量的最大值
+    const currentMaxShowYCount: number = computerMaxShowYCount(); // 计算当前实时数据中y轴数量的最大值，还未渲染
+    const currentData: seriesIdDataType = dataAbout.data.find((item: seriesIdDataType) => item.id === id) as seriesIdDataType;
+    const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + (cur.yAxisShow === false ? 0 : 1), 0);
+    console.log('maxShowYCount', lastMaxShowYCount);
+    console.log('currentShowYCount', currentShowYCount);
+    // 当前还未渲染
+    currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
+    currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新
   } else { // 实例不存在
     needHandle = true;
     myChart = echarts.init(element, props.theme);
@@ -271,6 +351,7 @@ const judgeEchartInstance = (id: string) => {
   dataAbout.restoreClickBool && (needHandle = true);
   // 监听是否全部更新操作 --- 原因：解决点击restore按钮后，只有最后一次操作的图表数据更新，其他图表实例没有变化被过滤掉导致数据不更新的问题
   dataAbout.isAllUpdate && (needHandle = true);
+  console.log('needHandle', needHandle);
   return { myChart, needHandle };
 }
 
@@ -323,8 +404,12 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
       type: item.type,
       name: item.name,
       seriesData: item.seriesData,
+      seriesDataCache: item.seriesData,
       xAxisName: item.xAxisName,
       yAxisName: item.yAxisName,
+      yAxisShow: item.yAxisShow,
+      seriesShow: item.seriesShow,
+      seriesYAxisIndex: item.seriesYAxisIndex,
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesData);
@@ -362,6 +447,7 @@ const initEcharts = () => {
     initOneEcharts(item, groupName);
   });
   dataAbout.restoreClickBool = false;
+  dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
   props.isLinkage && echarts.connect(groupName); // 联动
 }
 

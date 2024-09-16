@@ -1,6 +1,6 @@
 <template>
   <div class="drag-container">
-    <div class="main">
+    <div class="main" :class="id">
       <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
         class="flex flex-col gap-1  bg-gray-500/5 rounded drag-column"
         :data-info="data.value.length > 0 ? data.value[0].name : ''"
@@ -42,6 +42,10 @@ const props = defineProps({
   data: {
     type: Array<string>,
     default: () => [],
+  },
+  id: {
+    type: String,
+    default: '',
   },
   colors: {
     type: Array<string>,
@@ -362,39 +366,56 @@ const debouncedFn = useDebounceFn((e: any) => {
   // console.log('dropEffect', e.dataTransfer.dropEffect);
 }, 100);
 
-// 初始化事件监听
-const initEventListeners = () => {
-  const main = document.querySelector(".main") as HTMLDivElement;
-
-  // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
-  const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) => {
-    const dataOrigin = data;
-    outer: for (let i = 0; i < dataOrigin.length; i++) {
-      const itemArray = dataOrigin[i].value;
-      for (let j = 0; j < itemArray.length; j++) {
-        if (itemArray[j].name === selectedItem) {
-          if (j === 0) { // 点击的元素是当前列中第一个，隐藏当前列
-            const isShow = !dataOrigin[i].value[j].isShow;
-            dataOrigin[i].value.forEach(item => item.isShow = isShow);
-          } else { // 点击的元素不是当前列中第一个，只隐藏当前元素
-            itemArray[j].isShow = !itemArray[j].isShow;
-          }
-          break outer;
+// 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
+const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) => {
+  const dataOrigin = data;
+  outer: for (let i = 0; i < dataOrigin.length; i++) {
+    const itemArray = dataOrigin[i].value;
+    for (let j = 0; j < itemArray.length; j++) {
+      if (itemArray[j].name === selectedItem) {
+        if (j === 0) { // 点击的元素是当前列中第一个，隐藏当前列
+          const isShow = !dataOrigin[i].value[j].isShow;
+          dataOrigin[i].value.forEach(item => item.isShow = isShow);
+        } else { // 点击的元素不是当前列中第一个，只隐藏当前元素
+          itemArray[j].isShow = !itemArray[j].isShow;
         }
+        break outer;
       }
     }
-    return JSON.parse(JSON.stringify(dataOrigin));
   }
+  return JSON.parse(JSON.stringify(dataOrigin));
+}
 
-  // 监听鼠标点击事件--点击切换显示隐藏legend效果，通过改变series系列的show属性实现
-  main.addEventListener('click', (e: any) => {
+const handleItemClickFun = (e: any) => {
+    console.log('click', e);
+    console.log('click', e.target);
     if (!e.target.classList.contains('cursor-move') && !e.target.classList.contains('cursor-move-item')) return;
     console.log('click点击了子级元素:', e.target.textContent);
     const text = e.target.textContent;
     const handleData = handleItemClick(dataAbout.list, text);
     emit('update', handleData);
-  });
 }
+
+// 初始化事件监听
+const initEventListeners = () => {
+  // 1.监听拖动事件
+  const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
+  container.addEventListener('drag', debouncedFn);
+  // 2.监听鼠标点击事件--点击切换显示隐藏legend效果，通过改变series系列的show属性实现
+  const main = document.querySelector(`.${props.id}.main`) as HTMLDivElement;
+  main.addEventListener('click', handleItemClickFun);
+}
+
+// 移除事件监听
+const removeEventListener = () => {
+  // 1.移除拖动事件监听
+  const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
+  container.removeEventListener('drag', debouncedFn);
+  // 2.移除鼠标点击事件--点击切换显示隐藏legend效果
+  const main = document.querySelector(`.${props.id}.main`) as HTMLDivElement;
+  main.removeEventListener('click', handleItemClickFun);
+}
+
 
 // 获取所有数据 --- 导出方法
 const getAllData = (): Array<DragListDataType> => {
@@ -423,17 +444,12 @@ watch(() => props.data, (newVal, oldVal) => { // TAG: 这里有问题，第二�
 }, { deep: true, immediate: true });
 
 onMounted(() => {
-  // 监听拖动事件
-  const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
-  container.addEventListener('drag', debouncedFn);
-
   initEventListeners();
 });
 
 //销毁
 onBeforeUnmount(() => {
-  // 移除拖动事件监听
-  window.removeEventListener('drag', debouncedFn);
+  removeEventListener();
 });
 </script>
 
