@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-16 15:09:48
+ * @LastEditTime: 2024-09-16 23:55:09
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -53,6 +53,7 @@ export type EchartsLinkageModelType = {
   seriesOptionArray: Array<SeriesOptionType>,
   segment?: number,
   echartsColors?: Array<string>,
+  useMergedLegend?: boolean,
 }
 
 // 联动图表模型 ----------- 实体类
@@ -64,6 +65,7 @@ export class EchartsLinkageModel {
   private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
   private gridTopInit = 40; // 上方边距
   private echartsColors = ECHARTS_COLORS; // 颜色数组
+  private legendShow = true; // 是否显示图例
   private xAxisData: Array<number> = []; // x轴数据
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
   private optionTemplate: EChartsOption = optionTemplate; // 折线图表模板
@@ -75,15 +77,22 @@ export class EchartsLinkageModel {
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
+    this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
     this.init();
     console.groupEnd();
   }
 
   // 初始化
   init = () => {
+    this.setLenged();
     this.setYAxis();
     this.initOptionTemplate();
     this.setResultOption();
+  }
+
+  // 设置图例
+  setLenged = () => {
+    (this.optionTemplate.legend as ToolboxComponentOption).show = this.legendShow;
   }
 
   // 设置x轴刻度标签显示间隔
@@ -122,7 +131,7 @@ export class EchartsLinkageModel {
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = { show: true, interval: this.xAxisInterval });
   }
 
-  // 设置y轴 //todo: 这里可以考虑优化，后期使用自定义legend来显示隐藏Y轴
+  // 设置y轴 //todo: 这里可以考虑优化
   setYAxis = () => {
     const current: Array<any> = [];
     const yAxisShowArray: Array<boolean> = [];

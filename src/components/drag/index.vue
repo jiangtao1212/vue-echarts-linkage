@@ -2,21 +2,24 @@
   <div class="drag-container">
     <div class="main" :class="id">
       <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
-        class="flex flex-col gap-1  bg-gray-500/5 rounded drag-column"
+        class="flex flex-col items-start gap-1 drag-column"
         :data-info="data.value.length > 0 ? data.value[0].name : ''"
         :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
         v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost" :group="group"
         @update="onUpdate" @add="onAdd" @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move"
         @change="change">
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
-          class="cursor-move h-5 line-height-5 bg-gray-500/5 rounded pl-5px pr-5px text-2.7 flex justify-center items-center"
+          class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
           :class="item.isShow ? '' : 'vague'" @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
           <el-popover placement="right" :width="80"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
             <template #reference>
-              <span class="cursor-move-item" :style="{ 'color': colors[(+item.id - 1) % colors.length] }">
-                {{ item.name }}</span>
+              <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
+                :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
+                <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
+                <span class="cursor-move-item">{{ item.name }}</span>
+              </div>
             </template>
             <div class="flex flex-col justify-center items-center gap-1 ">
               <el-button type="primary" size="small" @click="clickObjFun.deleteItemDefault(item.id)">移除</el-button>
@@ -54,7 +57,11 @@ const props = defineProps({
   group: {
     type: String,
     default: 'people',
-  }
+  },
+  theme: {
+    type: String,
+    default: 'light',
+  },
 });
 
 // 响应式数据
@@ -387,13 +394,13 @@ const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) =>
 }
 
 const handleItemClickFun = (e: any) => {
-    console.log('click', e);
-    console.log('click', e.target);
-    if (!e.target.classList.contains('cursor-move') && !e.target.classList.contains('cursor-move-item')) return;
-    console.log('click点击了子级元素:', e.target.textContent);
-    const text = e.target.textContent;
-    const handleData = handleItemClick(dataAbout.list, text);
-    emit('update', handleData);
+  console.log('click', e);
+  console.log('click', e.target);
+  if (!e.target.classList.contains('cursor-move') && !e.target.classList.contains('cursor-move-item')) return;
+  console.log('click点击了子级元素:', e.target.textContent);
+  const text = e.target.textContent;
+  const handleData = handleItemClick(dataAbout.list, text);
+  emit('update', handleData);
 }
 
 // 初始化事件监听
@@ -402,7 +409,8 @@ const initEventListeners = () => {
   const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
   container.addEventListener('drag', debouncedFn);
   // 2.监听鼠标点击事件--点击切换显示隐藏legend效果，通过改变series系列的show属性实现
-  const main = document.querySelector(`.${props.id}.main`) as HTMLDivElement;
+  const selectors = props.id ? `.${props.id}.main` : '.main';
+  const main = document.querySelector(selectors) as HTMLDivElement;
   main.addEventListener('click', handleItemClickFun);
 }
 
@@ -412,7 +420,8 @@ const removeEventListener = () => {
   const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
   container.removeEventListener('drag', debouncedFn);
   // 2.移除鼠标点击事件--点击切换显示隐藏legend效果
-  const main = document.querySelector(`.${props.id}.main`) as HTMLDivElement;
+  const selectors = props.id ? `.${props.id}.main` : '.main';
+  const main = document.querySelector(selectors) as HTMLDivElement;
   main.removeEventListener('click', handleItemClickFun);
 }
 
@@ -472,6 +481,7 @@ onBeforeUnmount(() => {
     display: block;
     width: 100%;
     height: 100%;
+    // padding-left: 0 17px;
     margin-top: -20px;
     opacity: 0;
     z-index: 1;
@@ -486,6 +496,40 @@ onBeforeUnmount(() => {
 
     &.vague {
       opacity: 0.5;
+    }
+
+    .line {
+      background-color: var(--color);
+      position: relative;
+    }
+
+    .line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50%;
+      height: calc(var(--height) / 2);
+      border-radius: 50%;
+      border: 2px solid var(--color);
+      background-color: #FFFFFF;
+    }
+
+    .dark .line::after {
+      background-color: var(--color);
+    }
+
+    .cursor-move-item {
+      color: #333;
+      font-size: 12px;
+      font-weight: 450;
+      font-family: Arial, sans-serif;
+      background-color: transparent;
+    }
+
+    .dark .cursor-move-item {
+      color: #EDF0F9;
     }
   }
 }

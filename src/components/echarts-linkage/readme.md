@@ -103,6 +103,7 @@ const dropEchart = (data: dropEchartType) => {
 | theme | `light / dark` | 主题，light为浅色，dark为深色 | light |
 | background | `string` | 背景色，一般配合主题使用 | — |
 | is-linkage | `boolean` | 是否联动 | true，即联动 |
+| use-merged-legend | `boolean` | 是否使用合并图例 | true，即使用合并图例 |
 
 ## 4. 组件事件
 | 事件名 | 说明 | 参数 |

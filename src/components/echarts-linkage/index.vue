@@ -3,7 +3,7 @@
     <div class="main-container">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container">
         <div :id="item.id" class="h-100% w-100%"></div>
-        <Drag :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id" :group="item.id"
+        <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id" :group="item.id"
           @update="(data) => update(data, index)" @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
     </div>
@@ -45,6 +45,7 @@ export type PropsType = {
   theme?: 'light' | 'dark', // 主题
   background?: string, // 背景色
   isLinkage?: boolean, // 是否联动
+  useMergedLegend?: boolean, // 是否使用合并图例
 }
 
 // 定义 props
@@ -55,6 +56,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   gridAlign: false,
   theme: 'light',
   isLinkage: true, // 默认联动
+  useMergedLegend: true, // 默认使用合并图例
 });
 
 // 自定义验证函数
@@ -170,6 +172,7 @@ const getEchartsLikageModel = (data: SeriesOptionType[]) => {
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     minMarkLine: 1,
     maxMarkLine: 5,
+    useMergedLegend: props.useMergedLegend,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
 }
@@ -631,10 +634,8 @@ onBeforeUnmount(() => {
       .drag-container {
         position: absolute;
         top: 5px;
-        right: 15%;
+        right: 150px;
         padding: 2px;
-        .border-radius(5px, #6b72800d);
-        box-shadow: 3px 3px 5px #e8e8e8, -3px 3px 5px #e8e8e8;
         z-index: 20;
       }
     }
