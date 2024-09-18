@@ -2,8 +2,7 @@
   <div class="drag-container">
     <div class="main" :class="id">
       <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
-        class="flex flex-col items-start gap-1 drag-column"
-        :data-info="data.value.length > 0 ? data.value[0].name : ''"
+        class="flex flex-col items-start gap-1 drag-column" :data-info="data.value.length > 0 ? data.value[0].name : ''"
         :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
         v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost" :group="group"
         @update="onUpdate" @add="onAdd" @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move"
@@ -11,7 +10,7 @@
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
           class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
           :class="item.isShow ? '' : 'vague'" @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
-          <el-popover placement="right" :width="80"
+          <el-popover fixed="right" placement="right" :width="80" v-if="!dataAbout.isDeleteItemHandle"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
             <template #reference>
@@ -21,7 +20,7 @@
                 <span class="cursor-move-item">{{ item.name }}</span>
               </div>
             </template>
-            <div class="flex flex-col justify-center items-center gap-1 ">
+            <div class="flex flex-col justify-center items-center gap-1">
               <el-button type="primary" size="small" @click="clickObjFun.deleteItemDefault(item.id)">移除</el-button>
               <el-button type="primary" size="small" class="!ml-0"
                 @click="clickObjFun.resetItemDefault(item.name)">重置</el-button>
@@ -34,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect } from 'vue';
+import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick } from 'vue';
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType } from "./type/index";
@@ -68,6 +67,7 @@ const props = defineProps({
 const dataAbout = reactive({
   list: [] as Array<DragListDataType>,
   visible: "", // 右键菜单显示项
+  isDeleteItemHandle: false, // 是否为删除子项操作
 });
 
 // 数据，非响应式
@@ -109,7 +109,7 @@ clickObjFun.resetItemDefault = function (selectedItem: string) {
 }
 
 // 移除当前子项
-clickObjFun.deleteItemDefault = function (itemId: string) {
+clickObjFun.deleteItemDefault = async function (itemId: string) {
   console.group('移除当前子项');
   console.log('itemId', itemId);
   console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
@@ -142,9 +142,13 @@ clickObjFun.deleteItemDefault = function (itemId: string) {
   console.groupEnd();
   dataAbout.list = JSON.parse(JSON.stringify(resetData));
   // 4.右键菜单关闭
-  dataAbout.visible = ""; // 右键菜单关闭
+  dataAbout.visible = "";
   // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的子项索引(从0开始)
   emit('deleteItem', resetData, +itemId - 1);
+  // 6.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
+  dataAbout.isDeleteItemHandle = true;
+  await nextTick();
+  dataAbout.isDeleteItemHandle = false;
 }
 
 function change(e: any) {
