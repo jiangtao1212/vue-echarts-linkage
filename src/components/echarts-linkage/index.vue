@@ -3,8 +3,9 @@
     <div class="main-container">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container">
         <div :id="item.id" class="h-100% w-100%"></div>
-        <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id" :group="item.id"
-          @update="(data) => update(data, index)" @delete-item="(data, number) => deleteItem(data, number, index)" />
+        <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id"
+          :group="item.id" @update="(data) => update(data, index)"
+          @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
     </div>
   </div>
@@ -110,17 +111,18 @@ const update = async (data: Array<any>, echartsIndex: number) => {
   console.log('dataAbout.data', dataAbout.data);
   console.groupEnd();
   initEcharts();
-  await nextTick();
 }
 
 // 删除数据项
-const deleteItem = (data: Array<any>, number: number, echartsIndex: number) => {
-  // echartsRef.value?.deleteYAxis(number);
-  // echartsRef.value?.deleteSeries(number);
-  // const option = echartsRef.value?.getOption();
-  // console.log('option', option);
-  // update(data);
-  console.log('deleteItem', data, number);
+const deleteItem = async (data: Array<any>, number: number, echartsIndex: number) => {
+  console.groupCollapsed('deleteItem', data, number, echartsIndex);
+  dataAbout.data[echartsIndex].data.splice(number, 1);
+  dataAbout.data[echartsIndex].isDeleteItem = true;
+  update(data, echartsIndex);
+  await nextTick();
+  dataAbout.data[echartsIndex].isDeleteItem = false;
+  console.groupEnd();
+
 }
 
 // 组装yAxisShowData --- 各个Y轴的显示状态
@@ -284,7 +286,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
-  if (dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
+  if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
     dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData };
   } else {
     dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData });
@@ -328,8 +330,6 @@ const judgeEchartInstance = (id: string) => {
   let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
   let needHandle = false;
   if (myChart) { // 实例存在
-    needHandle = dataAbout.currentHandleChartId === id ? true : false; // 判断当前实例是否在操作
-
     // 比较当前echarts是否小于所有echarts中y轴数量的最大值，如果小于则需要更新
     const lastMaxShowYCount: number = dataAbout.currentMaxShowYCount; // 计算当前显示的echarts中y轴数量的最大值
     const currentMaxShowYCount: number = computerMaxShowYCount(); // 计算当前实时数据中y轴数量的最大值，还未渲染
@@ -337,9 +337,17 @@ const judgeEchartInstance = (id: string) => {
     const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + (cur.yAxisShow === false ? 0 : 1), 0);
     console.log('maxShowYCount', lastMaxShowYCount);
     console.log('currentShowYCount', currentShowYCount);
-    // 当前还未渲染
-    currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
-    currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新
+    // 实例存在且是删除操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
+    if (currentData.isDeleteItem) {
+      myChart.clear();
+      currentData.data.length > 0 && (needHandle = true); // 非空数据，需要渲染
+    } else { // 实例存在且不是删除操作，判断是否需要更新
+      dataAbout.currentHandleChartId === id && (needHandle = true); // 判断当前实例是否在操作
+      // 当前还未渲染
+      currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
+      currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
+      currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
+    }
   } else { // 实例不存在
     needHandle = true;
     myChart = echarts.init(element, props.theme);

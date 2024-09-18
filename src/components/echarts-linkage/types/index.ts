@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-16 17:18:38
+ * @LastEditTime: 2024-09-18 09:32:21
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -39,6 +39,7 @@ export type seriesIdDataType = {
   id: string;
   data: Array<OneDataType>;
   markLineArray?: Array<number>;
+  isDeleteItem?: boolean, // 是否删除数据项状态
 }
 
 export type DataAboutType = {
@@ -46,8 +47,8 @@ export type DataAboutType = {
   maxEchartsIdSeq: number;
   data: Array<seriesIdDataType>;
   currentHandleChartId: string;
-  restoreClickBool: Boolean;
-  isAllUpdate: Boolean;
+  restoreClickBool: boolean;
+  isAllUpdate: boolean;
   currentMaxShowYCount: number;
 }
 
