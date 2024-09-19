@@ -23,7 +23,7 @@
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, seriesTagType, dropEchartType } from '@/components/echarts-linkage/types/index';
+import type { OneDataType, SeriesTagType, DropEchartType } from '@/components/echarts-linkage/types/index';
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
@@ -64,10 +64,10 @@ const addLotEmptyLinkageBtnClick = () => {
 
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
-  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach((item: seriesTagType, index: number) => {
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
     if (index >= 18) {
       item.seriesData = [];
     } else {
@@ -134,7 +134,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
 }
 
 // 拖拽回调事件
-const dropEchart = (data: dropEchartType) => {
+const dropEchart = (data: DropEchartType) => {
   addLinkageSeriesCommon(seriesType, data.id);
 }
 

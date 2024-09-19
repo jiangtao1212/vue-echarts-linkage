@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
-import { VueEchartsLinkage, type OneDataType, type seriesTagType, type dropEchartType  } from 'vue-echarts-linkage';
+import { VueEchartsLinkage, type OneDataType, type SeriesTagType, type DropEchartType  } from 'vue-echarts-linkage';
 import "vue-echarts-linkage/dist/style.css";
 
 const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
@@ -42,7 +42,7 @@ const addLotEmptyLinkageBtnClick = () => {
 
 // 批量更新按钮
 const updateAllLinkageBtnClick = () => {
-  const allDistinctSeriesTagInfo: seriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as seriesTagType[];
+  const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   const res: { [key: string]: Array<number[]> } = {};
   allDistinctSeriesTagInfo.forEach(item => {
     item.seriesData = RandomUtil.getSeriesData(1000);
@@ -73,7 +73,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
 }
 
 // 拖拽回调事件
-const dropEchart = (data: dropEchartType) => {
+const dropEchart = (data: DropEchartType) => {
   addLinkageSeriesCommon(seriesType, data.id);
 }
 

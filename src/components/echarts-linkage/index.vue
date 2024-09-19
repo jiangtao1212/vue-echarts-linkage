@@ -3,7 +3,7 @@
     <div class="main-container">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container">
         <div :id="item.id" class="h-100% w-100%"></div>
-        <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors || undefined" :id="item.id"
+        <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
           :group="item.id" @update="(data) => update(data, index)"
           @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
@@ -19,8 +19,9 @@ import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import type { ExposedMethods, OneDataType, seriesIdDataType, DataAboutType, seriesTagType, dropEchartType } from './types/index';
+import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType } from './types/index';
 import Drag from "@/components/drag/index.vue";
+import { type DragItemDataProps } from "@/components/drag/type/index";
 
 /**
  * @description 组件props类型
@@ -77,7 +78,7 @@ const emit = defineEmits(['drop-echart']);
 const dataAbout = reactive({
   groupName: 'group1', // 组名
   maxEchartsIdSeq: 0, // 最大序号
-  data: [] as Array<seriesIdDataType>, // 所有echarts数据
+  data: [] as Array<SeriesIdDataType>, // 所有echarts数据
   currentHandleChartId: '', // 当前操作的echart图表id
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
@@ -86,10 +87,11 @@ const dataAbout = reactive({
 
 // 拖拽传入的数据
 const dragDataComputed = (number: number) => {
-  const res: string[] = [];
+  const res: Array<DragItemDataProps> = [];
   const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
   originData.forEach((item: OneDataType) => {
-    res.push(item.name);
+    // switch开关类型不可以拖拽
+    res.push({ name: item.name, isDrag: item.dataType === 'switch'? false : true });
   });
   return res;
 };
@@ -209,20 +211,17 @@ const setStyleProperty = () => {
  * @description 新增echart, id最大序号自增操作 --- 导出
  */
 const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
-  const echartsMaxCount = props.echartsMaxCount;
-  if (dataAbout.data.length >= echartsMaxCount) {
-    ElMessage.warning(`最多只能添加${echartsMaxCount}个echarts！`);
-    return;
-  }
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
   let markLineArray: number[] = []; // 标线数组
   let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
+    // 1.空数据，默认新增一个line
     oneDataType = setOneData('', 'line', [], '', []) as OneDataType;
     markLineArray = [];
     dataAll = [{ ...oneDataType }];
   } else if (Array.isArray(oneDataType)) {
+    // 2.新增多个echarts，数组
     const data: OneDataType[] = [];
     oneDataType.forEach((item: OneDataType) => {
       data.push({ ...item });
@@ -230,17 +229,15 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
     dataAll = data;
   } else {
+    // 3.新增单个echarts，如果没有seriesData，则默认新增一个line
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
     markLineArray = oneDataType.markLineArray || [],
       dataAll = [{ ...oneDataType }];
   }
-  dataAbout.data.push({
-    id,
-    markLineArray,
-    data: dataAll,
-  });
+  dataAbout.data.push({ id, markLineArray, data: dataAll });
+  judgeOverEchartsMaxCountHandle();
   setStyleProperty();
   await nextTick();
   initEcharts();
@@ -251,11 +248,23 @@ const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], 
 }
 
 /**
+ * @description 判断是否超出最大图表数量限制，超出则提示并删除最大数量之外的图表
+ */
+const judgeOverEchartsMaxCountHandle = () => {
+  // 判断是否超出最大图表数量限制
+  // 1.未超出，则返回
+  if (dataAbout.data.length <= props.echartsMaxCount) return;
+  // 2.超出，则提示并删除最大数量之外的图表
+  ElMessage.warning(`最多只能添加${props.echartsMaxCount}个echarts，超出限定数量的不进行加载！`);
+  dataAbout.data.splice(props.echartsMaxCount);
+}
+
+/**
  * @description 根据索引删除echarts
  * @param index 索引
  */
 const deleteEchart = async (id: string) => {
-  const index = dataAbout.data.findIndex((item: seriesIdDataType) => item.id === id);
+  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   dataAbout.data.splice(index, 1);
   setStyleProperty();
   await nextTick();
@@ -270,7 +279,7 @@ const deleteEchart = async (id: string) => {
 const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 
   // 判断series是否已存在，存在则不新增
-  const judgeSeriesExist = (echart: seriesIdDataType, oneData: OneDataType) => {
+  const judgeSeriesExist = (echart: SeriesIdDataType, oneData: OneDataType) => {
     let isExist = false;
     isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
     return isExist;
@@ -281,7 +290,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return;
   }
   dataAbout.currentHandleChartId = id;
-  const index = dataAbout.data.findIndex((item: seriesIdDataType) => item.id === id);
+  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
@@ -299,7 +308,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 // 监听，赋值最大的id序号
 const getMaxId = () => {
   let max = 0;
-  dataAbout.data.forEach((item: seriesIdDataType) => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
     const id = parseInt(item.id.substring(6));
     max = id > max ? id : max;
   });
@@ -309,7 +318,7 @@ const getMaxId = () => {
 // 计算当前显示的echarts中y轴数量的最大值
 const computerMaxShowYCount = () => {
   const showYCountArray: Array<number> = [];
-  dataAbout.data.forEach((item: seriesIdDataType) => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
     const data = item.data;
     let showYCount = 0;
     data.forEach((item: OneDataType) => {
@@ -338,7 +347,7 @@ const judgeEchartInstance = (id: string) => {
     // 比较当前echarts是否小于所有echarts中y轴数量的最大值，如果小于则需要更新
     const lastMaxShowYCount: number = dataAbout.currentMaxShowYCount; // 计算当前显示的echarts中y轴数量的最大值
     const currentMaxShowYCount: number = computerMaxShowYCount(); // 计算当前实时数据中y轴数量的最大值，还未渲染
-    const currentData: seriesIdDataType = dataAbout.data.find((item: seriesIdDataType) => item.id === id) as seriesIdDataType;
+    const currentData: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
     const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + judgeShowYAxisCommon(cur), 0);
     console.log('maxShowYCount', lastMaxShowYCount);
     console.log('currentShowYCount', currentShowYCount);
@@ -360,8 +369,6 @@ const judgeEchartInstance = (id: string) => {
     myChart.on('restore', () => {
       Promise.resolve().then(() => debouncedFn());
     });
-    // 监听legend图例点击事件
-    addChartLegendSelectChangedEvent(myChart);
   }
   // 监听 restore 按钮是否触发点击 ---> 原因：解决点击restore按钮后，只有最后一个图表显示，其他图表不显示的问题
   dataAbout.restoreClickBool && (needHandle = true);
@@ -370,30 +377,6 @@ const judgeEchartInstance = (id: string) => {
   console.log('needHandle', needHandle);
   return { myChart, needHandle };
 }
-
-// 新增echarts的图例点击监听事件 //todo: 待完善
-const addChartLegendSelectChangedEvent = (myChart: EChartsType) => {
-  myChart.on('legendselectchanged', function (params: any) {
-    const name = params.name; // 图例名称
-    const selected = params.selected;
-    const names = Object.keys(selected);
-    if (names.length > 0 && names.includes(name)) {
-      console.log(myChart);
-      const id = myChart.id;
-      // const connectedCharts = echarts.getMap().get(groupName);
-      console.log(params);
-      console.log(dataAbout.data);
-      dataAbout.data.forEach((echart: seriesIdDataType, index: number) => {
-        const isEqual = echart.data.map((series: OneDataType) => series.name).every((item: string, index: number) => item === names[index]);
-        // if (isEqual) {
-        //   const 
-
-        // }
-      });
-    }
-  });
-}
-
 
 // 监听 restore 事件，使用防抖函数
 const debouncedFn = useDebounceFn(() => {
@@ -408,7 +391,7 @@ const debouncedFn = useDebounceFn(() => {
  * @param groupName 组名
  * @returns EChartsType
  */
-const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
+const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   const { myChart, needHandle } = judgeEchartInstance(dataArray.id);
   if (!needHandle) { // 不需要操作
     myChart.resize();
@@ -460,7 +443,7 @@ const initEcharts = () => {
   // 基于准备好的dom，初始化echarts图表
   const groupName: string = dataAbout.groupName;
   echarts.dispose(groupName);
-  dataAbout.data.forEach((item: seriesIdDataType, index: number) => {
+  dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
   dataAbout.restoreClickBool = false;
@@ -478,7 +461,7 @@ const dropEchart = (e: any) => {
   if (e.target.localName !== 'canvas') return; // 防止拖拽组件在操作时触发echarts的drop事件
   e.preventDefault();
   const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
-  emit('drop-echart', { id } as dropEchartType);
+  emit('drop-echart', { id } as DropEchartType);
 }
 
 // 监听拖拽事件
@@ -501,9 +484,9 @@ const getDataLength = (): number => {
 }
 
 // 获取所有不重复系列的标签信息 --- 导出
-const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
-  const res: Array<seriesTagType> = [];
-  dataAbout.data.forEach((echart: seriesIdDataType) => {
+const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
+  const res: Array<SeriesTagType> = [];
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
     echart.data.forEach((series: OneDataType) => {
       const isExist = res.some(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData));
       series.name && !isExist && res.push({
@@ -517,10 +500,10 @@ const getAllDistinctSeriesTagInfo = (): Array<seriesTagType> => {
 }
 
 // 获取所有echarts实例各个系列的标签信息 --- 导出
-const getAllSeriesTagInfo = (): Array<{ id: string, series: Array<seriesTagType> }> => {
-  const res: Array<{ id: string, series: Array<seriesTagType> }> = [];
-  dataAbout.data.forEach((echart: seriesIdDataType) => {
-    const oneEchartInfo: { id: string, series: Array<seriesTagType> } = { id: echart.id, series: [] };
+const getAllSeriesTagInfo = (): Array<{ id: string, series: Array<SeriesTagType> }> => {
+  const res: Array<{ id: string, series: Array<SeriesTagType> }> = [];
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
+    const oneEchartInfo: { id: string, series: Array<SeriesTagType> } = { id: echart.id, series: [] };
     echart.data.forEach((series: OneDataType) => {
       oneEchartInfo.series.push({
         name: series.name,
@@ -558,14 +541,14 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   });
 }
 
-//todo: 待完善，更新单个echarts
+//TODO: 待完善，更新单个echarts
 const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) => {
 
 }
 
 // 传入所有显示子项数据，更新所有echarts
-const updateAllEcharts = async (newAllSeriesdata: Array<seriesTagType>) => {
-  dataAbout.data.forEach((echart: seriesIdDataType) => {
+const updateAllEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
     echart.data.forEach((series: OneDataType, index: number) => {
       const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
       newSeriesData && (series.seriesData = newSeriesData);

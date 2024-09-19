@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-15 14:40:38
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-11 10:56:43
+ * @LastEditTime: 2024-09-19 15:06:15
  * @FilePath: \vue-echarts-linkage\src\models\echartsLikage.ts
  * @Description: 基于 echarts 实现的联动组件，可以实现多个图表之间的联动
  */
@@ -195,7 +195,7 @@ export class EchartsLinkageModel {
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = { show: true, interval: this.xAxisInterval });
   }
 
-  // 设置y轴 //todo: 这里可以考虑优化，后期使用自定义legend来显示隐藏Y轴
+  // 设置y轴
   setYAxis = () => {
     const current: Array<any> = [];
     const yAxisShowArray: Array<boolean> = [];
@@ -208,7 +208,7 @@ export class EchartsLinkageModel {
         type: 'value',
         show, // 注：只有当数据不为空时才显示Y轴
         position: 'left',
-        offset: offset,  // todo: 这里需要优化，最好是没数据的隐藏Y轴，并且offset
+        offset: offset,
         alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
         nameTextStyle: { align: 'center', padding: 0 },

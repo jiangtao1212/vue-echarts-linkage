@@ -4,12 +4,13 @@
       <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
         class="flex flex-col items-start gap-1 drag-column" :data-info="data.value.length > 0 ? data.value[0].name : ''"
         :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
-        v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost" :group="group"
-        @update="onUpdate" @add="onAdd" @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move"
-        @change="change">
+        v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost"
+        :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
+        @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
           class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
-          :class="item.isShow ? '' : 'vague'" @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
+          :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
+          @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
           <el-popover fixed="right" placement="right" :width="80" v-if="!dataAbout.isDeleteItemHandle"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
@@ -36,31 +37,24 @@
 import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick } from 'vue';
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
-import { type DragExposedMethods, type DragItemType, type DragListDataType } from "./type/index";
+import { type DragExposedMethods, type DragItemType, type DragListDataType, type DragItemDataProps } from "./type/index";
 
 const emit = defineEmits(['update', 'deleteItem']);
 
-const props = defineProps({
-  data: {
-    type: Array<string>,
-    default: () => [],
-  },
-  id: {
-    type: String,
-    default: '',
-  },
-  colors: {
-    type: Array<string>,
-    default: ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'],
-  },
-  group: {
-    type: String,
-    default: 'people',
-  },
-  theme: {
-    type: String,
-    default: 'light',
-  },
+export type PropsType = {
+  data: Array<DragItemDataProps>,
+  id: string,
+  colors?: Array<string>,
+  group: string,
+  theme?: 'light' | 'dark',
+}
+
+const props = withDefaults(defineProps<PropsType>(), {
+  data: () => [],
+  id: '',
+  colors: () => ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'],
+  group: 'people',
+  theme: 'light',
 });
 
 // 响应式数据
@@ -150,6 +144,11 @@ clickObjFun.deleteItemDefault = async function (itemId: string) {
   await nextTick();
   dataAbout.isDeleteItemHandle = false;
 }
+
+// groupComputed方法，用于组装group和判断是否为可拖动列表
+const groupComputed = (data: DragListDataType) => {
+  return data.value.length > 0 && data.value[0].isDrag ? props.group : props.group + '-no-drag';
+};
 
 function change(e: any) {
   // console.log('change', e);
@@ -396,7 +395,7 @@ const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) =>
   }
   return JSON.parse(JSON.stringify(dataOrigin));
 }
-
+// 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
 const handleItemClickFun = (e: any) => {
   console.log('click', e);
   console.log('click', e.target);
@@ -429,6 +428,11 @@ const removeEventListener = () => {
   main.removeEventListener('click', handleItemClickFun);
 }
 
+// 组装子项数据
+const packageItem = (name: string, id: string, isShow: boolean = true, isDrag: boolean = true): DragItemType => {
+  return { name, id, isShow, isDrag }
+}
+
 
 // 获取所有数据 --- 导出方法
 const getAllData = (): Array<DragListDataType> => {
@@ -441,17 +445,17 @@ const exposedMethods: DragExposedMethods = {
 };
 defineExpose(exposedMethods);
 
-watch(() => props.data, (newVal, oldVal) => { // TAG: 这里有问题，第二次触发，打印的newVal和oldVal都是同一个数组，原因是父级对数组进行了push操作，并没有改变数组的地址，所以这里虽然会触发watch，但newVal和oldVal都是同一个数组。
+watch(() => props.data, (newVal, oldVal) => { // TAG: 这里需要注意，第二次触发，打印的newVal和oldVal都是同一个数组，原因是父级对数组进行了push操作，并没有改变数组的地址，所以这里虽然会触发watch，但newVal和oldVal都是同一个数组。
   // 解决方法：在父级使用JSON.stringify()对数组进行赋值，这里数组地址就改变了，newVal和oldVal就不会是同一个数组了。
   // console.log('watch', newVal, oldVal);
   if ((!oldVal || oldVal?.length === 0) && newVal.length > 0) { // 初始化数据
     dataAbout.list = newVal.map((item, index) => {
-      return { key: (index + 1).toString(), value: [{ name: item, id: (index + 1).toString(), isShow: true }] };
+      return { key: (index + 1).toString(), value: [packageItem(item.name, (index + 1).toString(), true, item.isDrag)] };
     });
   }
   if (dataAbout.list.length > 0 && newVal.length === dataAbout.list.length + 1) { // 新增数据，默认加在最后
     const index = newVal.length;
-    dataAbout.list.push({ key: index.toString(), value: [{ name: newVal[index - 1], id: index.toString(), isShow: true }] });
+    dataAbout.list.push({ key: index.toString(), value: [packageItem(newVal[index - 1].name, index.toString(), true, newVal[index - 1].isDrag)] });
   }
   // console.log('dataAbout.list', dataAbout.list);
 }, { deep: true, immediate: true });
@@ -496,6 +500,10 @@ onBeforeUnmount(() => {
     &:hover {
       background-color: #f5f5f5;
       cursor: pointer;
+    }
+
+    &.no-drag:hover {
+      cursor: default;
     }
 
     &.vague {

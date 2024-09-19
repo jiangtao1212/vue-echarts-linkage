@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-19 09:33:33
+ * @LastEditTime: 2024-09-19 14:35:16
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -155,8 +155,8 @@ export class EchartsLinkageModel {
       if (item.dataType === 'switch') { // 开关量
         yAxisObj.show = true;
         yAxisObj.name = '';
-        yAxisObj.min = 0 - switchYCount * 2;
-        yAxisObj.max = 12 - switchYCount * 2;
+        yAxisObj.min = 0 - switchYCount * 1.5;
+        yAxisObj.max = 12 - switchYCount * 1.5;
         // yAxisObj.interval = 1; //注：interval设置会导致其他坐标轴受影响，所以这里不设置
         yAxisObj.axisLine.show = false;  // 透明颜色
         yAxisObj.axisLabel.show = false;  // 透明颜色
@@ -200,7 +200,6 @@ export class EchartsLinkageModel {
         ...param,
       } as SeriesOptionType;
       let series: echarts.SeriesOption | echarts.SeriesOption[] | undefined = [];
-      let markLine = {};
       switch (defaultParams.type) {
         case 'line':
           series = option.series as LineSeriesOption[];

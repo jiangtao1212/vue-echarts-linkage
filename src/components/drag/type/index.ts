@@ -1,11 +1,12 @@
 /*
  * @Author: jiangtao 1106950092@qq.com
- * @Date: 2024-09-14 09:35:18
+ * @Date: 2024-09-14 10:16:52
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-14 10:04:15
- * @FilePath: \echarts-legend-drage\src\components\echartsDrag4\drag\type\index.ts
+ * @LastEditTime: 2024-09-19 14:58:40
+ * @FilePath: \vue-echarts-linkage\src\components\drag\type\index.ts
  * @Description: 拖拽组件的类型定义
  */
+
 
 /**
  * @description 拖拽组件暴露的方法类型定义
@@ -22,11 +23,13 @@ export interface DragExposedMethods {
  * @property {string} name - 子项名称
  * @property {string} id - 子项id
  * @property {boolean} isShow - 子项是否显示
+ * @property {boolean} isDrag - 子项是否可拖拽
  */
 export type DragItemType = {
   name: string,
   id: string,
   isShow: boolean,
+  isDrag: boolean,
 }
 
 /**
@@ -40,3 +43,11 @@ export type DragListDataType = {
   key: string,
   value: Array<DragItemType>,
 }
+
+/**
+ * @description 拖拽组件中单个子项的props类型定义
+ * @type DragItemDataProps
+ * @property {string} name - 子项名称
+ * @property {boolean} isDrag - 子项是否可拖拽
+ */
+export type DragItemDataProps = Pick<DragItemType, 'name' | 'isDrag'>;
