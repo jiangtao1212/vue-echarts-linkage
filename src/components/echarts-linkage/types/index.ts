@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-18 09:32:21
+ * @LastEditTime: 2024-09-18 16:46:16
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -33,6 +33,7 @@ export type OneDataType = {
   yAxisShow?: boolean;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
+  dataType?: 'switch' | 'pulse'; // 数据类型：switch 开关量， pulse 脉冲量
 }
 
 export type seriesIdDataType = {

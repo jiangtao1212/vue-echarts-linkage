@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-16 23:55:09
+ * @LastEditTime: 2024-09-19 09:33:33
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -42,6 +42,7 @@ export type SeriesOptionType = {
   yAxisShow?: boolean; // y轴是否显示
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
+  dataType: 'switch' | 'pulse' // 数据类型：switch 开关量， pulse 脉冲量
 }
 
 /**
@@ -131,28 +132,41 @@ export class EchartsLinkageModel {
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = { show: true, interval: this.xAxisInterval });
   }
 
-  // 设置y轴 //todo: 这里可以考虑优化
+  // 设置y轴
   setYAxis = () => {
     const current: Array<any> = [];
     const yAxisShowArray: Array<boolean> = [];
+    let switchYCount = 0; // 开关量Y轴数量
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
-      const offset = this.offsetNum * index; // 设置 Y 轴的偏移量, 这里的index是从0开始的
-      const show = item.seriesData.length > 0 && (item.yAxisShow === undefined || item.yAxisShow === true) ? true : false;
+      // 开关量不计入Y轴显示数量
+      const show = item.seriesData.length > 0 && item.yAxisShow !== false && item.dataType !== 'switch' ? true : false;
       yAxisShowArray.push(show);
-      current.push({
+      const yAxisObj: any = {
         name: item.yAxisName || '',
         type: 'value',
         show, // 注：只有当数据不为空时才显示Y轴
         position: 'left',
-        offset: offset,  // todo: 这里需要优化，最好是没数据的隐藏Y轴，并且offset
+        offset: 0,
         alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
         nameTextStyle: { align: 'center', padding: 0 },
         axisLabel: { margin: 2 },
-      });
+      }
+      if (item.dataType === 'switch') { // 开关量
+        yAxisObj.show = true;
+        yAxisObj.name = '';
+        yAxisObj.min = 0 - switchYCount * 2;
+        yAxisObj.max = 12 - switchYCount * 2;
+        // yAxisObj.interval = 1; //注：interval设置会导致其他坐标轴受影响，所以这里不设置
+        yAxisObj.axisLine.show = false;  // 透明颜色
+        yAxisObj.axisLabel.show = false;  // 透明颜色
+        switchYCount++;
+      }
+      current.push(yAxisObj);
     });
-    // 计算Y轴的偏移量
+    // 计算各个显示的Y轴偏移量
     current.forEach((item: any, index: number) => {
+      if (item.axisLine.show === false && item.axisLabel.show === false) return;
       const count = yAxisShowArray.reduce((pre, cur, currentIndex) => {
         if (currentIndex <= index) {
           pre = pre + (cur ? 1 : 0);
@@ -164,7 +178,9 @@ export class EchartsLinkageModel {
 
     // console.log("current", current);
     this.optionTemplate.yAxis = current;
-    const showYCount = current.filter((item: any) => item.show === true).length;
+    console.log("yAxisShowArray", yAxisShowArray);
+    // 计算grid的left值对齐
+    const showYCount = yAxisShowArray.filter((item: boolean) => item === true).length;
     if (showYCount === 0 || showYCount === 1) {
       (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit;
     } else {
@@ -196,16 +212,24 @@ export class EchartsLinkageModel {
           series = option.series as LineSeriesOption[];
           break;
       }
-      series.push({
+      const color = _that.echartsColors[yAxisIndex % _that.echartsColors.length];
+      const obj: any = {
         name: defaultParams.name,
         type: defaultParams.type,
         smooth: defaultParams.smooth,
+        step: false,
         symbol: 'none',
         yAxisIndex: (param.seriesYAxisIndex || param.seriesYAxisIndex === 0) ? param.seriesYAxisIndex : yAxisIndex,
-        lineStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
-        itemStyle: { color: _that.echartsColors[yAxisIndex % _that.echartsColors.length] },
+        lineStyle: { color },
+        itemStyle: { color },
         data: defaultParams.seriesShow === false ? [] : defaultParams.seriesData,
-      } as echarts.SeriesOption);
+      };
+      if (defaultParams.dataType === 'switch') { // 开关量
+        obj.smooth = false;
+        obj.step = 'start';
+        obj.areaStyle = { origin: 0 };
+      }
+      series.push(obj);
       return option;
     }
     let resOption: EChartsOption = ObjUtil.deepCopy(this.optionTemplate) as EChartsOption;
@@ -296,7 +320,7 @@ export class EchartsLinkageModel {
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       item.seriesData.length > 0 && showYCount++;
     });
-    if (showYCount === 0 ||maxShowYCount === 0) {
+    if (showYCount === 0 || maxShowYCount === 0) {
       (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit;
     } else {
       (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (maxShowYCount - 1);

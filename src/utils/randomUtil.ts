@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-20 13:51:03
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-10 16:02:42
+ * @LastEditTime: 2024-09-18 17:41:18
  * @FilePath: \vue-echarts-linkage\src\utils\randomUtil.ts
  * @Description: 随机数相关工具
  */
@@ -31,4 +31,20 @@ const getRandomDataFromInterval = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export default { getSeriesData, getRandomDataFromInterval };
+/**
+ * 获取随机开关数据
+ * @param count  数据总数
+ * @param close  关闭值
+ * @param open  打开值
+ * @returns 
+ */
+const getSwitchData = (count = 1000, close = 0, open = 1) => {
+  const seriesData = [];
+  for (let i = 0; i < count; i++) {
+    seriesData.push([i + 1, Math.random() > 0.5 ? open : close]);
+  }
+  return seriesData;
+
+}
+
+export default { getSeriesData, getRandomDataFromInterval, getSwitchData };

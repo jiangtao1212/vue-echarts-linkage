@@ -228,7 +228,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
       data.push({ ...item });
     });
     markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
-      dataAll = data;
+    dataAll = data;
   } else {
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
@@ -247,7 +247,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
 };
 // 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
-  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray };
+  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: 'pulse' };
 }
 
 /**
@@ -286,10 +286,11 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
+  const seriesData = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData, dataType: oneDataType.dataType || 'pulse' };
   if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
-    dataAbout.data[index].data[0] = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData };
+    dataAbout.data[index].data[0] = seriesData
   } else {
-    dataAbout.data[index].data.push({ name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData });
+    dataAbout.data[index].data.push(seriesData);
   }
   await nextTick();
   initEcharts();
@@ -312,12 +313,16 @@ const computerMaxShowYCount = () => {
     const data = item.data;
     let showYCount = 0;
     data.forEach((item: OneDataType) => {
-      showYCount += item.yAxisShow === false ? 0 : 1;
+      showYCount += judgeShowYAxisCommon(item);
     });
     showYCountArray.push(showYCount);
   });
   const max = Math.max(...showYCountArray);
   return max;
+}
+// 判断是否显示Y轴的通用方法
+const judgeShowYAxisCommon = (data: OneDataType) => {
+  return data.yAxisShow === false || data.dataType === 'switch' ? 0 : 1
 }
 
 /**
@@ -334,7 +339,7 @@ const judgeEchartInstance = (id: string) => {
     const lastMaxShowYCount: number = dataAbout.currentMaxShowYCount; // 计算当前显示的echarts中y轴数量的最大值
     const currentMaxShowYCount: number = computerMaxShowYCount(); // 计算当前实时数据中y轴数量的最大值，还未渲染
     const currentData: seriesIdDataType = dataAbout.data.find((item: seriesIdDataType) => item.id === id) as seriesIdDataType;
-    const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + (cur.yAxisShow === false ? 0 : 1), 0);
+    const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + judgeShowYAxisCommon(cur), 0);
     console.log('maxShowYCount', lastMaxShowYCount);
     console.log('currentShowYCount', currentShowYCount);
     // 实例存在且是删除操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
@@ -421,6 +426,7 @@ const initOneEcharts = (dataArray: seriesIdDataType, groupName: string) => {
       yAxisShow: item.yAxisShow,
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
+      dataType: item.dataType || 'pulse',
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesData);
