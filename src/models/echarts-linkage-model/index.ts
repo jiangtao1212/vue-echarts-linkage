@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-19 14:35:16
+ * @LastEditTime: 2024-09-20 13:30:17
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -294,6 +294,25 @@ export class EchartsLinkageModel {
   }
 
   /**
+   * 重写echarts实例的SaveAsImage按钮的点击事件
+   * @param callback SaveAsImage按钮的自定义点击事件回调函数
+   * @returns 
+   */
+  setSaveAsImageClickEvent = (callback: () => void) => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.mySaveAsImage) {
+        toolbox.feature.mySaveAsImage.onclick = callback;
+      } else {
+        console.error("mySaveAsImage is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /**
    * 设置toolbox中相关工具的title语言类型
    * @param lang 语言类型，zh-cn | en (中文 | 英文)，默认中文
    * @returns 
@@ -302,7 +321,7 @@ export class EchartsLinkageModel {
     const feature = (this.resultOption?.toolbox as any).feature;
     feature.dataZoom.title = { zoom: `${lang === 'zh-cn' ? '区域缩放' : 'Zoom'}`, back: `${lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset'}` };
     feature.restore.title = `${lang === 'zh-cn' ? '还原' : 'Restore'}`;
-    feature.saveAsImage.title = `${lang === 'zh-cn' ? '保存为图片' : 'Save as Image'}`;
+    // feature.mySaveAsImage.title = `${lang === 'zh-cn' ? '保存为图片' : 'Save as Image'}`;
     feature.myDeleteButton.title = `${lang === 'zh-cn' ? '删除' : 'Delete'}`;
     return this;
   }

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-19 14:53:28
+ * @LastEditTime: 2024-09-20 09:17:51
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -31,6 +31,7 @@ export interface ExposedMethods {
   updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => void;
   clearAllEchartsData: () => void;
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
+  downloadAllEchartsImg: () => void;
 }
 
 /**

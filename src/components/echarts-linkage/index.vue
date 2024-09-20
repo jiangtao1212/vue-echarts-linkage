@@ -19,6 +19,7 @@ import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
+import { FileUtil } from "@/utils/index";
 import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -91,7 +92,7 @@ const dragDataComputed = (number: number) => {
   const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
   originData.forEach((item: OneDataType) => {
     // switch开关类型不可以拖拽
-    res.push({ name: item.name, isDrag: item.dataType === 'switch'? false : true });
+    res.push({ name: item.name, isDrag: item.dataType === 'switch' ? false : true });
   });
   return res;
 };
@@ -227,7 +228,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
       data.push({ ...item });
     });
     markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
-    dataAll = data;
+      dataAll = data;
   } else {
     // 3.新增单个echarts，如果没有seriesData，则默认新增一个line
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
@@ -351,11 +352,11 @@ const judgeEchartInstance = (id: string) => {
     const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + judgeShowYAxisCommon(cur), 0);
     console.log('maxShowYCount', lastMaxShowYCount);
     console.log('currentShowYCount', currentShowYCount);
-    // 实例存在且是删除操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
+    // 实例存在且是删除子项item操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
     if (currentData.isDeleteItem) {
       myChart.clear();
       currentData.data.length > 0 && (needHandle = true); // 非空数据，需要渲染
-    } else { // 实例存在且不是删除操作，判断是否需要更新
+    } else { // 实例存在且不是删除子项item操作，判断是否需要更新
       dataAbout.currentHandleChartId === id && (needHandle = true); // 判断当前实例是否在操作
       // 当前还未渲染
       currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
@@ -418,6 +419,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   console.log(dataArray.data);
   // 各种处理
   echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
+    .setSaveAsImageClickEvent(() => saveAsImage(dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
@@ -469,6 +471,9 @@ const initLisener = () => {
   const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
   echartsLinkageContainer.addEventListener('dragover', dragoverEchart);
   echartsLinkageContainer.addEventListener('drop', dropEchart);
+  // echartsLinkageContainer.addEventListener('resize', (e) => {
+  //   console.log('resize', e);
+  // });
 }
 
 // 移除拖动事件监听
@@ -546,7 +551,7 @@ const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) =
 
 }
 
-// 传入所有显示子项数据，更新所有echarts
+// 传入所有显示子项数据，更新所有echarts --- 导出
 const updateAllEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
   dataAbout.data.forEach((echart: SeriesIdDataType) => {
     echart.data.forEach((series: OneDataType, index: number) => {
@@ -565,6 +570,26 @@ const getMaxEchartsIdSeq = () => {
   return dataAbout.maxEchartsIdSeq;
 }
 
+// 下载包含所有echarts的图片 --- 导出
+const downloadAllEchartsImg = () => {
+  const extraHeight = 10 * 2 + 10 * (dataAbout.data.length - 1); // 需要加上下padding的10px(10 * 2)，以及gap的和(10 * (count -1))
+  FileUtil.htmlElementToImage('.echarts-linkage-container', 'echarts-linkage.png', extraHeight);
+}
+
+// echarts上的按钮保存图片事件
+const saveAsImage = (id: string) => {
+  console.log('saveAsImage', id);
+  if (props.isLinkage) {
+    // 联动时，保存图片时包含所有图表
+    downloadAllEchartsImg();
+  } else {
+    // 非联动时，保存图片时只保存当前图表
+    const parentElement: HTMLElement = document.getElementById(id)?.parentElement as HTMLElement;
+    console.log('parentElement', parentElement);
+    FileUtil.htmlElementToImage(parentElement, `echarts-linkage-${id}.png`);
+  }
+}
+
 // 子组件暴露变量和方法
 const exposedMethods: ExposedMethods = {
   addEchart,
@@ -577,6 +602,7 @@ const exposedMethods: ExposedMethods = {
   updateAllEcharts,
   clearAllEchartsData,
   replaceAllEchartsData,
+  downloadAllEchartsImg,
 };
 defineExpose(exposedMethods);
 

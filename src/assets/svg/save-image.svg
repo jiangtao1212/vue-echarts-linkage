@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="159.966093px" height="163px" viewBox="0 0 159.966093 163" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Download</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round">
+        <g id="Download" transform="translate(5.000000, 4.500000)" stroke="#666666" stroke-width="10">
+            <line x1="76" y1="113.5" x2="113" y2="75.5" id="直线-3"></line>
+            <line x1="74" y1="113.5" x2="39" y2="77.5" id="直线-4"></line>
+            <line x1="75" y1="0.5" x2="75" y2="114.5" id="直线-2"></line>
+            <path d="M0,75.5 L0,152.5 C-4.33869274e-17,153.052285 0.44771525,153.5 1,153.5 L148.966093,153.5 C149.518378,153.5 149.966093,153.052285 149.966093,152.5 L149.966093,75.8333334 L149.966093,75.8333334" id="直线"></path>
+        </g>
+    </g>
+</svg>

@@ -1,13 +1,14 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/index.ts", "src/components/**/*", "src/utils/*", "src/models/*", "src/models/**/*"],
+  "include": ["src/index.ts", "src/components/**/*", "src/utils/*", "src/models/*", "src/models/**/*", "src/assets/svg/*.svg"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "types": ["vite/client"]
   },
   "references": [
     {

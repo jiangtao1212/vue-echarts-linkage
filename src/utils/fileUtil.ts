@@ -2,10 +2,11 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-07-26 09:51:44
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-07-29 13:25:27
+ * @LastEditTime: 2024-09-20 15:09:17
  * @FilePath: \echarts-legend-drage\src\utils\fileType.ts
  * @Description: 文件类型工具
  */
+import html2canvas from 'html2canvas';
 
 /**
  * @author jiangtao
@@ -15,7 +16,7 @@
  * @returns  `.jpg,.jpeg,.bmp,.webp,.gif,.png`
  */
 const fileTypesInputAcceptStr = (fileTypes: Array<string>): string => {
-  const fileTypesArray = fileTypes.map(item => '.'  + item);
+  const fileTypesArray = fileTypes.map(item => '.' + item);
   return fileTypesArray.join(',');
 }
 
@@ -28,7 +29,7 @@ const fileTypesInputAcceptStr = (fileTypes: Array<string>): string => {
  * @returns 例如：`.jpg | .jpeg | .bmp | .webp | .gif | .png`
  */
 const fileTypesSeparatorStr = (fileTypes: Array<string>, separator: string = ' | '): string => {
-  const fileTypesArray = fileTypes.map(item => '.'  + item);
+  const fileTypesArray = fileTypes.map(item => '.' + item);
   return fileTypesArray.join(separator);
 }
 
@@ -72,6 +73,36 @@ const getFileExtension = (fileName: string): string => {
   return '';
 }
 
+/**
+ * @description 导出html元素为图片
+ * @param selectorsOrElement 选择器 或 HTMLElement
+ * @param imgName 图片名称 
+ * @param extraHeight 额外的高度
+ */
+const htmlElementToImage = (selectorsOrElement: string | HTMLElement, imgName: string = 'htmlElementToImage.png', extraHeight: number = 0): void => {
+  console.log("打印图片");
+  const element: HTMLElement = typeof selectorsOrElement === 'string' ? document.querySelector(selectorsOrElement) as HTMLElement : selectorsOrElement;
+  // console.log('clientHeight:', element.clientHeight);
+  // console.log('offsetHeight', element.offsetHeight);
+  // console.log('scrollHeight', element.scrollHeight);
+  // const scrollHeight = element?.scrollHeight + extraHeight;
+  // console.log(scrollHeight);
+  // console.log('devicePixelRatio: ', window.devicePixelRatio);
+  html2canvas(element, {
+    backgroundColor: null,
+    useCORS: true,
+    // windowHeight: scrollHeight, // 不能设置高度，否则会导致图片大小不正确
+    scale: window.devicePixelRatio * 2, // 图片放大两倍，解决高清屏下图片模糊问题
+  }).then((canvas) => {
+    canvas.getContext("2d", { willReadFrequently: true }); // 设置 willReadFrequently 属性提高浏览器性能
+    const url = canvas.toDataURL();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = imgName;
+    a.click();
+    a.remove();
+  });
+}
 
 
-export default { fileTypesInputAcceptStr, fileTypesSeparatorStr, fileSizeToUnit, getFileExtension }
+export default { fileTypesInputAcceptStr, fileTypesSeparatorStr, fileSizeToUnit, getFileExtension, htmlElementToImage }

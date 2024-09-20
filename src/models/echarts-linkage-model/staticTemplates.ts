@@ -2,12 +2,14 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-16 23:53:11
+ * @LastEditTime: 2024-09-20 16:30:37
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
 
 import { type EChartsOption, type MarkLineComponentOption } from "echarts";
+import SaveAsImageSvg from '@/assets/svg/save-image.svg';
+import DeleteSvg from '@/assets/svg/delete.svg';
 
 // 颜色数组
 export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
@@ -37,11 +39,22 @@ export const optionTemplate: EChartsOption = {
       // dataView: { readOnly: false },
       // magicType: { type: ['line', 'bar'] },
       restore: {},
-      saveAsImage: {},
+      // saveAsImage: {}, //注：echarts自带的saveAsImage功能，不能将自定义legend等元素保存到图片中，因此这里使用下面自定义的mySaveAsImage功能
+      mySaveAsImage: { // 自定义的保存图片功能
+        show: true,
+        // title: `保存为图片`,
+        // icon: 'path://M225.28 675.75808a20.48 20.48 0 0 0-20.48 20.48v125.60384a20.48 20.48 0 0 0 20.48 20.48h573.44a20.48 20.48 0 0 0 20.48-20.48v-125.60384a20.48 20.48 0 1 0-40.96 0v105.12384H245.76v-105.12384a20.48 20.48 0 0 0-20.48-20.48z M512 186.96192a20.48 20.48 0 0 0-20.48 20.48v440.5248l-129.90464-125.48096a20.45952 20.45952 0 1 0-28.44672 29.45024l164.31104 158.74048 0.04096 0.04096 0.24576 0.22528c0.75776 0.73728 1.72032 1.04448 2.53952 1.6384 1.26976 0.9216 2.4576 1.9456 3.93216 2.53952a20.25472 20.25472 0 0 0 15.48288 0c1.37216-0.55296 2.4576-1.51552 3.64544-2.3552 0.94208-0.63488 2.00704-1.024 2.84672-1.8432l164.57728-159.0272a20.48 20.48 0 0 0-28.48768-29.45024L532.48 647.96672v-440.5248a20.48 20.48 0 0 0-20.48-20.48z',
+        icon: 'image://' + SaveAsImageSvg,
+        onclick: (e: any) => {
+          // console.log(e);
+          // 在这里添加你想要执行的代码
+        }
+      },
       myDeleteButton: {
         show: true,
         title: `删除`,
-        icon: 'path://M554.6496 512.0512l255.744-255.6928a30.1056 30.1056 0 1 0-42.6496-42.5984L512 469.4528 256.256 213.6064a30.1568 30.1568 0 1 0-42.6496 42.6496l255.744 255.6928-255.744 255.7952a30.1056 30.1056 0 1 0 42.6496 42.6496L512 554.6496l255.744 255.744a30.1568 30.1568 0 1 0 42.6496-42.6496l-255.744-255.6928z',
+        // icon: 'path://M554.6496 512.0512l255.744-255.6928a30.1056 30.1056 0 1 0-42.6496-42.5984L512 469.4528 256.256 213.6064a30.1568 30.1568 0 1 0-42.6496 42.6496l255.744 255.6928-255.744 255.7952a30.1056 30.1056 0 1 0 42.6496 42.6496L512 554.6496l255.744 255.744a30.1568 30.1568 0 1 0 42.6496-42.6496l-255.744-255.6928z',
+        icon: 'image://' + DeleteSvg,
         onclick: (e: any) => {
           // console.log(e);
           // 在这里添加你想要执行的代码
