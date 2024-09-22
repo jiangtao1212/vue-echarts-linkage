@@ -31,7 +31,7 @@ specifiers:
   vite-plugin-static-copy: ^1.0.6
   vue: ^3.4.29
   vue-draggable-plus: ^0.5.0
-  vue-echarts-linkage: 1.0.0-beta.5
+  vue-echarts-linkage: 1.0.0-beta.6
   vue-router: ^4.3.3
   vue-tsc: ^2.0.21
 
@@ -46,7 +46,7 @@ dependencies:
   print-js: 1.6.0
   vue: 3.5.4_typescript@5.4.5
   vue-draggable-plus: 0.5.3
-  vue-echarts-linkage: 1.0.0-beta.5_typescript@5.4.5
+  vue-echarts-linkage: 1.0.0-beta.6_typescript@5.4.5
   vue-router: 4.4.4_vue@3.5.4
 
 devDependencies:
@@ -4026,15 +4026,17 @@ packages:
       '@types/sortablejs': 1.15.8
     dev: false
 
-  /vue-echarts-linkage/1.0.0-beta.5_typescript@5.4.5:
-    resolution: {integrity: sha512-BrLCoaZE7hu0V28diPocE+Tg4SxPrR2frsdjnfFi/oc3wKnpARJOBmOPQmCmzCkQXzpcCxB++FLUJsKjM0lyWw==}
+  /vue-echarts-linkage/1.0.0-beta.6_typescript@5.4.5:
+    resolution: {integrity: sha512-nhRC7DwuAVvDT17hYkVb/vf9tittPYTrgdH3wUNZktPgMT4hcrkzMcId4a070/XvMgsao/F5oHUJOq42Ifh5Qg==}
     dependencies:
       '@element-plus/icons-vue': 2.3.1_vue@3.5.4
       '@vueuse/core': 10.11.1_vue@3.5.4
       axios: 1.7.7
       echarts: 5.5.1
       element-plus: 2.8.2_vue@3.5.4
+      html2canvas: 1.4.1
       pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
+      print-js: 1.6.0
       vue: 3.5.4_typescript@5.4.5
       vue-draggable-plus: 0.5.3
       vue-router: 4.4.4_vue@3.5.4

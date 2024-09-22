@@ -17,8 +17,9 @@ import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
-import { useDebounceFn } from "@vueuse/core";
-import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
+import { useDebounceFn, useThrottleFn } from "@vueuse/core";
+import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType, type GraphicLocationInfoType } from "@/models/index";
+import { XAXIS_ID } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -419,7 +420,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   console.log(dataArray.data);
   // 各种处理
   echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
-    .setSaveAsImageClickEvent(() => saveAsImage(dataArray.id))
+    .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
@@ -427,6 +428,10 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
   myChart.setOption(option);
+  dataArray.data[0].seriesData.length > 0 && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, (params: GraphicLocationInfoType) => {
+    graphicDragLinkage(params);
+  }))
+  // echartsLinkageModel.setGraphic(myChart);
   myChart.group = groupName;
   myChart.resize();
   return myChart;
@@ -452,6 +457,61 @@ const initEcharts = () => {
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
   props.isLinkage && echarts.connect(groupName); // 联动
 }
+
+
+let animating = false;
+/**
+ * @description 图形移动联动, 使用requestAnimationFrame优化性能
+ * @param params 图形位置信息
+ */
+const graphicDragLinkage = (params: GraphicLocationInfoType) => {
+  if (animating) return;
+  animating = true;
+  requestAnimationFrame(() => {
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      let notDragGraphic: { graphicId: string; positionX: number; xAxisX: number; } = {} as any;
+      item.graphics && item.graphics.forEach((graphic: { graphicId: string; positionX: number; xAxisX: number; }) => {
+        if (graphic.graphicId === params.currentDragGraphicId) {
+          graphic.positionX = params.currentDragGraphicPositionX;
+          graphic.xAxisX = params.currentDragGraphicXAxisX;
+        } else {
+          notDragGraphic = graphic;
+        }
+      });
+      // if (item.id === currentEchartsId) return; // 跳过当前图形
+      // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
+      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
+      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      myChart.setOption({
+        graphic: [
+          {
+            id: params.currentDragGraphicId,
+            position: [params.currentDragGraphicPositionX, 0],
+            info: params.currentDragGraphicXAxisX,
+            textContent: {
+              type: 'text',
+              style: {
+                text: params.currentDragGraphicXAxisX,
+              }
+            },
+          },
+          {
+            id: notDragGraphic.graphicId,
+            position: [notDragGraphic.positionX, 0],
+            info: myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX),
+            textContent: {
+              type: 'text',
+              style: {
+                text: myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX),
+              }
+            },
+          }
+        ],
+      });
+    });
+    animating = false;
+  });
+};
 
 // 拖拽移动事件
 const dragoverEchart = (e: DragEvent) => {
@@ -577,7 +637,7 @@ const downloadAllEchartsImg = () => {
 }
 
 // echarts上的按钮保存图片事件
-const saveAsImage = (id: string) => {
+const saveAsImage = (e: any, id: string) => {
   console.log('saveAsImage', id);
   if (props.isLinkage) {
     // 联动时，保存图片时包含所有图表

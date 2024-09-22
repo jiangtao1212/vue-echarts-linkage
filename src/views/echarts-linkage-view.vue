@@ -13,11 +13,11 @@
     <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽进开关量图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-   <div class="h-80vh overflow-y-auto">
-    <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" class="h-100vh !w-98%"
-    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light" :is-linkage="false"
+   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
+    <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" 
+    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light" :is-linkage="true"
     id="echarts-linkage-view" @drop-echart="dropEchart" />
-   </div>
+   <!-- </div> -->
 </template>
 
 <script setup lang="ts">

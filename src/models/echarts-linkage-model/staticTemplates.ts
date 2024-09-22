@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-20 16:30:37
+ * @LastEditTime: 2024-09-21 17:37:14
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -11,6 +11,8 @@ import { type EChartsOption, type MarkLineComponentOption } from "echarts";
 import SaveAsImageSvg from '@/assets/svg/save-image.svg';
 import DeleteSvg from '@/assets/svg/delete.svg';
 
+// x轴id
+export const XAXIS_ID = 'X1';
 // 颜色数组
 export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
 // 折线图表模板
@@ -69,6 +71,7 @@ export const optionTemplate: EChartsOption = {
   }],
   xAxis: [{
     type: 'category',
+    id: XAXIS_ID,
     name: '',
     // axisLabel: {
     //   show: true,

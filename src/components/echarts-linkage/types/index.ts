@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-20 09:17:51
+ * @LastEditTime: 2024-09-22 17:44:16
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -76,6 +76,7 @@ export type SeriesIdDataType = {
   data: Array<OneDataType>;
   markLineArray?: Array<number>;
   isDeleteItem?: boolean, // 是否删除数据项状态
+  graphics?: Array<{ graphicId: string, positionX: number, xAxisX: number }>
 }
 
 /**
