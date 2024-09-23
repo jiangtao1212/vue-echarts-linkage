@@ -1,10 +1,10 @@
 <template>
   <div class='echarts-linkage-container'>
     <div class="main-container">
-      <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container">
+      <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container" :style="{'background-color': computedBackgroundColor}">
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
-          :group="item.id" @update="(data) => update(data, index)"
+          :group="item.id" :theme="theme" @update="(data) => update(data, index)"
           @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
     </div>
@@ -88,6 +88,13 @@ const dataAbout = reactive({
   isAllUpdate: false, // 是否全部更新
   currentMaxShowYCount: 0, // 当前显示的echarts中最大Y轴数量
 }) as DataAboutType;
+
+// 计算每个echarts的父级容器颜色
+const computedBackgroundColor = computed(() => {
+  if (props.background) return props.background;
+  if (props.theme === 'dark') return '#100C2A';
+  return 'transparent';
+});
 
 // 拖拽传入的数据
 const dragDataComputed = (number: number) => {
@@ -429,7 +436,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
-  props.background && echartsLinkageModel.setBackgroundColor(props.background) // 设置背景色
+  echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
   myChart.setOption(option);

@@ -2,7 +2,7 @@
 <svg width="159.966093px" height="163px" viewBox="0 0 159.966093 163" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Download</title>
     <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round">
-        <g id="Download" transform="translate(5.000000, 4.500000)" stroke="#666666" stroke-width="10">
+        <g id="Download" transform="translate(5.000000, 4.500000)" stroke="#A1A1A1" stroke-width="15">
             <line x1="76" y1="113.5" x2="113" y2="75.5" id="直线-3"></line>
             <line x1="74" y1="113.5" x2="39" y2="77.5" id="直线-4"></line>
             <line x1="75" y1="0.5" x2="75" y2="114.5" id="直线-2"></line>

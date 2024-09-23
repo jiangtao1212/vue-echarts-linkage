@@ -501,6 +501,9 @@ onBeforeUnmount(() => {
       background-color: #f5f5f5;
       cursor: pointer;
     }
+    &:hover:has(.dark) {
+      background-color: #8E84CB;
+    }
 
     &.no-drag:hover {
       cursor: default;
