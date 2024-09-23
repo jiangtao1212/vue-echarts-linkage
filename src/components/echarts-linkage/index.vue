@@ -504,6 +504,7 @@ const graphicDragLinkage = (params: GraphicLocationInfoType) => {
         graphic: [
           {
             id: params.graphicId,
+            type: 'rect',
             position: [params.positionX, 0],
             info: params.xAxisX,
             textContent: {
@@ -515,6 +516,7 @@ const graphicDragLinkage = (params: GraphicLocationInfoType) => {
           },
           {
             id: notDragGraphic.graphicId,
+            type: 'rect',
             position: [notDragGraphic.positionX, 0],
             info: notDragGraphic.xAxisX,
             textContent: {

@@ -31,7 +31,7 @@ specifiers:
   vite-plugin-static-copy: ^1.0.6
   vue: ^3.4.29
   vue-draggable-plus: ^0.5.0
-  vue-echarts-linkage: 1.0.0
+  vue-echarts-linkage: 1.0.1
   vue-router: ^4.3.3
   vue-tsc: ^2.0.21
 
@@ -46,7 +46,7 @@ dependencies:
   print-js: 1.6.0
   vue: 3.5.4_typescript@5.4.5
   vue-draggable-plus: 0.5.3
-  vue-echarts-linkage: 1.0.0_typescript@5.4.5
+  vue-echarts-linkage: 1.0.1_typescript@5.4.5
   vue-router: 4.4.4_vue@3.5.4
 
 devDependencies:
@@ -4026,8 +4026,8 @@ packages:
       '@types/sortablejs': 1.15.8
     dev: false
 
-  /vue-echarts-linkage/1.0.0_typescript@5.4.5:
-    resolution: {integrity: sha512-2DafGfwQ66fkaqsquKioBjpD0BING7rqeAv0YAjLIeCgUKLmISBadrd3M77YkZ4BiMWo3QEu84M4GEUHivgYxw==}
+  /vue-echarts-linkage/1.0.1_typescript@5.4.5:
+    resolution: {integrity: sha512-JBcd61fXP00Kl7HbeOTiX4hNKAfYAZFsF2QWzAvsrcOq4675kYTbJcKXsEp2UbMudIfun3cVsigW50dR0ejk/A==}
     dependencies:
       '@element-plus/icons-vue': 2.3.1_vue@3.5.4
       '@vueuse/core': 10.11.1_vue@3.5.4
