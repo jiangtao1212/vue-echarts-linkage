@@ -79,7 +79,7 @@ import "vue-echarts-linkage/dist/style.css";
 ```
 
 ```javascript
-import { VueEchartsLinkage, type OneDataType, type seriesTagType, type dropEchartType  } from 'vue-echarts-linkage';
+import { VueEchartsLinkage, type OneDataType, type SeriesTagType, type DropEchartType  } from 'vue-echarts-linkage';
 import "vue-echarts-linkage/dist/style.css";
 ...
 const echartsLinkageRef = ref<InstanceType<typeof VueEchartsLinkage>>();
@@ -104,11 +104,13 @@ const dropEchart = (data: dropEchartType) => {
 | background | `string` | 背景色，一般配合主题使用 | — |
 | is-linkage | `boolean` | 是否联动 | true，即联动 |
 | use-merged-legend | `boolean` | 是否使用合并图例 | true，即使用合并图例 |
+| use-graphic-location | `boolean` | 是否使用图形定位 | true，即使用图形定位 |
 
 ## 4. 组件事件
 | 事件名 | 说明 | 参数 |
 | --- | --- | --- |
-| drop-echart | 拖拽图表回调事件，返回当前拖拽的图表id(data.id) | `(data: dropEchartType)` |
+| drop-echart | 拖拽图表回调事件，返回当前拖拽的图表id(data.id) | `(data: DropEchartType)` |
+| listener-graphic-location | 监听图形定位事件，返回所有图形定位信息 | `(data: ListenerGrapicLocationType)` |
 
 ## 5. 组件方法
 | 方法名 | 说明 | 参数 |
@@ -118,8 +120,8 @@ const dropEchart = (data: dropEchartType) => {
 | deleteEchart | 根据echarts的id删除echarts | `(id: string) => Promise<void>` |
 | getDataLength | 获取数据总数 | `() => number` |
 | getMaxEchartsIdSeq | 获取最大的id序号 | `() => number` |
-| getAllDistinctSeriesTagInfo | 获取所有不重复系列的标签信息 | `() => Array<seriesTagType>` |
-| getAllSeriesTagInfo, | 获取所有系列的标签信息 | `() => Array<{ id: string; series: Array<seriesTagType>; }>` |
-| updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<seriesTagType>) => Promise<void>` |
+| getAllDistinctSeriesTagInfo | 获取所有不重复系列的标签信息 | `() => Array<SeriesTagType>` |
+| getAllSeriesTagInfo, | 获取所有系列的标签信息 | `() => Array<{ id: string; series: Array<SeriesTagType>; }>` |
+| updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
 | clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
 | replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |
