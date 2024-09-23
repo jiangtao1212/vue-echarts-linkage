@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-22 17:44:16
+ * @LastEditTime: 2024-09-23 13:26:20
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -65,18 +65,33 @@ export type OneDataType = {
 }
 
 /**
+ * @description: 图形位置信息类型
+ * @param {string} graphicId 图形id
+ * @param {number} positionX 图形距离echarts容器左侧的距离
+ * @param {number} xAxisSeq 图形元素x轴坐标序号：从0开始
+ * @param {number} xAxisX 图形元素x轴坐标值：不定，可能是数值可能是时间等等
+ */
+export type GraphicLocationInfoType = { 
+  graphicId: string, 
+  positionX: number, 
+  xAxisSeq: number, 
+  xAxisX: number 
+}
+
+/**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
  * @param {Array<number>} markLineArray 标记线数据
  * @param {boolean} isDeleteItem 是否删除数据项状态
+ * @param {Array<GraphicLocationType>} graphics 图形位置信息
  */
 export type SeriesIdDataType = {
   id: string;
   data: Array<OneDataType>;
   markLineArray?: Array<number>;
   isDeleteItem?: boolean, // 是否删除数据项状态
-  graphics?: Array<{ graphicId: string, positionX: number, xAxisX: number }>
+  graphics?: Array<GraphicLocationInfoType>
 }
 
 /**
@@ -115,3 +130,10 @@ export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesDat
 export type DropEchartType = {
   id: string;
 }
+
+/**
+ * @description: 接收listener-graphic-location事件的参数类型
+ * @param {string} id 接收grapicLocation事件的图表id
+ * @param {Array<GraphicLocationInfoType>} graphics 图形位置信息
+ */
+export type ListenerGrapicLocationType = Array<Pick<SeriesIdDataType, 'id' | 'graphics'>>;

@@ -13,18 +13,18 @@
     <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽进开关量图表</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
-   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-    <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" 
-    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light" :is-linkage="true"
-    id="echarts-linkage-view" @drop-echart="dropEchart" />
-   <!-- </div> -->
+  <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
+    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
+    :is-linkage="true" :use-graphic-location="true" id="echarts-linkage-view" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
+  <!-- </div> -->
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, SeriesTagType, DropEchartType } from '@/components/echarts-linkage/types/index';
+import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType  } from '@/components/echarts-linkage/types/index';
 
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
@@ -125,9 +125,9 @@ const downloadImg = () => {
 
 // 新增series按钮
 const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
-  let seriesData = RandomUtil.getSeriesData(1300);
+  let seriesData = RandomUtil.getSeriesData(1000);
   if (switchFlag) {
-    seriesData = RandomUtil.getSwitchData(1300);
+    seriesData = RandomUtil.getSwitchData(1000);
   }
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
@@ -170,6 +170,10 @@ const initLisener = () => {
     e.dataTransfer!.dropEffect = 'move';
     switchFlag = true;
   });
+}
+
+const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
+  console.log("listenerGraphicLocation", data);
 }
 
 const init = () => {

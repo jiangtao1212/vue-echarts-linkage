@@ -18,10 +18,10 @@ import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";
-import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType, type GraphicLocationInfoType } from "@/models/index";
+import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { XAXIS_ID } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
-import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType } from './types/index';
+import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
 
@@ -50,6 +50,7 @@ export type PropsType = {
   background?: string, // 背景色
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
+  useGraphicLocation?: boolean, // 是否使用图形定位
 }
 
 // 定义 props
@@ -61,6 +62,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   theme: 'light',
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
+  useGraphicLocation: true, // 默认使用图形定位
 });
 
 // 自定义验证函数
@@ -74,7 +76,7 @@ const validateCols = (value: number) => {
 // 验证 props
 validateCols(props.cols);
 
-const emit = defineEmits(['drop-echart']);
+const emit = defineEmits(['drop-echart', 'listener-graphic-location']);
 
 // 定义数据
 const dataAbout = reactive({
@@ -342,6 +344,7 @@ const judgeShowYAxisCommon = (data: OneDataType) => {
  * @returns {myChart: EChartsType, needHandle: boolean}
  */
 const judgeEchartInstance = (id: string) => {
+  console.groupCollapsed('judgeEchartInstance', id);
   const element: HTMLElement = document.getElementById(id) as HTMLElement;
   let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
   let needHandle = false;
@@ -377,6 +380,7 @@ const judgeEchartInstance = (id: string) => {
   // 监听是否全部更新操作 --- 原因：解决点击restore按钮后，只有最后一次操作的图表数据更新，其他图表实例没有变化被过滤掉导致数据不更新的问题
   dataAbout.isAllUpdate && (needHandle = true);
   console.log('needHandle', needHandle);
+  console.groupEnd();
   return { myChart, needHandle };
 }
 
@@ -394,6 +398,7 @@ const debouncedFn = useDebounceFn(() => {
  * @returns EChartsType
  */
 const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
+  console.groupCollapsed('initOneEcharts', dataArray.id);
   const { myChart, needHandle } = judgeEchartInstance(dataArray.id);
   if (!needHandle) { // 不需要操作
     myChart.resize();
@@ -428,12 +433,14 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   console.log("option", option);
   myChart.setOption(option);
-  dataArray.data[0].seriesData.length > 0 && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, (params: GraphicLocationInfoType) => {
-    graphicDragLinkage(params);
-  }))
-  // echartsLinkageModel.setGraphic(myChart);
+  // 图形设置
+  props.useGraphicLocation
+    && dataArray.data[0].seriesData.length > 0
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params)));
+  // 联动
   myChart.group = groupName;
   myChart.resize();
+  console.groupEnd();
   return myChart;
 }
 
@@ -453,6 +460,7 @@ const initEcharts = () => {
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
+  emitGraphicLocation();
   dataAbout.restoreClickBool = false;
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
   props.isLinkage && echarts.connect(groupName); // 联动
@@ -469,49 +477,62 @@ const graphicDragLinkage = (params: GraphicLocationInfoType) => {
   animating = true;
   requestAnimationFrame(() => {
     dataAbout.data.forEach((item: SeriesIdDataType) => {
-      let notDragGraphic: { graphicId: string; positionX: number; xAxisX: number; } = {} as any;
-      item.graphics && item.graphics.forEach((graphic: { graphicId: string; positionX: number; xAxisX: number; }) => {
-        if (graphic.graphicId === params.currentDragGraphicId) {
-          graphic.positionX = params.currentDragGraphicPositionX;
-          graphic.xAxisX = params.currentDragGraphicXAxisX;
-        } else {
-          notDragGraphic = graphic;
-        }
-      });
-      // if (item.id === currentEchartsId) return; // 跳过当前图形
+      if (!props.isLinkage && (item.id !== params.graphicId)) return; // 非联动状态，只处理当前实例的图形
       // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
       let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      let notDragGraphic: GraphicLocationInfoType = {} as any;
+      item.graphics && item.graphics.forEach((graphic: GraphicLocationInfoType) => {
+        if (graphic.graphicId === params.graphicId) {
+          graphic.positionX = params.positionX;
+          graphic.xAxisSeq = params.xAxisSeq;
+          graphic.xAxisX = params.xAxisX;
+        } else {
+          notDragGraphic = graphic;
+          notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
+          notDragGraphic.xAxisX = item.data[0].seriesData[notDragGraphic.xAxisSeq - 1][0];
+        }
+      });
       myChart.setOption({
         graphic: [
           {
-            id: params.currentDragGraphicId,
-            position: [params.currentDragGraphicPositionX, 0],
-            info: params.currentDragGraphicXAxisX,
+            id: params.graphicId,
+            position: [params.positionX, 0],
+            info: params.xAxisX,
             textContent: {
               type: 'text',
               style: {
-                text: params.currentDragGraphicXAxisX,
+                text: params.xAxisX,
               }
             },
           },
           {
             id: notDragGraphic.graphicId,
             position: [notDragGraphic.positionX, 0],
-            info: myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX),
+            info: notDragGraphic.xAxisX,
             textContent: {
               type: 'text',
               style: {
-                text: myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX),
+                text: notDragGraphic.xAxisX,
               }
             },
           }
         ],
       });
     });
+    emitGraphicLocation();
     animating = false;
   });
 };
+
+// 组装所有图形数据，发送给父组件（1.初始化时调，2.移动图形时调用）
+const emitGraphicLocation = () => {
+  const graphicLocation: ListenerGrapicLocationType = [];
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
+    graphicLocation.push({ id: item.id, graphics: item.graphics ? JSON.parse(JSON.stringify(item.graphics)) : [] });
+  });
+  emit('listener-graphic-location', graphicLocation);
+}
 
 // 拖拽移动事件
 const dragoverEchart = (e: DragEvent) => {

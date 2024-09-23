@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-22 17:54:37
+ * @LastEditTime: 2024-09-23 10:47:09
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,18 +18,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil } from "@/utils/index";
-
-/**
- * @description 图表位置信息类型(拖动的图表和未拖动的图表)
- * @param currentDragGraphicId 当前拖动的图表id
- * @param currentDragGraphicPositionX 当前拖动的图表位置x
- * @param currentDragGraphicXAxisX 当前拖动的图表x轴位置x
- */
-export type GraphicLocationInfoType = {
-  currentDragGraphicId: string,
-  currentDragGraphicPositionX: number,
-  currentDragGraphicXAxisX: number,
-}
+import { type GraphicLocationInfoType} from "@/components/echarts-linkage/types/index"
 
 /**
  * @description 图表数据类型
@@ -117,16 +106,14 @@ export class EchartsLinkageModel {
 
   // 获取x轴数据 --- 如果有多个series，则从第一个开始获取，如果没有则往下一个series中获取
   setXAxisData = () => {
-    const xAxisData = [];
+    let xAxisData: Array<any> = [];
     for (let i = 0; i < this.seriesOptionArray.length; i++) {
       const seriesData = this.seriesOptionArray[i].seriesData;
       if (seriesData.length === 0) {
         continue;
       } else {
-        const end = seriesData[seriesData.length - 1][0];
-        for (let j = 0; j <= end; j++) {
-          xAxisData.push(j);
-        }
+        // 第一个值空字符串，用于隔开起始点
+        xAxisData = ['', ...seriesData.map((item: Array<number>) => item[0])]; 
         break;
       }
     }
@@ -359,23 +346,25 @@ export class EchartsLinkageModel {
     return this;
   }
 
-  setGraphic = (myChart: any, onPointDragging: Function): Array<{ graphicId: string, positionX: number, xAxisX: number }> => {
-    console.log('myChart', myChart);
-    console.log('myChart.getHeight()', myChart.getHeight());
+  setGraphic = (myChart: any, graphics: Array<GraphicLocationInfoType> | undefined, onPointDragging: Function): Array<GraphicLocationInfoType> => {
+    // console.log('myChart', myChart);
+    // console.log('myChart.getHeight()', myChart.getHeight());
     const GRAPHIC_RECT1_ID = 'rect1'; // 矩形图形元素1的id
     const GRAPHIC_RECT2_ID = 'rect2'; // 矩形图形元素2的id
-    const xAxisX1 = this.xAxisData[Math.floor(this.xAxisData.length / 3)];
-    const xAxisX2 = this.xAxisData[Math.floor(this.xAxisData.length / 3) * 2];
+    const xAxisSeq1 = (graphics && graphics[0].xAxisSeq) || Math.floor(this.xAxisData.length / 3);
+    const xAxisSeq2 = (graphics && graphics[1].xAxisSeq) || Math.floor(this.xAxisData.length / 3) * 2;
+    const xAxisX1 = this.xAxisData[xAxisSeq1];
+    const xAxisX2 = this.xAxisData[xAxisSeq2];
     myChart.setOption({
       // 绘制markLine的graphic line
       graphic: [
         {
-          ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT1_ID, xAxisX1),
+          ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT1_ID, xAxisSeq1, xAxisX1),
           ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT1_ID)),
           // ondragend: (e: any) => onPointDragendx1(e, GRAPHIC_RECT1_Id),// 此长方形的拖拽的响应事件，在拖拽过程中会不断被触发。
         },
         {
-          ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT2_ID, xAxisX2),
+          ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT2_ID, xAxisSeq2, xAxisX2),
           ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT2_ID)),
           // ondragend: (e: any) => onPointDragendx2(e, GRAPHIC_RECT2_ID)
         }
@@ -449,8 +438,8 @@ export class EchartsLinkageModel {
       console.groupEnd();
     }
     return [
-      { graphicId: GRAPHIC_RECT1_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisX1), xAxisX: xAxisX1 },
-      { graphicId: GRAPHIC_RECT2_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisX2), xAxisX: xAxisX2 }
+      { graphicId: GRAPHIC_RECT1_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq1), xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
+      { graphicId: GRAPHIC_RECT2_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq2), xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
     ]
   }
 
@@ -468,12 +457,14 @@ export class EchartsLinkageModel {
    * @description 获取graphic 矩形图形模板
    * @param myChart echarts实例
    * @param graphicId 图形元素id
-   * @param graphicXAxisX 图形元素x轴坐标
+   * @param xAxisSeq 图形元素x轴坐标序号：从0开始
+   * @param graphicXAxisX 图形元素x轴坐标：不定，可能是数值可能是时间等等
    * @returns 
    */
-  getGraphicRectTemplate = (myChart: any, graphicId: string, graphicXAxisX: number) => {
+  getGraphicRectTemplate = (myChart: any, graphicId: string, xAxisSeq: number, graphicXAxisX: number) => {
     const TOP = 40; // 图形元素距离顶部的偏移量
     const TEXT_OFFSET_TOP = 5; // 文本距离顶部的偏移量
+    const positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq); // 图形元素的X轴坐标转为像素值
     return {
       id: graphicId,
       type: 'rect',	//'rect' 表示这个 graphic element 的类型是长方形。
@@ -488,7 +479,7 @@ export class EchartsLinkageModel {
       },
       // 用 transform 的方式对长方形进行定位。position: [x, y] 表示将长方形平移到 [x, y] 位置。
       // 这里使用了 convertToPixel 这个 API 来得到长方形的位置
-      position: [myChart.convertToPixel({ xAxisId: XAXIS_ID }, graphicXAxisX), 0],
+      position: [positionX, 0],
       draggable: 'horizontal',// 这个属性让圆点可以被拖拽。
       //设置长方形的样式，透明度设置为0时，该长方形不可见
       //  invisible: true,// 这个属性让长方形不可见（但是不影响他响应鼠标事件）。
@@ -517,7 +508,7 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * @description 计算两个graphic矩形的坐标信息: 当前拖拽的图形的左侧位置和在X轴上的坐标、未拖动的图形的左侧位置和在X轴上的坐标
+   * @description 计算两个graphic矩形的坐标信息: 当前拖拽的图形的左侧位置和在X轴上的坐标值、未拖动的图形的左侧位置和在X轴上的坐标值
    * @param e 鼠标事件对象 
    * @param myChart echarts实例 
    * @param currentDragGraphicId 当前拖拽的图形的id 
@@ -526,8 +517,14 @@ export class EchartsLinkageModel {
    */
   computedTwoGraphicRect = (e: any, myChart: any, currentDragGraphicId: string): GraphicLocationInfoType => {
     const currentDragGraphicPositionX: number = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
-    const currentDragGraphicXAxisX: number = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, currentDragGraphicPositionX);
-    return { currentDragGraphicId, currentDragGraphicPositionX, currentDragGraphicXAxisX };
+    const xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, currentDragGraphicPositionX); // 图形元素x轴坐标序号：从0开始
+    const currentDragGraphicXAxisX: number = this.xAxisData[xAxisSeq];
+    return { 
+      graphicId: currentDragGraphicId, 
+      positionX: currentDragGraphicPositionX, 
+      xAxisSeq,
+      xAxisX: currentDragGraphicXAxisX 
+    };
   }
 
   getOptionTemplate = () => {
