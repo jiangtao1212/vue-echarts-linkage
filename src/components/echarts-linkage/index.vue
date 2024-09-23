@@ -443,7 +443,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   // 图形设置
   props.useGraphicLocation
     && dataArray.data[0].seriesData.length > 0
-    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params)));
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params, dataArray.id)));
   // 联动
   myChart.group = groupName;
   myChart.resize();
@@ -478,22 +478,24 @@ let animating = false;
 /**
  * @description 图形移动联动, 使用requestAnimationFrame优化性能
  * @param params 图形位置信息
+ * @param currentEchartsId 当前实例id
  */
-const graphicDragLinkage = (params: GraphicLocationInfoType) => {
+const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEchartsId: string) => {
   if (animating) return;
   animating = true;
   requestAnimationFrame(() => {
     dataAbout.data.forEach((item: SeriesIdDataType) => {
-      if (!props.isLinkage && (item.id !== params.graphicId)) return; // 非联动状态，只处理当前实例的图形
+      console.log('graphicDragLinkage', item.id, graphicLocation.graphicId);
+      if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
       // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
       let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
       let notDragGraphic: GraphicLocationInfoType = {} as any;
       item.graphics && item.graphics.forEach((graphic: GraphicLocationInfoType) => {
-        if (graphic.graphicId === params.graphicId) {
-          graphic.positionX = params.positionX;
-          graphic.xAxisSeq = params.xAxisSeq;
-          graphic.xAxisX = params.xAxisX;
+        if (graphic.graphicId === graphicLocation.graphicId) {
+          graphic.positionX = graphicLocation.positionX;
+          graphic.xAxisSeq = graphicLocation.xAxisSeq;
+          graphic.xAxisX = graphicLocation.xAxisX;
         } else {
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
@@ -503,14 +505,14 @@ const graphicDragLinkage = (params: GraphicLocationInfoType) => {
       myChart.setOption({
         graphic: [
           {
-            id: params.graphicId,
-            type: 'rect',
-            position: [params.positionX, 0],
-            info: params.xAxisX,
+            id: graphicLocation.graphicId,
+            type: 'rect', // 这里必须要添加图形类型，否则打包后发布新版本再引入会报错
+            position: [graphicLocation.positionX, 0],
+            info: graphicLocation.xAxisX,
             textContent: {
               type: 'text',
               style: {
-                text: params.xAxisX,
+                text: graphicLocation.xAxisX,
               }
             },
           },
