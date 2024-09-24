@@ -1,10 +1,11 @@
 <template>
   <div class='echarts-linkage-container'>
     <div class="main-container">
-      <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container" :style="{'background-color': computedBackgroundColor}">
+      <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container"
+        :style="{ 'background-color': computedBackgroundColor, '--drag-top': dataAbout.drag.top + 'px' }">
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
-          :group="item.id" :theme="theme" @update="(data) => update(data, index)"
+          :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize" @update="(data) => update(data, index)"
           @delete-item="(data, number) => deleteItem(data, number, index)" />
       </div>
     </div>
@@ -87,6 +88,10 @@ const dataAbout = reactive({
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
   currentMaxShowYCount: 0, // 当前显示的echarts中最大Y轴数量
+  drag: {
+    top: 5, // 拖拽legend图例距离顶部距离
+    fontSize: 12, // 拖拽legend图例字体大小
+  }
 }) as DataAboutType;
 
 // 计算每个echarts的父级容器颜色
@@ -205,6 +210,7 @@ const setStyleProperty = () => {
   const rows = Math.ceil(count / cols);
   element.style.setProperty('--count', count.toString());
   element.style.setProperty('--rows', rows.toString());
+  element.style.setProperty('--gap', '10px');
   const gap = 10;
   if (cols === 1) { // 单列，宽度为100%
     element.style.setProperty('--item-width', '100%');
@@ -250,8 +256,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   dataAbout.data.push({ id, markLineArray, data: dataAll });
   judgeOverEchartsMaxCountHandle();
   setStyleProperty();
-  await nextTick();
-  initEcharts();
+  allUpdateHandleCommon();
 };
 // 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
@@ -278,8 +283,7 @@ const deleteEchart = async (id: string) => {
   const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   dataAbout.data.splice(index, 1);
   setStyleProperty();
-  await nextTick();
-  initEcharts();
+  allUpdateHandleCommon();
 }
 
 /**
@@ -435,6 +439,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
+    .setFontSizeBottomAuto(comsputerEchartsHeight()) // 设置字体大小自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
@@ -449,6 +454,28 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   myChart.resize();
   console.groupEnd();
   return myChart;
+}
+
+/**
+ * @description 计算echarts高度
+ * @returns number
+ */
+const comsputerEchartsHeight = () => {
+  // 计算echarts高度
+  const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
+  const gap = element.style.getPropertyValue('--gap');
+  const count = dataAbout.data.length;
+  const height = Math.floor((element.offsetHeight - (count - 1) * parseInt(gap.substring(0, gap.length - 2))) / count);
+  console.log('height', height);
+  setDragPosition(height);
+  return height;
+}
+
+const setDragPosition = (height: number) => {
+  if (height <= 200) {
+    dataAbout.drag.top = -2;
+    dataAbout.drag.fontSize = 11;
+  }
 }
 
 // 初始化空白echarts
@@ -485,7 +512,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
   animating = true;
   requestAnimationFrame(() => {
     dataAbout.data.forEach((item: SeriesIdDataType) => {
-      console.log('graphicDragLinkage', item.id, graphicLocation.graphicId);
+      // console.log('graphicDragLinkage', item.id, graphicLocation.graphicId);
       if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
       // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
@@ -644,13 +671,21 @@ const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) =
 }
 
 // 传入所有显示子项数据，更新所有echarts --- 导出
-const updateAllEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
+const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
   dataAbout.data.forEach((echart: SeriesIdDataType) => {
     echart.data.forEach((series: OneDataType, index: number) => {
       const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
       newSeriesData && (series.seriesData = newSeriesData);
     });
   });
+  allUpdateHandleCommon();
+}
+
+/**
+ * @description 全部更新处理的公共方法
+ */
+const allUpdateHandleCommon = async () => {
+  await nextTick(); // 作用：防止在调用方法之前修改了dataAbout.data，而dataAbout.data是响应式的，又会导致画面重新渲染
   dataAbout.isAllUpdate = true; // 标记全部更新
   initEcharts();
   await nextTick();
@@ -748,7 +783,7 @@ onBeforeUnmount(() => {
 
       .drag-container {
         position: absolute;
-        top: 5px;
+        top: var(--drag-top);
         right: 150px;
         padding: 2px;
         z-index: 20;

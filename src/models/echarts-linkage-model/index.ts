@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-23 10:47:09
+ * @LastEditTime: 2024-09-24 17:13:47
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,7 +18,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil } from "@/utils/index";
-import { type GraphicLocationInfoType} from "@/components/echarts-linkage/types/index"
+import { type GraphicLocationInfoType } from "@/components/echarts-linkage/types/index"
 
 /**
  * @description 图表数据类型
@@ -69,6 +69,7 @@ export class EchartsLinkageModel {
   private echartsColors = ECHARTS_COLORS; // 颜色数组
   private legendShow = true; // 是否显示图例
   private xAxisData: Array<number> = []; // x轴数据
+  private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
   private optionTemplate: EChartsOption = optionTemplate; // 折线图表模板
   private resultOption: EChartsOption = optionTemplate; // 最终的option
@@ -113,7 +114,7 @@ export class EchartsLinkageModel {
         continue;
       } else {
         // 第一个值空字符串，用于隔开起始点
-        xAxisData = ['', ...seriesData.map((item: Array<number>) => item[0])]; 
+        xAxisData = ['', ...seriesData.map((item: Array<number>) => item[0])];
         break;
       }
     }
@@ -148,7 +149,7 @@ export class EchartsLinkageModel {
         offset: 0,
         alignTicks: true,
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
-        nameTextStyle: { align: 'center', padding: 0 },
+        nameTextStyle: { align: 'center', padding: [0, 0, -7, 0] },
         axisLabel: { margin: 2 },
       }
       if (item.dataType === 'switch') { // 开关量
@@ -296,7 +297,7 @@ export class EchartsLinkageModel {
   /**
    * 重写echarts实例的SaveAsImage按钮的点击事件
    * @param callback SaveAsImage按钮的自定义点击事件回调函数
-   * @returns 
+   * @returns this 链式调用 
    */
   setSaveAsImageClickEvent = (callback: Function) => {
     if (this.resultOption.toolbox) {
@@ -315,7 +316,7 @@ export class EchartsLinkageModel {
   /**
    * 设置toolbox中相关工具的title语言类型
    * @param lang 语言类型，zh-cn | en (中文 | 英文)，默认中文
-   * @returns 
+   * @returns this 链式调用 
    */
   setLanguage = (lang: 'zh-cn' | 'en') => {
     const feature = (this.resultOption?.toolbox as any).feature;
@@ -332,6 +333,7 @@ export class EchartsLinkageModel {
    * 最大显示数量maxShowYCount为0时，grid的left值设置默认值，无需对齐
    * 其他情况，grid的left值设置： 默认值 + 最大显示数量-1的偏移量
    * @param maxShowYCount 各个图表中Y轴的最大显示数量
+   * @returns this 链式调用
    */
   setGridLeftAlign = (maxShowYCount: number) => {
     let showYCount = 0;
@@ -346,6 +348,13 @@ export class EchartsLinkageModel {
     return this;
   }
 
+  /**
+   * 
+   * @param myChart echarts实例
+   * @param graphics 图形元素数组 
+   * @param onPointDragging 自定义图形元素拖拽事件回调函数 
+   * @returns 图形元素数组信息 Array<GraphicLocationInfoType>
+   */
   setGraphic = (myChart: any, graphics: Array<GraphicLocationInfoType> | undefined, onPointDragging: Function): Array<GraphicLocationInfoType> => {
     // console.log('myChart', myChart);
     // console.log('myChart.getHeight()', myChart.getHeight());
@@ -462,8 +471,22 @@ export class EchartsLinkageModel {
    * @returns 
    */
   getGraphicRectTemplate = (myChart: any, graphicId: string, xAxisSeq: number, graphicXAxisX: number) => {
-    const TOP = 40; // 图形元素距离顶部的偏移量
-    const TEXT_OFFSET_TOP = 5; // 文本距离顶部的偏移量
+    console.log('this.usedStandards', this.usedStandards);
+    let TOP = 40; // 图形元素距离顶部的偏移量
+    let TEXT_OFFSET_TOP = 20; // 文本距离顶部的偏移量
+    let height = myChart.getHeight() * 0.9 - TOP; // 图形元素的高度
+    let fontSize = 12; // 图形元素的字体大小
+    if (Object.keys(this.usedStandards).length !== 0) {
+      // 自适应
+      const usedStandards: any = this.usedStandards;
+      const top = usedStandards.grid.top;
+      const bottom = usedStandards.grid.bottom;
+      TOP = top / 2;
+      height = usedStandards.echartsHeight - top - bottom + TOP;
+      fontSize = usedStandards.fontSize;
+      TEXT_OFFSET_TOP = (top - TOP) / 2 + fontSize;
+    }
+    
     const positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq); // 图形元素的X轴坐标转为像素值
     return {
       id: graphicId,
@@ -474,7 +497,7 @@ export class EchartsLinkageModel {
       //设置长方形的形状
       shape: {
         width: 1,
-        height: myChart.getHeight() * 0.9 - TOP,
+        height: height,
         // r: 10
       },
       // 用 transform 的方式对长方形进行定位。position: [x, y] 表示将长方形平移到 [x, y] 位置。
@@ -488,12 +511,12 @@ export class EchartsLinkageModel {
         type: 'text',
         style: {
           text: graphicXAxisX,
-          // font: '20px "STHeiti", sans-serif'
+          font: fontSize + 'px "Microsoft YaHei", sans-serif'
         }
       },
       textConfig: {
         position: 'top',
-        offset: [0, TEXT_OFFSET_TOP]
+        offset: [15, TEXT_OFFSET_TOP]
       },
       style: {
         fill: 'red',
@@ -519,12 +542,102 @@ export class EchartsLinkageModel {
     const currentDragGraphicPositionX: number = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
     const xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, currentDragGraphicPositionX); // 图形元素x轴坐标序号：从0开始
     const currentDragGraphicXAxisX: number = this.xAxisData[xAxisSeq];
-    return { 
-      graphicId: currentDragGraphicId, 
-      positionX: currentDragGraphicPositionX, 
+    return {
+      graphicId: currentDragGraphicId,
+      positionX: currentDragGraphicPositionX,
       xAxisSeq,
-      xAxisX: currentDragGraphicXAxisX 
+      xAxisX: currentDragGraphicXAxisX
     };
+  }
+
+  /**
+   * 
+   * @param myChart echarts实例
+   * @returns this 链式调用
+   */
+  setFontSizeBottomAuto = (height: number) => {
+    console.log('setFontSizeBottomAuto', height);
+    let usedStandards: any = {}; // 使用的标准
+    const standardsMap = { // 标准映射
+      '200': {
+        fontSize: 12,
+        grid: {
+          top: 50,
+          bottom: 12 + 5 + 4,
+        },
+        toolbox: {
+          top: 'auto',
+          itemSize: 15,
+          itemGap: 8,
+        }
+      },
+      '150': {
+        fontSize: 10,
+        grid: {
+          top: 40,
+          bottom: 10 + 5 + 4,
+        },
+        toolbox: {
+          top: -4,
+          itemSize: 12,
+          itemGap: 6,
+        }
+      },
+      '100': {
+        fontSize: 10,
+        grid: {
+          top: 30,
+          bottom: 10 + 5 + 4,
+        },
+        toolbox: {
+          top: -4,
+          itemSize: 12,
+          itemGap: 6,
+        }
+      },
+      'other': {
+        fontSize: 9,
+        grid: {
+          top: 20,
+          bottom: 9 + 5 + 4,
+        },
+        toolbox: {
+          top: -4,
+          itemSize: 10,
+          itemGap: 4,
+        }
+      },
+    }
+    if (height > 200) {
+      usedStandards = standardsMap['200'];
+    } else if (height > 150) {
+      usedStandards = standardsMap['150'];
+    } else if (height > 100) {
+      usedStandards = standardsMap['100'];
+    } else {
+      usedStandards = standardsMap['other'];
+    }
+    // grid
+    const grid = this.resultOption.grid as echarts.GridComponentOption;
+    grid.top = usedStandards.grid.top;
+    grid.bottom = usedStandards.grid.bottom;
+    // toolbox
+    const toolbox = this.resultOption.toolbox as echarts.ToolboxComponentOption;
+    toolbox.top = usedStandards.toolbox.top;
+    toolbox.itemSize = usedStandards.toolbox.itemSize;
+    toolbox.itemGap = usedStandards.toolbox.itemGap;
+    // xAxis
+    const xAxis = (this.resultOption.xAxis as Array<any>)[0];
+    xAxis.axisLabel.fontSize = usedStandards.fontSize;
+    xAxis.nameTextStyle.fontSize = usedStandards.fontSize;
+    // yAxis
+    (this.resultOption.yAxis as Array<echarts.YAXisComponentOption>).forEach((yAxis: any) => {
+      yAxis.axisLabel.fontSize = usedStandards.fontSize;
+      yAxis.nameTextStyle.fontSize = usedStandards.fontSize;
+    });
+    usedStandards.echartsHeight = height;
+    this.usedStandards = usedStandards;
+    return this;
   }
 
   getOptionTemplate = () => {

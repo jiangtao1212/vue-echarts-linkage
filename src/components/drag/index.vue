@@ -18,7 +18,7 @@
               <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
                 :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
                 <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
-                <span class="cursor-move-item">{{ item.name }}</span>
+                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">{{ item.name }}</span>
               </div>
             </template>
             <div class="flex flex-col justify-center items-center gap-1">
@@ -34,19 +34,29 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick } from 'vue';
+import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick, computed } from 'vue';
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType, type DragItemDataProps } from "./type/index";
 
 const emit = defineEmits(['update', 'deleteItem']);
 
+/**
+ * @description: 组件props类型
+ * @param {Array<DragItemDataProps>} data - 原始数据
+ * @param {string} id - 唯一标识
+ * @param {Array<string>} colors - 颜色数组
+ * @param {string} group - 组名
+ * @param {'light' | 'dark'} theme - 主题
+ * @param {string | number} itemFontSize - 子项字体大小
+ */
 export type PropsType = {
   data: Array<DragItemDataProps>,
   id: string,
   colors?: Array<string>,
   group: string,
   theme?: 'light' | 'dark',
+  itemFontSize?: string | number,
 }
 
 const props = withDefaults(defineProps<PropsType>(), {
@@ -55,6 +65,15 @@ const props = withDefaults(defineProps<PropsType>(), {
   colors: () => ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'],
   group: 'people',
   theme: 'light',
+  itemFontSize: '12px',
+});
+
+// 计算item的字体大小
+const computedItemFontSize = computed(() => {
+  if (typeof props.itemFontSize === 'number') {
+    return props.itemFontSize + 'px';
+  }
+  return props.itemFontSize;
 });
 
 // 响应式数据
@@ -537,7 +556,7 @@ onBeforeUnmount(() => {
 
     .cursor-move-item {
       color: #333;
-      font-size: 12px;
+      font-size: var(--move-item-font-size);
       font-weight: 450;
       font-family: Arial, sans-serif;
       background-color: transparent;

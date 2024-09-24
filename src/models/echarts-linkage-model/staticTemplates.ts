@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-21 17:37:14
+ * @LastEditTime: 2024-09-24 14:46:45
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -22,8 +22,8 @@ export const optionTemplate: EChartsOption = {
   grid: {
     show: true,
     left: '1%',
-    right: '2%',
-    // top: '1%',
+    right: '1.3%',
+    top: '15%',
     bottom: '10%',
     // containLabel: true, // 包含刻度标签, 如果这里使用的话，echarts自身的适配的效果并不好，grid的left适配会出现问题
   },
@@ -73,10 +73,14 @@ export const optionTemplate: EChartsOption = {
     type: 'category',
     id: XAXIS_ID,
     name: '',
-    // axisLabel: {
-    //   show: true,
-    //   interval: 1, // 控制刻度标签显示间隔
-    // },
+    axisLabel: {
+      fontSize: 12,
+    },
+    nameTextStyle: {
+      fontSize: 12,
+      align: 'center',
+      verticalAlign: 'top',
+    },
     data: [],
   }],
   yAxis: [
@@ -85,11 +89,14 @@ export const optionTemplate: EChartsOption = {
       show: true,
       nameLocation: 'center',
       nameTextStyle: {
-        padding: [0, 10, 0, 50],
+        padding: 0,
         align: 'right',
       },
       axisLine: {
         show: true,
+      },
+      axisLabel: {
+        fontSize: 12,
       },
     }
   ],
