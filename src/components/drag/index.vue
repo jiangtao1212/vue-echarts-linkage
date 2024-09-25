@@ -70,6 +70,7 @@ const props = withDefaults(defineProps<PropsType>(), {
 
 // 计算item的字体大小
 const computedItemFontSize = computed(() => {
+  console.log('computedItemFontSize', props.itemFontSize);
   if (typeof props.itemFontSize === 'number') {
     return props.itemFontSize + 'px';
   }

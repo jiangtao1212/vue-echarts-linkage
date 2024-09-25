@@ -439,7 +439,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
-    .setFontSizeBottomAuto(comsputerEchartsHeight()) // 设置字体大小自适应
+    .setFontSizeBottomAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
@@ -471,10 +471,17 @@ const comsputerEchartsHeight = () => {
   return height;
 }
 
+/**
+ * @description 根据echarts实例容器的高度，设置拖拽legend图例的位置和字体大小
+ * @param height echarts高度
+ */
 const setDragPosition = (height: number) => {
   if (height <= 200) {
     dataAbout.drag.top = -2;
     dataAbout.drag.fontSize = 11;
+  } else {
+    dataAbout.drag.top = 5;
+    dataAbout.drag.fontSize = 12;
   }
 }
 
@@ -689,6 +696,7 @@ const allUpdateHandleCommon = async () => {
   dataAbout.isAllUpdate = true; // 标记全部更新
   initEcharts();
   await nextTick();
+  comsputerEchartsHeight();
   dataAbout.isAllUpdate = false; // 标记全部更新完成
 }
 

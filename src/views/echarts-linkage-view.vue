@@ -16,7 +16,7 @@
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
-    :is-linkage="true" :use-graphic-location="true" id="echarts-linkage-view" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
+    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
 </template>
 

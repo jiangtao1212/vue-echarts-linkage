@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-24 17:13:47
+ * @LastEditTime: 2024-09-25 10:57:51
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -555,14 +555,14 @@ export class EchartsLinkageModel {
    * @param myChart echarts实例
    * @returns this 链式调用
    */
-  setFontSizeBottomAuto = (height: number) => {
+  setFontSizeBottomAuto = (height: number, useGraphicLocation: boolean = true) => {
     console.log('setFontSizeBottomAuto', height);
     let usedStandards: any = {}; // 使用的标准
     const standardsMap = { // 标准映射
       '200': {
         fontSize: 12,
         grid: {
-          top: 50,
+          top: useGraphicLocation ? 50 : 30,
           bottom: 12 + 5 + 4,
         },
         toolbox: {
@@ -574,7 +574,7 @@ export class EchartsLinkageModel {
       '150': {
         fontSize: 10,
         grid: {
-          top: 40,
+          top: useGraphicLocation ? 40 : 20,
           bottom: 10 + 5 + 4,
         },
         toolbox: {
@@ -586,7 +586,7 @@ export class EchartsLinkageModel {
       '100': {
         fontSize: 10,
         grid: {
-          top: 30,
+          top: useGraphicLocation ? 30 : 20,
           bottom: 10 + 5 + 4,
         },
         toolbox: {
