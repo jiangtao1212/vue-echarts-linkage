@@ -6,7 +6,8 @@
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
           :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize" @update="(data) => update(data, index)"
-          @delete-item="(data, number) => deleteItem(data, number, index)" />
+          @delete-item="(data, number) => deleteItem(data, number, index)"
+          @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)" />
       </div>
     </div>
   </div>
@@ -131,16 +132,37 @@ const update = async (data: Array<any>, echartsIndex: number) => {
   initEcharts();
 }
 
-// 删除数据项
-const deleteItem = async (data: Array<any>, number: number, echartsIndex: number) => {
-  console.groupCollapsed('deleteItem', data, number, echartsIndex);
-  dataAbout.data[echartsIndex].data.splice(number, 1);
+/**
+ * @description 删除数据项
+ * @param data 删除后重新组装的数据 
+ * @param deleteItemsIndex 删除的项序号（其实是索引，从0开始） 
+ * @param echartsIndex echarts索引，从0开始 
+ */
+const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsIndex: number) => {
+  console.groupCollapsed('deleteItem', data, deleteItemsIndex, echartsIndex);
+  dataAbout.data[echartsIndex].data.splice(deleteItemsIndex, 1);
   dataAbout.data[echartsIndex].isDeleteItem = true;
   update(data, echartsIndex);
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
   console.groupEnd();
+}
 
+/**
+ * @description 删除数据项所在的列
+ * @param data 删除后重新组装的数据 
+ * @param number 删除的项序号数组（其实是索引，从0开始） 
+ * @param echartsIndex echarts索引，从0开始 
+ */
+ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[], echartsIndex: number) => {
+  console.groupCollapsed('deleteItemColumn', data, deleteItemsIndexArray, echartsIndex);
+  dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
+  console.log('dataAbout.data', dataAbout.data[echartsIndex]);
+  dataAbout.data[echartsIndex].isDeleteItem = true;
+  update(data, echartsIndex);
+  await nextTick();
+  dataAbout.data[echartsIndex].isDeleteItem = false;
+  console.groupEnd();
 }
 
 // 组装yAxisShowData --- 各个Y轴的显示状态

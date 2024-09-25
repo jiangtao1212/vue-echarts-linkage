@@ -10,21 +10,37 @@
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
           class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
           :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
-          @contextmenu.prevent="clickObjFun.handleContextMenu($event, item.id)">
-          <el-popover fixed="right" placement="right" :width="80" v-if="!dataAbout.isDeleteItemHandle"
+          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)">
+          <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
             <template #reference>
               <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
                 :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
                 <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
-                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">{{ item.name }}</span>
+                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">{{ item.name
+                  }}</span>
               </div>
             </template>
-            <div class="flex flex-col justify-center items-center gap-1">
-              <el-button type="primary" size="small" @click="clickObjFun.deleteItemDefault(item.id)">移除</el-button>
-              <el-button type="primary" size="small" class="!ml-0"
-                @click="clickObjFun.resetItemDefault(item.name)">重置</el-button>
+            <div class="flex flex-col justify-center items-start gap-1">
+              <div class="flex justify-start items-center gap-1">
+                <span>重置：</span>
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.resetItemDefault(item.id)">重置</el-button>
+              </div>
+              <el-divider border-style="dashed" />
+              <div class="flex justify-start items-center gap-1">
+                <span>移除：</span>
+                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemDefault(item.id)">
+                  自身
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemColumnDefault(item.id)">
+                  本列
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemDefault(item.id)">
+                  全部
+                </el-button>
+              </div>
             </div>
           </el-popover>
         </div>
@@ -39,7 +55,7 @@ import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType, type DragItemDataProps } from "./type/index";
 
-const emit = defineEmits(['update', 'deleteItem']);
+const emit = defineEmits(['update', 'deleteItem', 'deleteItemColumn']);
 
 /**
  * @description: 组件props类型
@@ -90,79 +106,131 @@ const dataConst = {
   dataCache: [], // 缓存数据
 }
 
-// 点击相关的对象方法
-const clickObjFun: { [key: string]: Function } = {};
+// 点击相关的对象
+const popoverClickObj: { [key: string]: Function } = {};
+// 初始化右键菜单点击对象方法
+const initPopoverClickObjFun = () => {
+  // 这里设置其他右键菜单关闭---原因是：默认右键点击时，el-popover默认不能关闭上次的右键菜单，
+  popoverClickObj.handleContextMenu = function (event: any, id: string) {
+    // 处理右键点击
+    console.log('处理右键点击', id);
+    dataAbout.visible = id;
+  }
 
-// 这里设置其他右键菜单关闭---原因是：默认右键点击时，el-popover默认不能关闭上次的右键菜单，
-clickObjFun.handleContextMenu = function (event: any, id: string) {
-  // 处理右键点击
-  console.log('处理右键点击', id);
-  dataAbout.visible = id;
-}
-
-// 重置当前子项默认状态 --- 单列唯一
-clickObjFun.resetItemDefault = function (selectedItem: string) {
-  let resData = {};
-  const dataOrigin = dataAbout.list;
-  // 1.找到当前子项数据
-  outer: for (let i = 0; i < dataOrigin.length; i++) {
-    const itemArray = dataOrigin[i].value;
-    for (let j = 0; j < itemArray.length; j++) {
-      if (itemArray[j].name === selectedItem) {
-        resData = itemArray[j];
-        break outer;
+  // 重置当前子项默认状态 --- 单列唯一
+  popoverClickObj.resetItemDefault = function (itemId: string) {
+    let resData = {};
+    const dataOrigin = dataAbout.list;
+    // 1.找到当前子项数据
+    outer: for (let i = 0; i < dataOrigin.length; i++) {
+      const itemArray = dataOrigin[i].value;
+      for (let j = 0; j < itemArray.length; j++) {
+        if (itemArray[j].id === itemId) {
+          resData = itemArray[j];
+          break outer;
+        }
       }
     }
+    // 2.重置当前子项数据
+    dataAbout.list = resetDefaultCommon(JSON.parse(JSON.stringify(resData)));
+    // 3.右键菜单关闭
+    dataAbout.visible = "";
+    // 4.发送更新数据事件
+    emit('update', JSON.parse(JSON.stringify(dataAbout.list)));
   }
-  // 2.重置当前子项数据
-  dataAbout.list = resetDefaultCommon(JSON.parse(JSON.stringify(resData)));
-  // 3.右键菜单关闭
-  dataAbout.visible = "";
-  // 4.发送更新数据事件
-  emit('update', JSON.parse(JSON.stringify(dataAbout.list)));
-}
 
-// 移除当前子项
-clickObjFun.deleteItemDefault = async function (itemId: string) {
-  console.group('移除当前子项');
-  console.log('itemId', itemId);
-  console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
-  let dataOrigin = JSON.parse(JSON.stringify(dataAbout.list));
-  // 1.删除当前子项
-  dataOrigin.forEach((item: DragListDataType) => item.value = item.value.filter((value: DragItemType) => value.id !== itemId));
-  // 2.调整各个子项id，大于当前子项的id减1，使其保持连续
-  dataOrigin.forEach((item: DragListDataType) => {
-    item.value.forEach((value: DragItemType, index: number) => {
-      if (value.id > itemId) {
-        value.id = (+value.id - 1).toString();
-      }
+  // 移除当前子项，并且调整各个子项id，使其保持连续
+  popoverClickObj.deleteItemDefault = async function (itemId: string) {
+    console.group('移除当前子项');
+    console.log('itemId', itemId);
+    console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
+    let dataOrigin: Array<DragListDataType> = JSON.parse(JSON.stringify(dataAbout.list));
+    // 1.删除当前子项
+    dataOrigin.forEach((item: DragListDataType) => item.value = item.value.filter((value: DragItemType) => value.id !== itemId));
+    // 2.调整各个子项id，大于当前子项的id减1，使其保持连续
+    dataOrigin.forEach((item: DragListDataType) => {
+      item.value.forEach((value: DragItemType, index: number) => {
+        if (value.id > itemId) {
+          value.id = (+value.id - 1).toString();
+        }
+      });
     });
-  });
-  const count = dataOrigin.reduce((acc: number, cur: DragListDataType) => acc + cur.value.length, 0);
-  // 3.新建空列表，填充对应数据
-  const resetData: Array<DragListDataType> = new Array(count);
-  for (let i = 0; i < count; i++) {
-    resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+    const count = dataOrigin.reduce((acc: number, cur: DragListDataType) => acc + cur.value.length, 0);
+    // 3.新建空列表，填充对应数据
+    const resetData: Array<DragListDataType> = new Array(count);
+    for (let i = 0; i < count; i++) {
+      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+    }
+    resetData.forEach((item1: DragListDataType) => {
+      const key = item1.key;
+      dataOrigin.forEach((item2: DragListDataType, index: number) => {
+        if (item2.value.length > 0 && item2.value[0].id === key) {
+          item1.value = item2.value;
+        }
+      });
+    });
+    console.log('resetData', resetData);
+    console.groupEnd();
+    dataAbout.list = JSON.parse(JSON.stringify(resetData));
+    // 4.右键菜单关闭
+    dataAbout.visible = "";
+    // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的子项索引(从0开始)
+    emit('deleteItem', resetData, +itemId - 1);
+    // 6.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
+    dataAbout.isDeleteItemHandle = true;
+    await nextTick();
+    dataAbout.isDeleteItemHandle = false;
   }
-  resetData.forEach((item1: DragListDataType) => {
-    const key = item1.key;
-    dataOrigin.forEach((item2: DragListDataType, index: number) => {
-      if (item2.value.length > 0 && item2.value[0].id === key) {
-        item1.value = item2.value;
-      }
+
+  // 移除当前子项所在的列，并且调整各个子项id，使其保持连续
+  popoverClickObj.deleteItemColumnDefault = async function (itemId: string) {
+    console.group('移除当前子项所在的列');
+    console.log('itemId', itemId);
+    console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
+    let dataOrigin: Array<DragListDataType> = JSON.parse(JSON.stringify(dataAbout.list));
+    // 1.先筛选出要删除的列数据，再删除当前子项所在的列，并且将空的列也删除
+    let deleteColumn: Array<DragItemType> = []; // 要删除的列数据
+    dataOrigin.forEach((item: DragListDataType) => item.value.some((value: DragItemType) => value.id === itemId) && (deleteColumn = JSON.parse(JSON.stringify(item.value))));
+    dataOrigin = dataOrigin.filter((item: DragListDataType) => item.value.length > 0 && !item.value.some((value: DragItemType) => value.id === itemId) )
+    // 2.先提取所有id进行排序，然后再调整各个子项id，重新从1开始排序，使其保持连续
+    const idArr: Array<string> = [];
+    dataOrigin.forEach((item: DragListDataType) => item.value.forEach((value: DragItemType) => idArr.push(value.id)));
+    idArr.sort((a: string, b: string) => +a - +b);
+    console.log('tt', idArr);
+    dataOrigin.forEach((item: DragListDataType) => {
+      item.value.forEach((value: DragItemType, index: number) => {
+        idArr.findIndex(item => item === value.id);
+        value.id = (idArr.findIndex(item => item === value.id) + 1).toString(); // 重新从1开始排序
+      });
     });
-  });
-  console.log('resetData', resetData);
-  console.groupEnd();
-  dataAbout.list = JSON.parse(JSON.stringify(resetData));
-  // 4.右键菜单关闭
-  dataAbout.visible = "";
-  // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的子项索引(从0开始)
-  emit('deleteItem', resetData, +itemId - 1);
-  // 6.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
-  dataAbout.isDeleteItemHandle = true;
-  await nextTick();
-  dataAbout.isDeleteItemHandle = false;
+    console.log('dataOrigin', dataOrigin);
+    // 3.新建空列表，填充对应数据
+    const resetData: Array<DragListDataType> = new Array(idArr.length);
+    for (let i = 0; i < idArr.length; i++) {
+      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+    }
+    resetData.forEach((item1: DragListDataType) => {
+      const key = item1.key;
+      dataOrigin.forEach((item2: DragListDataType, index: number) => {
+        if (item2.value.length > 0 && item2.value[0].id === key) {
+          item1.value = item2.value;
+        }
+      });
+    });
+    console.log('resetData', resetData);
+    console.groupEnd();
+    dataAbout.list = JSON.parse(JSON.stringify(resetData));
+    // 4.右键菜单关闭
+    dataAbout.visible = "";
+    // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的所有子项索引数组
+    const deleteItemsIndexArray: Array<number> = deleteColumn.map((item: DragItemType) => +item.id - 1);
+    emit('deleteItemColumn', resetData, deleteItemsIndexArray);
+    // 6.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
+    dataAbout.isDeleteItemHandle = true;
+    await nextTick();
+    dataAbout.isDeleteItemHandle = false;
+  }
+
 }
 
 // groupComputed方法，用于组装group和判断是否为可拖动列表
@@ -482,6 +550,7 @@ watch(() => props.data, (newVal, oldVal) => { // TAG: 这里需要注意，第�
 
 onMounted(() => {
   initEventListeners();
+  initPopoverClickObjFun();
 });
 
 //销毁
@@ -521,6 +590,7 @@ onBeforeUnmount(() => {
       background-color: #f5f5f5;
       cursor: pointer;
     }
+
     &:hover:has(.dark) {
       background-color: #8E84CB;
     }
@@ -567,5 +637,11 @@ onBeforeUnmount(() => {
       color: #EDF0F9;
     }
   }
+}
+</style>
+
+<style scoped lang="less">
+:deep(.el-divider--horizontal) {
+  margin: 1px 0;
 }
 </style>
