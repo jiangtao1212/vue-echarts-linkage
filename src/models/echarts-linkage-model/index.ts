@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-25 10:57:51
+ * @LastEditTime: 2024-09-26 14:55:36
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -76,7 +76,7 @@ export class EchartsLinkageModel {
 
   constructor(param: EchartsLinkageModelType) {
     console.groupCollapsed('EchartsLinkageModel')
-    console.log(param);
+    console.log('param', param);
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
@@ -241,8 +241,8 @@ export class EchartsLinkageModel {
     } else { // 单个series
       resOption = addOneSeries(resOption, this.seriesOptionArray[0], 0);
     }
+    // console.log(resOption);
     this.resultOption = resOption;
-    console.log(this.resultOption);
   }
 
   /**
@@ -551,12 +551,12 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * 
+   * @description 设置字体大小和其他自适应
    * @param myChart echarts实例
    * @returns this 链式调用
    */
-  setFontSizeBottomAuto = (height: number, useGraphicLocation: boolean = true) => {
-    console.log('setFontSizeBottomAuto', height);
+  setFontSizeAndMoreAuto = (height: number, useGraphicLocation: boolean = true) => {
+    console.log('setFontSizeAndMoreAuto', height);
     let usedStandards: any = {}; // 使用的标准
     const standardsMap = { // 标准映射
       '200': {

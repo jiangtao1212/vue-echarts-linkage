@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 10:44:53
+ * @LastEditTime: 2024-09-26 14:11:33
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -122,7 +122,7 @@ export type DataAboutType = {
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {Array<number[]>} seriesData 系列数据
  */
-export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData'>;
+export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType'>;
 
 /**
  * @description: 接收drop事件的参数类型

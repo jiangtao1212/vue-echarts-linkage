@@ -13,6 +13,15 @@ import DeleteSvg from '@/assets/svg/delete.svg';
 
 // x轴id
 export const XAXIS_ID = 'X1';
+// 主题
+export const THEME = {
+  'DARK': { // 黑色主题
+    BACKGROUND_COLOR: '#100C2A',
+  },
+  'LIGHT': { // 白色主题
+    BACKGROUND_COLOR: 'transparent',
+  }
+};
 // 颜色数组
 export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
 // 折线图表模板

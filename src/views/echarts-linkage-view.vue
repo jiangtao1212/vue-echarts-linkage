@@ -16,7 +16,8 @@
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
-    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
+    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
+    @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
 </template>
 
@@ -24,7 +25,7 @@
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType  } from '@/components/echarts-linkage/types/index';
+import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType } from '@/components/echarts-linkage/types/index';
 
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
@@ -70,8 +71,8 @@ const updateAllLinkageBtnClick = () => {
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
   allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
-    if (index >= 18) {
-      item.seriesData = [];
+    if (item.dataType === 'switch') {
+      item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
       item.seriesData = RandomUtil.getSeriesData(1000);
     }

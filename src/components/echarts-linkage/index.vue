@@ -6,8 +6,8 @@
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
           :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize"
-          @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging"
-          @update="(data) => update(data, index)" @delete-item="(data, number) => deleteItem(data, number, index)"
+          @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging" @update="(data) => update(data, index)"
+          @delete-item="(data, number) => deleteItem(data, number, index)"
           @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
           @delete-items-all="deleteItemsAll(index)" />
       </div>
@@ -23,7 +23,7 @@ import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { XAXIS_ID } from "@/models/echarts-linkage-model/staticTemplates"
+import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -101,14 +101,16 @@ const dataAbout = reactive({
 // 计算每个echarts的父级容器颜色
 const computedBackgroundColor = computed(() => {
   if (props.background) return props.background;
-  if (props.theme === 'dark') return '#100C2A';
-  return 'transparent';
+  if (props.theme === 'dark') return THEME.DARK.BACKGROUND_COLOR;
+  return THEME.LIGHT.BACKGROUND_COLOR;
 });
 
 // 拖拽传入的数据
 const dragDataComputed = (number: number) => {
   const res: Array<DragItemDataProps> = [];
   const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
+  // 初始化空白echarts时，有占位数据，但name为空，legend不显示
+  if (originData.length > 0 && originData[0].name === '') return res;
   originData.forEach((item: OneDataType) => {
     // switch开关类型不可以拖拽
     res.push({ name: item.name, isDrag: item.dataType === 'switch' ? false : true });
@@ -346,9 +348,15 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return;
   }
   const seriesData = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData, dataType: oneDataType.dataType || 'pulse' };
-  if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].seriesData.length === 0) { // 空数据，直接赋值
-    dataAbout.data[index].data[0] = seriesData
+  console.log('seriesData', dataAbout.data[index]);
+  //注意：这里有两种空数据情况
+  // 情况1是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，除了type属性基本上都是空数据
+  // 情况2是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，有name等数据，只是seriesData数据为空
+  if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].name === '') {
+    // 情况1，直接赋值
+    dataAbout.data[index].data[0] = seriesData;
   } else {
+    // 情况2，新增数据; 其他为正常新增
     dataAbout.data[index].data.push(seriesData);
   }
   await nextTick();
@@ -400,8 +408,8 @@ const judgeEchartInstance = (id: string) => {
     const currentMaxShowYCount: number = computerMaxShowYCount(); // 计算当前实时数据中y轴数量的最大值，还未渲染
     const currentData: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
     const currentShowYCount: number = currentData.data.reduce((pre: number, cur: OneDataType) => pre + judgeShowYAxisCommon(cur), 0);
-    console.log('maxShowYCount', lastMaxShowYCount);
-    console.log('currentShowYCount', currentShowYCount);
+    // console.log('maxShowYCount', lastMaxShowYCount);
+    // console.log('currentShowYCount', currentShowYCount);
     // 实例存在且是删除子项item操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
     if (currentData.isDeleteItem) {
       myChart.clear();
@@ -468,18 +476,18 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   const echartsLinkageModel = getEchartsLikageModel(seriesData);
   // 添加自定义标记线
   dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
-  console.log(dataArray.data);
+  console.log('数据', dataArray.data);
   // 各种处理
   echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
-    .setFontSizeBottomAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小自适应
+    .setFontSizeAndMoreAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
-  console.log("option", option);
   myChart.setOption(option);
+  console.log('option', option);
   // 图形设置
   props.useGraphicLocation
     && dataArray.data[0].seriesData.length > 0
@@ -496,12 +504,11 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
  * @returns number
  */
 const comsputerEchartsHeight = () => {
-  // 计算echarts高度
   const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
   const gap = element.style.getPropertyValue('--gap');
   const count = dataAbout.data.length;
   const height = Math.floor((element.offsetHeight - (count - 1) * parseInt(gap.substring(0, gap.length - 2))) / count);
-  console.log('height', height);
+  // console.log('height', height);
   setDragPosition(height);
   return height;
 }
@@ -536,7 +543,7 @@ const initEcharts = () => {
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     initOneEcharts(item, groupName);
   });
-  emitGraphicLocation();
+  props.useGraphicLocation && emitGraphicLocation(); // 初始化时发送图形位置信息
   dataAbout.restoreClickBool = false;
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
   props.isLinkage && echarts.connect(groupName); // 联动
@@ -659,6 +666,7 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
       series.name && !isExist && res.push({
         name: series.name,
         customData: series.customData,
+        dataType: series.dataType,
         seriesData: [],
       })
     });
