@@ -5,9 +5,11 @@
         :style="{ 'background-color': computedBackgroundColor, '--drag-top': dataAbout.drag.top + 'px' }">
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
-          :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize" @update="(data) => update(data, index)"
-          @delete-item="(data, number) => deleteItem(data, number, index)"
-          @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)" />
+          :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize"
+          @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging"
+          @update="(data) => update(data, index)" @delete-item="(data, number) => deleteItem(data, number, index)"
+          @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
+          @delete-items-all="deleteItemsAll(index)" />
       </div>
     </div>
   </div>
@@ -92,6 +94,7 @@ const dataAbout = reactive({
   drag: {
     top: 5, // 拖拽legend图例距离顶部距离
     fontSize: 12, // 拖拽legend图例字体大小
+    isDragging: false, // 是否拖拽中
   }
 }) as DataAboutType;
 
@@ -154,12 +157,22 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
  * @param number 删除的项序号数组（其实是索引，从0开始） 
  * @param echartsIndex echarts索引，从0开始 
  */
- const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[], echartsIndex: number) => {
+const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[], echartsIndex: number) => {
   console.groupCollapsed('deleteItemColumn', data, deleteItemsIndexArray, echartsIndex);
   dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
   console.log('dataAbout.data', dataAbout.data[echartsIndex]);
   dataAbout.data[echartsIndex].isDeleteItem = true;
   update(data, echartsIndex);
+  await nextTick();
+  dataAbout.data[echartsIndex].isDeleteItem = false;
+  console.groupEnd();
+}
+
+const deleteItemsAll = async (echartsIndex: number) => {
+  console.groupCollapsed('deleteItemsAll', echartsIndex);
+  dataAbout.data[echartsIndex].data = [];
+  dataAbout.data[echartsIndex].isDeleteItem = true;
+  initEcharts();
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
   console.groupEnd();
@@ -609,6 +622,7 @@ const dragoverEchart = (e: DragEvent) => {
 // 接收拖拽事件
 const dropEchart = (e: any) => {
   if (e.target.localName !== 'canvas') return; // 防止拖拽组件在操作时触发echarts的drop事件
+  if (dataAbout.drag.isDragging) return; // 防止拖拽legend图例时触发echarts的drop事件
   e.preventDefault();
   const id = (e.target as HTMLElement).parentElement!.offsetParent!.id;
   emit('drop-echart', { id } as DropEchartType);

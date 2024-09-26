@@ -31,13 +31,16 @@
               <el-divider border-style="dashed" />
               <div class="flex justify-start items-center gap-1">
                 <span>移除：</span>
-                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemDefault(item.id)">
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemDefault(item.id)">
                   自身
                 </el-button>
-                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemColumnDefault(item.id)">
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemColumnDefault(item.id)">
                   本列
                 </el-button>
-                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.deleteItemDefault(item.id)">
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemsAllDefault(item.id)">
                   全部
                 </el-button>
               </div>
@@ -55,7 +58,7 @@ import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType, type DragItemDataProps } from "./type/index";
 
-const emit = defineEmits(['update', 'deleteItem', 'deleteItemColumn']);
+const emit = defineEmits(['isDragging', 'update', 'deleteItem', 'deleteItemColumn', 'deleteItemsAll']);
 
 /**
  * @description: 组件props类型
@@ -191,7 +194,7 @@ const initPopoverClickObjFun = () => {
     // 1.先筛选出要删除的列数据，再删除当前子项所在的列，并且将空的列也删除
     let deleteColumn: Array<DragItemType> = []; // 要删除的列数据
     dataOrigin.forEach((item: DragListDataType) => item.value.some((value: DragItemType) => value.id === itemId) && (deleteColumn = JSON.parse(JSON.stringify(item.value))));
-    dataOrigin = dataOrigin.filter((item: DragListDataType) => item.value.length > 0 && !item.value.some((value: DragItemType) => value.id === itemId) )
+    dataOrigin = dataOrigin.filter((item: DragListDataType) => item.value.length > 0 && !item.value.some((value: DragItemType) => value.id === itemId))
     // 2.先提取所有id进行排序，然后再调整各个子项id，重新从1开始排序，使其保持连续
     const idArr: Array<string> = [];
     dataOrigin.forEach((item: DragListDataType) => item.value.forEach((value: DragItemType) => idArr.push(value.id)));
@@ -226,6 +229,22 @@ const initPopoverClickObjFun = () => {
     const deleteItemsIndexArray: Array<number> = deleteColumn.map((item: DragItemType) => +item.id - 1);
     emit('deleteItemColumn', resetData, deleteItemsIndexArray);
     // 6.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
+    dataAbout.isDeleteItemHandle = true;
+    await nextTick();
+    dataAbout.isDeleteItemHandle = false;
+  }
+
+  // 移除所有子项
+  popoverClickObj.deleteItemsAllDefault = async function (itemId: string) {
+    console.group('移除所有子项');
+    console.log('itemId', itemId);
+    // 1.清空列表数据
+    dataAbout.list = [];
+    // 2.右键菜单关闭
+    dataAbout.visible = "";
+    // 3.发送删除数据事件
+    emit('deleteItemsAll');
+    // 4.右键菜单先全部删除，浏览器渲染之后再重新生成，这是为了解决响应式数据变化而el-popover的绝对定位位置不变的问题
     dataAbout.isDeleteItemHandle = true;
     await nextTick();
     dataAbout.isDeleteItemHandle = false;
@@ -267,6 +286,7 @@ function remove() {
 const onStart = (e: any) => {
   // console.log('start');
   dataConst.dataCache = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
+  emit('isDragging', true);
 }
 
 // 延迟函数
@@ -288,6 +308,7 @@ function delay(time = 100) {
  */
 const onEnd = async (e: any) => {
   // console.group('end');
+  emit('isDragging', false); // 发送拖动结束事件
   await delay(100); // 停顿100ms，注：这里必须进行停顿，因为此时监听的drag事件中的数据由于使用了防抖函数，可能还未更新到最新数据。（测试下来，这里快了50ms左右，所以这里设置100ms停顿）
   // console.log(e)
   // 1.若拖动到非可放置区域，则还原数据
@@ -296,13 +317,15 @@ const onEnd = async (e: any) => {
     dataAbout.list = JSON.parse(JSON.stringify(dataConst.dataCache));
     return;
   }
-  if (dragResetDefaultFlag(e)) { // 拖动到重置框中，进行重置列表操作
-    console.log(e);
-    resetDefault(e);
-  } else { // 拖动到其他列表中，进行排序操作
+  if (!e.originalEvent.toElement.id || e.pullMode) {
+    // 没有正确获取到目标元素id，或者拖动到非可放置区域，则不操作
+    return;
+  } else {
+    // 拖动到其他列表中，进行排序操作
     sortEnd(e);
     adjustOrder();
   }
+  console.log('dataAbout.list', dataAbout.list);
   // console.groupEnd();
   emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
 }
@@ -364,31 +387,6 @@ const adjustOrder = () => {
     });
   });
   dataAbout.list = copyData1;
-}
-
-// 判断是否拖动到重置框中
-const dragResetDefaultFlag = (e: any) => {
-  let flag = true; // 标识，默认是true，表示拖动到重置框中
-  const id = e.originalEvent.toElement.id;
-  // if (!id || !idArray.includes(id)) flag = false; // 没有拖动到重置框中
-  if (!id || e.pullMode) flag = false; // 没有拖动到重置框中
-  return flag;
-}
-
-/**
- * 重置默认列表：元素拖动到重置框中，源列表中移除拖动的元素，默认列表中显示拖动的元素
- * @param e 事件对象
- */
-const resetDefault = (e: any) => {
-  console.log('resetDefault');
-  // 拖动的元素数据
-  let dragData: any = {};
-  const symbolKeys = Object.getOwnPropertySymbols(e.item);
-  symbolKeys.forEach(symbol => {
-    dragData = e.item[symbol]; // Symbol(cloneElement), 输出 { name: 'xxx-1', id: '1' }
-  });
-  console.log('dragData', dragData);
-  dataAbout.list = resetDefaultCommon(dragData);
 }
 
 /**
@@ -485,8 +483,7 @@ const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) =>
 }
 // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
 const handleItemClickFun = (e: any) => {
-  console.log('click', e);
-  console.log('click', e.target);
+  // console.log('click', e);
   if (!e.target.classList.contains('cursor-move') && !e.target.classList.contains('cursor-move-item')) return;
   console.log('click点击了子级元素:', e.target.textContent);
   const text = e.target.textContent;
@@ -603,26 +600,31 @@ onBeforeUnmount(() => {
       opacity: 0.5;
     }
 
+    &.no-drag {
+      .line::after {
+        // transform: translate(-50%, -50%);
+        width: 40%;
+        height: calc(var(--height) / 2.5);
+        border-radius: 10%;
+      }
+    }
+
     .line {
       background-color: var(--color);
       position: relative;
-    }
 
-    .line::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 50%;
-      height: calc(var(--height) / 2);
-      border-radius: 50%;
-      border: 2px solid var(--color);
-      background-color: #FFFFFF;
-    }
-
-    .dark .line::after {
-      background-color: var(--color);
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50%;
+        height: calc(var(--height) / 2);
+        border-radius: 50%;
+        border: 2px solid var(--color);
+        background-color: #FFFFFF;
+      }
     }
 
     .cursor-move-item {
@@ -633,8 +635,14 @@ onBeforeUnmount(() => {
       background-color: transparent;
     }
 
-    .dark .cursor-move-item {
-      color: #EDF0F9;
+    .dark {
+      .line::after {
+        background-color: var(--color);
+      }
+
+      .cursor-move-item {
+        color: #EDF0F9;
+      }
     }
   }
 }

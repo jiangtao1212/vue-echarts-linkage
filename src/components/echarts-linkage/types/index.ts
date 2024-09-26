@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-24 15:23:46
+ * @LastEditTime: 2024-09-26 10:44:53
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -112,7 +112,7 @@ export type DataAboutType = {
   restoreClickBool: boolean;
   isAllUpdate: boolean;
   currentMaxShowYCount: number;
-  drag: { top: number, fontSize: number | string }
+  drag: { top: number, fontSize: number | string, isDragging: boolean }
 }
 
 /**
