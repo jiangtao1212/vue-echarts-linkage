@@ -10,7 +10,7 @@
         <div v-for="item in dataAbout.list[index].value" :key="item.id"
           class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
           :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
-          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)">
+          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)" @click="handleItemClick(item.name)">
           <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
@@ -463,7 +463,7 @@ const debouncedFn = useDebounceFn((e: any) => {
 }, 100);
 
 // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
-const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) => {
+const handleItemShowHide = (data: Array<DragListDataType>, selectedItem: string) => {
   const dataOrigin = data;
   outer: for (let i = 0; i < dataOrigin.length; i++) {
     const itemArray = dataOrigin[i].value;
@@ -481,13 +481,10 @@ const handleItemClick = (data: Array<DragListDataType>, selectedItem: string) =>
   }
   return JSON.parse(JSON.stringify(dataOrigin));
 }
-// 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
-const handleItemClickFun = (e: any) => {
-  // console.log('click', e);
-  if (!e.target.classList.contains('cursor-move') && !e.target.classList.contains('cursor-move-item')) return;
-  console.log('click点击了子级元素:', e.target.textContent);
-  const text = e.target.textContent;
-  const handleData = handleItemClick(dataAbout.list, text);
+// 处理子项点击逻辑 -- 点击切换显示隐藏legend效果，通过改变series系列的show属性实现
+const handleItemClick = (text: string) => {
+  console.log('click点击了子级元素:', text);
+  const handleData = handleItemShowHide(dataAbout.list, text);
   emit('update', handleData);
 }
 
@@ -496,10 +493,6 @@ const initEventListeners = () => {
   // 1.监听拖动事件
   const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
   container.addEventListener('drag', debouncedFn);
-  // 2.监听鼠标点击事件--点击切换显示隐藏legend效果，通过改变series系列的show属性实现
-  const selectors = props.id ? `.${props.id}.main` : '.main';
-  const main = document.querySelector(selectors) as HTMLDivElement;
-  main.addEventListener('click', handleItemClickFun);
 }
 
 // 移除事件监听
@@ -507,17 +500,12 @@ const removeEventListener = () => {
   // 1.移除拖动事件监听
   const container: HTMLDivElement = document.querySelector(".drag-container") as HTMLDivElement;
   container.removeEventListener('drag', debouncedFn);
-  // 2.移除鼠标点击事件--点击切换显示隐藏legend效果
-  const selectors = props.id ? `.${props.id}.main` : '.main';
-  const main = document.querySelector(selectors) as HTMLDivElement;
-  main.removeEventListener('click', handleItemClickFun);
 }
 
 // 组装子项数据
 const packageItem = (name: string, id: string, isShow: boolean = true, isDrag: boolean = true): DragItemType => {
   return { name, id, isShow, isDrag }
 }
-
 
 // 获取所有数据 --- 导出方法
 const getAllData = (): Array<DragListDataType> => {
