@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-07-26 09:51:44
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-20 15:09:17
+ * @LastEditTime: 2024-09-26 17:09:49
  * @FilePath: \echarts-legend-drage\src\utils\fileType.ts
  * @Description: 文件类型工具
  */
@@ -104,5 +104,10 @@ const htmlElementToImage = (selectorsOrElement: string | HTMLElement, imgName: s
   });
 }
 
+// 获取assets静态资源
+export const getAssetsFile = (url: string) => {
+  return new URL(`../assets/${url}`, import.meta.url).href;
+};
 
-export default { fileTypesInputAcceptStr, fileTypesSeparatorStr, fileSizeToUnit, getFileExtension, htmlElementToImage }
+
+export default { fileTypesInputAcceptStr, fileTypesSeparatorStr, fileSizeToUnit, getFileExtension, htmlElementToImage, getAssetsFile }

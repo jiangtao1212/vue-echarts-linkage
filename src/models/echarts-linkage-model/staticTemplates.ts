@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-24 14:46:45
+ * @LastEditTime: 2024-09-26 16:02:35
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -51,6 +51,15 @@ export const optionTemplate: EChartsOption = {
       // magicType: { type: ['line', 'bar'] },
       restore: {},
       // saveAsImage: {}, //注：echarts自带的saveAsImage功能，不能将自定义legend等元素保存到图片中，因此这里使用下面自定义的mySaveAsImage功能
+      myThemeButton: { // 自定义的主题切换功能
+        show: true,
+        title: `深色模式`,
+        icon: 'image://',
+        onclick: (e: any) => {
+          // console.log(e);
+          // 在这里添加你想要执行的代码
+        }
+      },
       mySaveAsImage: { // 自定义的保存图片功能
         show: true,
         // title: `保存为图片`,
@@ -61,7 +70,8 @@ export const optionTemplate: EChartsOption = {
           // 在这里添加你想要执行的代码
         }
       },
-      myDeleteButton: {
+      
+      myDeleteButton: { // 自定义的删除功能
         show: true,
         title: `删除`,
         // icon: 'path://M554.6496 512.0512l255.744-255.6928a30.1056 30.1056 0 1 0-42.6496-42.5984L512 469.4528 256.256 213.6064a30.1568 30.1568 0 1 0-42.6496 42.6496l255.744 255.6928-255.744 255.7952a30.1056 30.1056 0 1 0 42.6496 42.6496L512 554.6496l255.744 255.744a30.1568 30.1568 0 1 0 42.6496-42.6496l-255.744-255.6928z',

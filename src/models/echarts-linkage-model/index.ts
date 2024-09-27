@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 14:55:36
+ * @LastEditTime: 2024-09-27 10:55:46
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -17,8 +17,8 @@ import {
   type MarkLineComponentOption
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
-import { ObjUtil } from "@/utils/index";
-import { type GraphicLocationInfoType } from "@/components/echarts-linkage/types/index"
+import { ObjUtil, FileUtil } from "@/utils/index";
+import { type GraphicLocationInfoType } from "@/components/echarts-linkage/types/index";
 
 /**
  * @description 图表数据类型
@@ -48,11 +48,14 @@ export type SeriesOptionType = {
 
 /**
  * @param {Array<Array<number>>} originData - 原始数据
+ * @param {'dark' | 'light'} theme - 主题
  * @param {number} segment - 图表分段数
  * @param {Array<string>} colors - 颜色数组
+ * @param {boolean} useMergedLegend - 是否使用合并图例
  */
 export type EchartsLinkageModelType = {
   seriesOptionArray: Array<SeriesOptionType>,
+  theme: 'dark' | 'light',
   segment?: number,
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
@@ -62,6 +65,8 @@ export type EchartsLinkageModelType = {
 export class EchartsLinkageModel {
   private seriesOptionArray: Array<SeriesOptionType>; // 原始数据
   private segment; // 图表分段数
+  private theme: 'dark' | 'light'; // 主题
+  private swichThemeIcon: 'dark' | 'light'; // 切换按钮的icon主题，与theme相反
   private xAxisInterval = 1; // x轴刻度标签显示间隔
   private offsetNum = 40; // Y轴偏移量
   private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
@@ -79,6 +84,8 @@ export class EchartsLinkageModel {
     console.log('param', param);
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
+    this.theme = param.theme;
+    this.swichThemeIcon = this.theme === 'dark' ? 'light' : 'dark';
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
     this.init();
@@ -89,6 +96,7 @@ export class EchartsLinkageModel {
   init = () => {
     this.setLenged();
     this.setYAxis();
+    this.setThemeButtonIcon();
     this.initOptionTemplate();
     this.setResultOption();
   }
@@ -188,6 +196,26 @@ export class EchartsLinkageModel {
     }
   }
 
+  // 设置主题按钮图标
+  setThemeButtonIcon = () => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.myThemeButton) {
+        console.log('this.theme:', this.theme);
+        console.log('this.swichThemeIcon:', this.swichThemeIcon);
+        const dark = FileUtil.getAssetsFile('svg/dark.svg');
+        const light = FileUtil.getAssetsFile('svg/light.svg');
+        const icon = this.swichThemeIcon === 'dark' ? dark : light;
+        toolbox.feature.myThemeButton.icon = 'image://' + icon;
+      } else {
+        console.error("myThemeButton is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
   // 组装option
   setResultOption = () => {
     const _that = this;
@@ -276,11 +304,11 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * @description 设置工具箱点击事件
-   * @param callback 自定义工具箱按钮的点击事件回调函数
+   * @description 设置echarts实例的myDeleteButton按钮的点击事件
+   * @param callback myDeleteButton按钮的自定义点击事件回调函数
    * @returns this 链式调用
    */
-  setToolBoxClickEvent = (callback: Function) => {
+  setMyDeleteButton = (callback: Function) => {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
       if (toolbox.feature && toolbox.feature.myDeleteButton) {
@@ -295,7 +323,7 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * 重写echarts实例的SaveAsImage按钮的点击事件
+   * @description 重写echarts实例的SaveAsImage按钮的点击事件
    * @param callback SaveAsImage按钮的自定义点击事件回调函数
    * @returns this 链式调用 
    */
@@ -314,16 +342,35 @@ export class EchartsLinkageModel {
   }
 
   /**
+   * @description 设置echarts实例的myThemeButton按钮的点击事件
+   * @param callback myThemeButton按钮的自定义点击事件回调函数
+   * @returns this 链式调用 
+   */
+  setMyThemeButtonClickEvent = (callback: Function) => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.myThemeButton) {
+        toolbox.feature.myThemeButton.onclick = callback;
+      } else {
+        console.error("myThemeButton is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /**
    * 设置toolbox中相关工具的title语言类型
    * @param lang 语言类型，zh-cn | en (中文 | 英文)，默认中文
    * @returns this 链式调用 
    */
   setLanguage = (lang: 'zh-cn' | 'en') => {
     const feature = (this.resultOption?.toolbox as any).feature;
-    feature.dataZoom.title = { zoom: `${lang === 'zh-cn' ? '区域缩放' : 'Zoom'}`, back: `${lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset'}` };
-    feature.restore.title = `${lang === 'zh-cn' ? '还原' : 'Restore'}`;
-    // feature.mySaveAsImage.title = `${lang === 'zh-cn' ? '保存为图片' : 'Save as Image'}`;
-    feature.myDeleteButton.title = `${lang === 'zh-cn' ? '删除' : 'Delete'}`;
+    feature.dataZoom.title = { zoom: lang === 'zh-cn' ? '区域缩放' : 'Zoom', back: lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset' };
+    feature.restore.title = lang === 'zh-cn' ? '还原' : 'Restore';
+    feature.myThemeButton.title = lang === 'zh-cn' ? (this.swichThemeIcon === 'dark' ? '黑夜' : '白天') : (this.swichThemeIcon === 'dark' ? 'Night' : 'Day');
+    feature.myDeleteButton.title = lang === 'zh-cn' ? '删除' : 'Delete';
     return this;
   }
 
@@ -486,7 +533,7 @@ export class EchartsLinkageModel {
       fontSize = usedStandards.fontSize;
       TEXT_OFFSET_TOP = (top - TOP) / 2 + fontSize;
     }
-    
+
     const positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq); // 图形元素的X轴坐标转为像素值
     return {
       id: graphicId,

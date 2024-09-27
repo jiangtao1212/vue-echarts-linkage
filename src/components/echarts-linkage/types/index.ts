@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 14:11:33
+ * @LastEditTime: 2024-09-26 16:52:40
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -91,7 +91,8 @@ export type SeriesIdDataType = {
   data: Array<OneDataType>;
   markLineArray?: Array<number>;
   isDeleteItem?: boolean, // 是否删除数据项状态
-  graphics?: Array<GraphicLocationInfoType>
+  graphics?: Array<GraphicLocationInfoType>,
+  theme: 'dark' | 'light',
 }
 
 /**
@@ -102,6 +103,7 @@ export type SeriesIdDataType = {
  * @param {string} currentHandleChartId 当前操作的echarts图表id
  * @param {boolean} restoreClickBool 监听restore是否触发点击
  * @param {boolean} isAllUpdate 是否全部更新
+ * @param {boolean} isSwitchingTheme 是否正在切换主题
  * @param {number} currentMaxShowYCount 当前最大显示y轴数量
  */
 export type DataAboutType = {
@@ -111,6 +113,7 @@ export type DataAboutType = {
   currentHandleChartId: string;
   restoreClickBool: boolean;
   isAllUpdate: boolean;
+  isSwitchingTheme: boolean;
   currentMaxShowYCount: number;
   drag: { top: number, fontSize: number | string, isDragging: boolean }
 }

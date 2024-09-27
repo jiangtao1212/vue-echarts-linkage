@@ -2,10 +2,10 @@
   <div class='echarts-linkage-container'>
     <div class="main-container">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container"
-        :style="{ 'background-color': computedBackgroundColor, '--drag-top': dataAbout.drag.top + 'px' }">
+        :style="{ 'background-color': computedBackgroundColor(item), '--drag-top': dataAbout.drag.top + 'px' }">
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
-          :group="item.id" :theme="theme" :item-font-size="dataAbout.drag.fontSize"
+          :group="item.id" :theme="item.theme" :item-font-size="dataAbout.drag.fontSize"
           @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging" @update="(data) => update(data, index)"
           @delete-item="(data, number) => deleteItem(data, number, index)"
           @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
@@ -90,6 +90,7 @@ const dataAbout = reactive({
   currentHandleChartId: '', // 当前操作的echart图表id
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
+  isSwitchingTheme: false, // 是否正在切换主题
   currentMaxShowYCount: 0, // 当前显示的echarts中最大Y轴数量
   drag: {
     top: 5, // 拖拽legend图例距离顶部距离
@@ -99,11 +100,31 @@ const dataAbout = reactive({
 }) as DataAboutType;
 
 // 计算每个echarts的父级容器颜色
-const computedBackgroundColor = computed(() => {
-  if (props.background) return props.background;
-  if (props.theme === 'dark') return THEME.DARK.BACKGROUND_COLOR;
-  return THEME.LIGHT.BACKGROUND_COLOR;
-});
+const computedBackgroundColor = (data: SeriesIdDataType) => {
+  const echartsId = data.id;
+  const echartsTheme = data.theme;
+  let res = '';
+  // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
+  if (dataAbout.isSwitchingTheme) {
+    // 切换主题时，优先级最高
+    if (echartsTheme === 'dark') {
+      res = THEME.DARK.BACKGROUND_COLOR;
+    } else {
+      res = THEME.LIGHT.BACKGROUND_COLOR;
+    }
+  } else {
+    if (props.background) {
+      res = props.background;
+    } else {
+      if (echartsTheme === 'dark') {
+        res = THEME.DARK.BACKGROUND_COLOR
+      } else {
+        res = THEME.LIGHT.BACKGROUND_COLOR;
+      }
+    }
+  }
+  return res;
+};
 
 // 拖拽传入的数据
 const dragDataComputed = (number: number) => {
@@ -222,13 +243,14 @@ const packageSeriesyAxisIndexData = (data: Array<any>): number[] => {
  * @param data 系列数据
  * @returns EchartsLinkageModel 实例
  */
-const getEchartsLikageModel = (data: SeriesOptionType[]) => {
+const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark') => {
   const echartsLinkageModel = new EchartsLinkageModel({
     seriesOptionArray: data,
+    theme,
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
-    minMarkLine: 1,
-    maxMarkLine: 5,
+    // minMarkLine: 1,
+    // maxMarkLine: 5,
     useMergedLegend: props.useMergedLegend,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
@@ -290,7 +312,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     markLineArray = oneDataType.markLineArray || [],
       dataAll = [{ ...oneDataType }];
   }
-  dataAbout.data.push({ id, markLineArray, data: dataAll });
+  dataAbout.data.push({ id, markLineArray, data: dataAll, theme: props.theme });
   judgeOverEchartsMaxCountHandle();
   setStyleProperty();
   allUpdateHandleCommon();
@@ -361,6 +383,8 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   }
   await nextTick();
   initEcharts();
+  await nextTick();
+  dataAbout.currentHandleChartId = '';
 }
 
 // 监听，赋值最大的id序号
@@ -397,7 +421,7 @@ const judgeShowYAxisCommon = (data: OneDataType) => {
  * @param id echarts id
  * @returns {myChart: EChartsType, needHandle: boolean}
  */
-const judgeEchartInstance = (id: string) => {
+const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
   console.groupCollapsed('judgeEchartInstance', id);
   const element: HTMLElement = document.getElementById(id) as HTMLElement;
   let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
@@ -421,14 +445,24 @@ const judgeEchartInstance = (id: string) => {
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
+    if (dataAbout.isSwitchingTheme) {
+      // 切换主题时，需要先销毁实例，然后重新初始化实例（注意这里必须要dispose实例，clear实例不能清除主题样式）
+      const currentTheme = dataEcharts.theme;
+      if (props.isLinkage || (!props.isLinkage && (dataEcharts.id === dataAbout.currentHandleChartId))) {
+        // 联动模式下，处理所有图表；非联动模式下，只处理当前实例的图表
+        myChart.dispose();
+        myChart = echarts.init(element, currentTheme); // 切换主题时，需要重新初始化实例
+      }
+    }
   } else { // 实例不存在
     needHandle = true;
-    myChart = echarts.init(element, props.theme);
+    myChart = echarts.init(element, dataEcharts.theme);
     // 监听 restore 事件
     myChart.on('restore', () => {
       Promise.resolve().then(() => debouncedFn());
     });
   }
+
   // 监听 restore 按钮是否触发点击 ---> 原因：解决点击restore按钮后，只有最后一个图表显示，其他图表不显示的问题
   dataAbout.restoreClickBool && (needHandle = true);
   // 监听是否全部更新操作 --- 原因：解决点击restore按钮后，只有最后一次操作的图表数据更新，其他图表实例没有变化被过滤掉导致数据不更新的问题
@@ -453,7 +487,7 @@ const debouncedFn = useDebounceFn(() => {
  */
 const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   console.groupCollapsed('initOneEcharts', dataArray.id);
-  const { myChart, needHandle } = judgeEchartInstance(dataArray.id);
+  const { myChart, needHandle } = judgeEchartInstance(dataArray.id, dataArray);
   if (!needHandle) { // 不需要操作
     myChart.resize();
     return myChart;
@@ -473,13 +507,14 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
       dataType: item.dataType || 'pulse',
     });
   });
-  const echartsLinkageModel = getEchartsLikageModel(seriesData);
+  const echartsLinkageModel = getEchartsLikageModel(seriesData, dataArray.theme);
   // 添加自定义标记线
   dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
   console.log('数据', dataArray.data);
   // 各种处理
-  echartsLinkageModel.setToolBoxClickEvent((e: any) => deleteEchart(dataArray.id))
+  echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
+    .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
@@ -767,6 +802,29 @@ const saveAsImage = (e: any, id: string) => {
     console.log('parentElement', parentElement);
     FileUtil.htmlElementToImage(parentElement, `echarts-linkage-${id}.png`);
   }
+}
+
+// echarts上的主题切换事件
+const switchEchartsTheme = async (e: any, id: string) => {
+  console.log('switchEchartsTheme', id);
+  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  const theme = data.theme === 'light' ? 'dark' : 'light';
+  console.log('data', data);
+  dataAbout.isSwitchingTheme = true;
+  if (props.isLinkage) {
+    // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
+    dataAbout.data.forEach((item: SeriesIdDataType) => item.theme = theme);
+    allUpdateHandleCommon();
+  } else {
+    // 非联动状态，切换主题时，只切换当前图表的主题
+    const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+    dataAbout.data[index].theme = theme;
+    dataAbout.currentHandleChartId = id;
+    await nextTick();
+    initEcharts();
+  }
+  await nextTick();
+  dataAbout.isSwitchingTheme = false;
 }
 
 // 子组件暴露变量和方法
