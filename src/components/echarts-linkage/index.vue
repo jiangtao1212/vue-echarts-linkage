@@ -479,6 +479,11 @@ const debouncedFn = useDebounceFn(() => {
   initEcharts();
 }, 500);
 
+// 容器大小变化全部更新操作，使用防抖函数，只处理最后一次操作
+const containerResizeFn = useDebounceFn(() => {
+  allUpdateHandleCommon();
+}, 500);
+
 /**
  * @description 初始化单个echarts
  * @param dataArray 数据数组
@@ -522,14 +527,17 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   myChart.setOption(option);
+  // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
+  dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
+  myChart.on('datazoom', () => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[])));
   console.log('option', option);
-  // 图形设置
-  props.useGraphicLocation
-    && dataArray.data[0].seriesData.length > 0
-    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params, dataArray.id)));
   // 联动
   myChart.group = groupName;
   myChart.resize();
+  // 图形设置，必须在myChart.resize()之后，否则会导致图形位置不正确
+  props.useGraphicLocation
+    && dataArray.data[0].seriesData.length > 0
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params, dataArray.id)));
   console.groupEnd();
   return myChart;
 }
@@ -584,6 +592,56 @@ const initEcharts = () => {
   props.isLinkage && echarts.connect(groupName); // 联动
 }
 
+/**
+ * @description 根据position实时计算graphic的坐标信息
+ * @param myChart echarts实例
+ * @param graphics 图形元素数组  
+ * @returns 
+ */
+const computerDatazoomGraphic = (myChart: any, graphics: Array<GraphicLocationInfoType>, xAxisData: string[]): Array<GraphicLocationInfoType> => {
+  const positionX1 = graphics[0].positionX;
+  const positionX2 = graphics[1].positionX;
+  const xAxisSeq1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX1);
+  const xAxisSeq2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX2);
+  const xAxisX1 = xAxisData[xAxisSeq1];
+  const xAxisX2 = xAxisData[xAxisSeq2];
+  return [
+    { graphicId: graphics[0].graphicId, positionX: positionX1, xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
+    { graphicId: graphics[1].graphicId, positionX: positionX2, xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
+  ]
+}
+
+/**
+ * @description 监听datazoom事件，计算当前实例的图形位置信息，赋值给其他实例，并且触发更新
+ * 联动模式下：datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
+ * 非联动模式下：只处理当前实例的图形
+ * @param graphicLocation 图形位置信息
+ * @param currentEchartsId 当前实例id
+ * @param xAxisData x轴数组数据
+ */
+const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[]) => {
+  // console.log('datazoomEvent', graphicLocation, currentEchartsId, xAxisData);
+  if (props.isLinkage && (dataAbout.data[0].id !== currentEchartsId)) return; // 联动模式下，只处理计算第一个实例的图形
+  if (animating || !graphicLocation) return; // 防止动画过程中重复触发
+  animating = true;
+  requestAnimationFrame(() => {
+    // 联动模式下，datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
+    const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
+    let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+    const datazoomGraphic = computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
+    // 赋值给所有实例，并且触发更新
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
+      item.graphics = datazoomGraphic;
+      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
+      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      setOptionGraphic(myChart, datazoomGraphic);
+    });
+    emitGraphicLocation();
+    animating = false;
+  });
+}
+
 
 let animating = false;
 /**
@@ -610,42 +668,51 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
         } else {
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
-          notDragGraphic.xAxisX = item.data[0].seriesData[notDragGraphic.xAxisSeq - 1][0];
+          notDragGraphic.xAxisX = item.data[0].seriesData[notDragGraphic.xAxisSeq - 1][0].toString();
         }
       });
-      myChart.setOption({
-        graphic: [
-          {
-            id: graphicLocation.graphicId,
-            type: 'rect', // 这里必须要添加图形类型，否则打包后发布新版本再引入会报错
-            position: [graphicLocation.positionX, 0],
-            info: graphicLocation.xAxisX,
-            textContent: {
-              type: 'text',
-              style: {
-                text: graphicLocation.xAxisX,
-              }
-            },
-          },
-          {
-            id: notDragGraphic.graphicId,
-            type: 'rect',
-            position: [notDragGraphic.positionX, 0],
-            info: notDragGraphic.xAxisX,
-            textContent: {
-              type: 'text',
-              style: {
-                text: notDragGraphic.xAxisX,
-              }
-            },
-          }
-        ],
-      });
+      setOptionGraphic(myChart, [graphicLocation, notDragGraphic]);
     });
     emitGraphicLocation();
     animating = false;
   });
 };
+
+/**
+ * @description 渲染图形
+ * @param myChart echarts实例
+ * @param graphics 图形元素数组
+ */
+const setOptionGraphic = (myChart: EChartsType, graphics: GraphicLocationInfoType[]) => {
+  myChart.setOption({
+    graphic: [
+      {
+        id: graphics[0].graphicId,
+        type: 'rect', // 这里必须要添加图形类型，否则打包后发布新版本再引入会报错
+        position: [graphics[0].positionX, 0],
+        info: graphics[0].xAxisX,
+        textContent: {
+          type: 'text',
+          style: {
+            text: graphics[0].xAxisX,
+          }
+        },
+      },
+      {
+        id: graphics[1].graphicId,
+        type: 'rect',
+        position: [graphics[1].positionX, 0],
+        info: graphics[1].xAxisX,
+        textContent: {
+          type: 'text',
+          style: {
+            text: graphics[1].xAxisX,
+          }
+        },
+      }
+    ],
+  });
+}
 
 // 组装所有图形数据，发送给父组件（1.初始化时调，2.移动图形时调用）
 const emitGraphicLocation = () => {
@@ -670,21 +737,41 @@ const dropEchart = (e: any) => {
   emit('drop-echart', { id } as DropEchartType);
 }
 
-// 监听拖拽事件
+let resizeObserver: ResizeObserver; // 元素尺寸变化观察器
+let initFlag = true; // 初始化标识
+// 监听事件
 const initLisener = () => {
+  // 监听拖拽事件
   const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
   echartsLinkageContainer.addEventListener('dragover', dragoverEchart);
   echartsLinkageContainer.addEventListener('drop', dropEchart);
-  // echartsLinkageContainer.addEventListener('resize', (e) => {
-  //   console.log('resize', e);
-  // });
+
+  // 创建 ResizeObserver 实例
+  resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      // console.log('main-container 高度变化:', entry.contentRect.height);
+      if (initFlag) {
+        // 初始化时，有一次触发，不进行操作，将初始状态标记为false 
+        initFlag = false;
+      } else {
+        // 非初始化时，高度变化，才重新更新所有echarts。
+        containerResizeFn();
+      }
+    }
+  });
+  // 开始观察 mainContainer
+  resizeObserver.observe(echartsLinkageContainer);
 }
 
-// 移除拖动事件监听
+// 移除事件监听
 const removeLisener = () => {
   const echartsLinkageContainer: HTMLElement = document.querySelector('.echarts-linkage-container') as HTMLElement;
+  // 移除拖动事件监听
   echartsLinkageContainer.removeEventListener('dragover', dragoverEchart);
   echartsLinkageContainer.removeEventListener('drop', dropEchart);
+
+  // 停止观察 mainContainer
+  resizeObserver.unobserve(echartsLinkageContainer); // 在销毁前停止观察
 }
 
 // 获取数据总数 --- 导出

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-27 10:55:46
+ * @LastEditTime: 2024-09-29 16:03:41
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -36,8 +36,8 @@ export type SeriesOptionType = {
   type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
   name?: string, // 图表名称
   smooth?: true,
-  seriesData: Array<Array<number>>, // 数据系列
-  seriesDataCache: Array<Array<number>>, // 缓存数据系列
+  seriesData: Array<Array<number | string>>, // 数据系列
+  seriesDataCache: Array<Array<number | string>>, // 缓存数据系列
   xAxisName?: string, // x轴名称
   yAxisName?: string, // y轴名称
   yAxisShow?: boolean; // y轴是否显示
@@ -73,7 +73,7 @@ export class EchartsLinkageModel {
   private gridTopInit = 40; // 上方边距
   private echartsColors = ECHARTS_COLORS; // 颜色数组
   private legendShow = true; // 是否显示图例
-  private xAxisData: Array<number> = []; // x轴数据
+  private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
   private optionTemplate: EChartsOption = optionTemplate; // 折线图表模板
@@ -122,7 +122,7 @@ export class EchartsLinkageModel {
         continue;
       } else {
         // 第一个值空字符串，用于隔开起始点
-        xAxisData = ['', ...seriesData.map((item: Array<number>) => item[0])];
+        xAxisData = ['', ...seriesData.map((item: Array<(string | number)>) => item[0])];
         break;
       }
     }
@@ -396,7 +396,7 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * 
+   * @description 统一设置所有echarts实例的Y轴的显示
    * @param myChart echarts实例
    * @param graphics 图形元素数组 
    * @param onPointDragging 自定义图形元素拖拽事件回调函数 
@@ -407,6 +407,7 @@ export class EchartsLinkageModel {
     // console.log('myChart.getHeight()', myChart.getHeight());
     const GRAPHIC_RECT1_ID = 'rect1'; // 矩形图形元素1的id
     const GRAPHIC_RECT2_ID = 'rect2'; // 矩形图形元素2的id
+    console.log('graphics', graphics);
     const xAxisSeq1 = (graphics && graphics[0].xAxisSeq) || Math.floor(this.xAxisData.length / 3);
     const xAxisSeq2 = (graphics && graphics[1].xAxisSeq) || Math.floor(this.xAxisData.length / 3) * 2;
     const xAxisX1 = this.xAxisData[xAxisSeq1];
@@ -499,6 +500,7 @@ export class EchartsLinkageModel {
     ]
   }
 
+
   /**
    * 设置背景色
    * @param color 背景色
@@ -517,7 +519,7 @@ export class EchartsLinkageModel {
    * @param graphicXAxisX 图形元素x轴坐标：不定，可能是数值可能是时间等等
    * @returns 
    */
-  getGraphicRectTemplate = (myChart: any, graphicId: string, xAxisSeq: number, graphicXAxisX: number) => {
+  getGraphicRectTemplate = (myChart: any, graphicId: string, xAxisSeq: number, graphicXAxisX: string) => {
     console.log('this.usedStandards', this.usedStandards);
     let TOP = 40; // 图形元素距离顶部的偏移量
     let TEXT_OFFSET_TOP = 20; // 文本距离顶部的偏移量
@@ -588,7 +590,7 @@ export class EchartsLinkageModel {
   computedTwoGraphicRect = (e: any, myChart: any, currentDragGraphicId: string): GraphicLocationInfoType => {
     const currentDragGraphicPositionX: number = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
     const xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, currentDragGraphicPositionX); // 图形元素x轴坐标序号：从0开始
-    const currentDragGraphicXAxisX: number = this.xAxisData[xAxisSeq];
+    const currentDragGraphicXAxisX: string = this.xAxisData[xAxisSeq];
     return {
       graphicId: currentDragGraphicId,
       positionX: currentDragGraphicPositionX,

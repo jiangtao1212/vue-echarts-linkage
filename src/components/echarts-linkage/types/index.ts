@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 16:52:40
+ * @LastEditTime: 2024-09-29 16:00:20
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -52,8 +52,8 @@ export interface ExposedMethods {
 export type OneDataType = {
   name: string;
   type: 'line' | 'bar';
-  seriesData: Array<number[]>;
-  seriesDataCache?: Array<number[]>;
+  seriesData: Array<(string | number)[]>;
+  seriesDataCache?: Array<(string | number)[]>;
   xAxisName?: string;
   yAxisName?: string;
   markLineArray?: Array<number>;
@@ -75,7 +75,7 @@ export type GraphicLocationInfoType = {
   graphicId: string, 
   positionX: number, 
   xAxisSeq: number, 
-  xAxisX: number 
+  xAxisX: string 
 }
 
 /**
@@ -89,6 +89,7 @@ export type GraphicLocationInfoType = {
 export type SeriesIdDataType = {
   id: string;
   data: Array<OneDataType>;
+  xAxisdata?: Array<string>;
   markLineArray?: Array<number>;
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,

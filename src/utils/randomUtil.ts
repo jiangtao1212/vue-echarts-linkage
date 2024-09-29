@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-20 13:51:03
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-23 13:47:38
+ * @LastEditTime: 2024-09-29 13:21:13
  * @FilePath: \vue-echarts-linkage\src\utils\randomUtil.ts
  * @Description: 随机数相关工具
  */
@@ -15,8 +15,20 @@
  */
 const getSeriesData = (count = 1000, min = 1, max = 10000) => {
   const seriesData = [];
+  let current = 0;
+  let segment = Math.floor(Math.random() * 20) + 30;
   for (let i = 0; i < count; i++) {
-    seriesData.push([i + 1, Math.floor(Math.random() * max) + 1]);
+    if (i === 0) {
+      current = Math.floor(Math.random() * max) + 1;
+    } else {
+      current += Math.random() > 0.55 ? 0 - Math.floor(Math.random() * segment) : Math.floor(Math.random() * segment);
+      if (current < min) {
+        current = min;
+      } else if (current > max) {
+        current = max;
+      }
+    }
+    seriesData.push([i + 1, current]);
   }
   return seriesData;
 }
