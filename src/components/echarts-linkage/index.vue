@@ -482,7 +482,7 @@ const debouncedFn = useDebounceFn(() => {
 // 容器大小变化全部更新操作，使用防抖函数，只处理最后一次操作
 const containerResizeFn = useDebounceFn(() => {
   allUpdateHandleCommon();
-}, 500);
+}, 300);
 
 /**
  * @description 初始化单个echarts

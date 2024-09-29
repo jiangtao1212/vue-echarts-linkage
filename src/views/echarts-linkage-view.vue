@@ -40,7 +40,7 @@ const addLinkageBtnClick = () => {
     name: `新增图表${maxEchartsIdSeq + 1}`,
     type: 'line',
     seriesData: seriesData,
-    markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
+    // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
@@ -215,6 +215,7 @@ onMounted(() => {
 .echarts-linkage-container {
   width: 100vw;
   height: 95vh;
+  padding: 10px;
 }
 </style>
 <style scoped lang="less">
