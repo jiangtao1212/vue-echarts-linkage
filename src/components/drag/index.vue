@@ -7,10 +7,10 @@
         v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost"
         :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
         @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
-        <div v-for="item in dataAbout.list[index].value" :key="item.id"
+        <div v-for="item in dataAbout.list[index].value" :key="item.id" :data-id="item.id"
           class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
           :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
-          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)" @click="handleItemClick(item.name)">
+          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)" @click="handleItemClick(item.name, item.id)">
           <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
             :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
             trigger="contextmenu">
@@ -18,15 +18,23 @@
               <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
                 :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
                 <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
-                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">{{ item.name
-                  }}</span>
+                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">
+                  {{ item.name }}
+                </span>
               </div>
             </template>
             <div class="flex flex-col justify-center items-start gap-1">
               <div class="flex justify-start items-center gap-1">
                 <span>重置：</span>
+                <!-- 重置(列) -->
                 <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.resetItemDefault(item.id)">重置</el-button>
+                  @click="popoverClickObj.resetItemDefault(item.id)">
+                  重置
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.resetAllItemsDefault">
+                  全部
+                </el-button>
               </div>
               <el-divider border-style="dashed" />
               <div class="flex justify-start items-center gap-1">
@@ -136,6 +144,29 @@ const initPopoverClickObjFun = () => {
     }
     // 2.重置当前子项数据
     dataAbout.list = resetDefaultCommon(JSON.parse(JSON.stringify(resData)));
+    // 3.右键菜单关闭
+    dataAbout.visible = "";
+    // 4.发送更新数据事件
+    emit('update', JSON.parse(JSON.stringify(dataAbout.list)));
+  }
+
+  // 重置全部子项默认状态 --- 单列唯一
+  popoverClickObj.resetAllItemsDefault = function () {
+    // 1.新建空列表
+    const resetData: Array<DragListDataType> = new Array(dataAbout.list.length);
+    for (let i = 0; i < dataAbout.list.length; i++) {
+      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+    }
+    // 2.填充对应数据
+    dataAbout.list.forEach((item: DragListDataType) => {
+      const itemArray = item.value;
+      itemArray.forEach((value: DragItemType) => {
+        resetData.forEach((item2: DragListDataType) => {
+          item2.key === value.id && (item2.value[0] = value);
+        });
+      });
+    });
+    dataAbout.list = resetData;
     // 3.右键菜单关闭
     dataAbout.visible = "";
     // 4.发送更新数据事件
@@ -311,20 +342,22 @@ const onEnd = async (e: any) => {
   emit('isDragging', false); // 发送拖动结束事件
   await delay(100); // 停顿100ms，注：这里必须进行停顿，因为此时监听的drag事件中的数据由于使用了防抖函数，可能还未更新到最新数据。（测试下来，这里快了50ms左右，所以这里设置100ms停顿）
   // console.log(e)
-  // 1.若拖动到非可放置区域，则还原数据
-  // 2.非拖动状态（pullMode为undefined），则还原数据 --- 暂不开放
-  if (dataConst.dropEffect === 'none') { //  dataConst.dropEffect === 'none' || !e.pullMode
+  if (dataConst.dropEffect === 'none') {
+    // 1.若拖动到非可放置区域，则还原数据
+    // 2.非拖动状态（pullMode为undefined），则还原数据 --- 暂不开放，这里有个问题，在本列中移动(pullMode为undefined)会出问题
+    console.log('拖动到非可放置区域，则还原数据');
     dataAbout.list = JSON.parse(JSON.stringify(dataConst.dataCache));
     return;
   }
-  if (!e.originalEvent.toElement.id || e.pullMode) {
-    // 没有正确获取到目标元素id，或者拖动到非可放置区域，则不操作
+  if (!e.pullMode && e.originalEvent.toElement.nodeName.toLowerCase() === 'canvas') {
+    // pullMode为false（代表未移动到其他列），并且是拖拽到画布上，则进行重置操作
+    // 注意：pullMode为false是有两种情况：1.未移动到其他列，移动到外部容器中；2.在本列中移动。
+    const id = e.item.dataset.id; // 拖动的元素id
+    popoverClickObj.resetItemDefault(id);
     return;
-  } else {
-    // 拖动到其他列表中，进行排序操作
-    sortEnd(e);
-    adjustOrder();
   }
+  sortEnd(e);
+  adjustOrder();
   console.log('dataAbout.list', dataAbout.list);
   // console.groupEnd();
   emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
@@ -463,12 +496,12 @@ const debouncedFn = useDebounceFn((e: any) => {
 }, 100);
 
 // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果
-const handleItemShowHide = (data: Array<DragListDataType>, selectedItem: string) => {
+const handleItemShowHide = (data: Array<DragListDataType>, id: string) => {
   const dataOrigin = data;
   outer: for (let i = 0; i < dataOrigin.length; i++) {
     const itemArray = dataOrigin[i].value;
     for (let j = 0; j < itemArray.length; j++) {
-      if (itemArray[j].name === selectedItem) {
+      if (itemArray[j].id === id) {
         if (j === 0) { // 点击的元素是当前列中第一个，隐藏当前列
           const isShow = !dataOrigin[i].value[j].isShow;
           dataOrigin[i].value.forEach(item => item.isShow = isShow);
@@ -482,9 +515,9 @@ const handleItemShowHide = (data: Array<DragListDataType>, selectedItem: string)
   return JSON.parse(JSON.stringify(dataOrigin));
 }
 // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果，通过改变series系列的show属性实现
-const handleItemClick = (text: string) => {
-  console.log('click点击了子级元素:', text);
-  const handleData = handleItemShowHide(dataAbout.list, text);
+const handleItemClick = (text: string, id: string) => {
+  console.log('click点击了子级元素:', id, text);
+  const handleData = handleItemShowHide(dataAbout.list, id);
   emit('update', handleData);
 }
 
