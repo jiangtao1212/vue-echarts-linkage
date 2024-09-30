@@ -312,7 +312,9 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     markLineArray = oneDataType.markLineArray || [],
       dataAll = [{ ...oneDataType }];
   }
-  dataAbout.data.push({ id, markLineArray, data: dataAll, theme: props.theme });
+  const { theme, graphics } = addEchartJudgeLinkage();
+  const obj = { id, markLineArray, data: dataAll, theme, graphics };
+  dataAbout.data.push(obj);
   judgeOverEchartsMaxCountHandle();
   setStyleProperty();
   allUpdateHandleCommon();
@@ -320,6 +322,18 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
 // 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
   return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: 'pulse' };
+}
+// 新增echart，判断是否联动，如果联动并且已经有echart存在的情况，需要考虑新增echart的图形位置和主题
+const addEchartJudgeLinkage = () => {
+  let theme = props.theme;
+  let graphics: GraphicLocationInfoType[] | undefined;
+  if (props.isLinkage && dataAbout.data.length > 0) {
+    theme = dataAbout.data[0].theme;
+    if (props.useGraphicLocation) {
+      graphics = dataAbout.data[0].graphics as GraphicLocationInfoType[];
+    }
+  }
+  return { theme, graphics };
 }
 
 /**
