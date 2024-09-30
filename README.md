@@ -30,6 +30,10 @@ vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动�
 
 ![容器尺寸实时自适应](./src/demo/demo6.gif)
 
+### 2.7 联动模式切换
+> 非联动模式，开关量显示，图形定位，主题背景自定义，容器尺寸实时自适应
+![联动模式切换](./src/demo/demo7.gif)
+
 ## 3. 安装及使用组件
 
 ### 3.1 安装组件
