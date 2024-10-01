@@ -682,7 +682,9 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
         } else {
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
-          notDragGraphic.xAxisX = item.data[0].seriesData[notDragGraphic.xAxisSeq - 1][0].toString();
+          // 如果x轴最前面被加上了空值，这里的序号则需要减去1
+          const seq = item.xAxisdata?.length === (item.data[0].seriesData.length + 1) ? notDragGraphic.xAxisSeq - 1 : notDragGraphic.xAxisSeq;
+          notDragGraphic.xAxisX = item.data[0].seriesData[seq][0].toString();
         }
       });
       setOptionGraphic(myChart, [graphicLocation, notDragGraphic]);

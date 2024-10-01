@@ -1,10 +1,11 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" @click="addLinkageBtnClick">新增echarts实例</el-button>
-    <el-button type="primary" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts实例-多series</el-button>
-    <el-button type="primary" @click="updateAllLinkageBtnClick">批量更新echarts实例</el-button>
-    <el-button type="primary" @click="clearAllEchartsData">批量清除echarts实例数据</el-button>
-    <el-button type="primary" @click="replaceAllEchartsData">批量替换echarts实例数据</el-button>
+    <el-button type="primary" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts-多series</el-button>
+    <el-button type="primary" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
+    <el-button type="primary" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
+    <el-button type="primary" @click="clearAllEchartsData">批量清除echarts数据</el-button>
+    <el-button type="primary" @click="replaceAllEchartsData">批量替换echarts数据</el-button>
     <el-button type="primary" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
     <el-button type="primary" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
     <el-button type="primary" @click="downloadImg">下载图片</el-button>
@@ -16,7 +17,7 @@
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
-    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
+    :is-linkage="true" :use-graphic-location="true" id="echarts-linkage-view" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
 </template>
@@ -79,6 +80,22 @@ const updateAllLinkageBtnClick = () => {
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }
+
+// 批量更新按钮
+const updateAllLinkageTimeBtnClick = () => {
+  const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
+  console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+  const res: { [key: string]: Array<number[]> } = {};
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+    if (item.dataType === 'switch') {
+      item.seriesData = RandomUtil.getSwitchData(1000);
+    } else {
+      item.seriesData = RandomUtil.getSeriesDataWithTime(1000);
+    }
+  });
+  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
 
 // 批量清除echarts实例数据
 const clearAllEchartsData = () => {

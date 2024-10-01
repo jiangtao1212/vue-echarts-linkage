@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-29 16:03:41
+ * @LastEditTime: 2024-10-02 00:36:11
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -109,6 +109,9 @@ export class EchartsLinkageModel {
   // 设置x轴刻度标签显示间隔
   setXAxisInterval = () => {
     if (!this.segment) return false;
+    // segment值300，表示间隔300，效果应该是0,300,600,...,； 
+    // 但在echarts中的含义其实是interval为299，表示『隔299个标签显示一个标签』；
+    // 也就是说，间隔300，实际上interval为299。
     this.xAxisInterval = this.segment - 1;
     return this.xAxisInterval;
   }
@@ -121,8 +124,9 @@ export class EchartsLinkageModel {
       if (seriesData.length === 0) {
         continue;
       } else {
-        // 第一个值空字符串，用于隔开起始点
-        xAxisData = ['', ...seriesData.map((item: Array<(string | number)>) => item[0])];
+        // 第一个值空字符串，用于隔开起始点---注意：这里会影响后续图形更新时的x轴seq序号数据，因为此时x轴数据长度比series数据长度多1
+        seriesData[0][0].toString() === '1' && xAxisData.unshift('');
+        xAxisData = [...xAxisData, ...seriesData.map((item: Array<(string | number)>) => item[0].toString())];
         break;
       }
     }
@@ -137,7 +141,7 @@ export class EchartsLinkageModel {
     xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
     xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
-    this.setXAxisInterval() && (xAxis[0].axisLabel.interval = { show: true, interval: this.xAxisInterval });
+    this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
   }
 
   // 设置y轴
