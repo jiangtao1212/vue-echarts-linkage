@@ -683,7 +683,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
           // 如果x轴最前面被加上了空值，这里的序号则需要减去1
-          const seq = item.xAxisdata?.length === (item.data[0].seriesData.length + 1) ? notDragGraphic.xAxisSeq - 1 : notDragGraphic.xAxisSeq;
+          const seq = judgeLengthAnalysisOrNot(item.xAxisdata, item.data[0].seriesData) ? notDragGraphic.xAxisSeq - 1 : notDragGraphic.xAxisSeq;
           notDragGraphic.xAxisX = item.data[0].seriesData[seq][0].toString();
         }
       });
@@ -693,6 +693,11 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
     animating = false;
   });
 };
+
+// 判断是否为长度分析图表，长度分析图表X轴最前面被加上了空值，所以长度比series中数据多1
+const judgeLengthAnalysisOrNot = (xAxisdata: string[] | undefined, seriesData: (number | string)[][], diff: number = 1) => {
+  return xAxisdata?.length === (seriesData.length + diff);
+}
 
 /**
  * @description 渲染图形
@@ -887,6 +892,62 @@ const getMaxEchartsIdSeq = () => {
   return dataAbout.maxEchartsIdSeq;
 }
 
+// 新增实时数据更新 --- 导出 //todo: 现在默认每次只新增一个点，后续需要考虑每次新增多个点
+const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>) => {
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
+    let x = ''; // 记录当前x轴新增数据
+    let limitFlag = false; // 记录是否超过最大数据量
+    echart.data.forEach((series: OneDataType, index: number) => {
+      const realTimeData: SeriesTagType | undefined = allRealTimeData.filter(item => judgeTagIsSame(item, series))[0];
+      if (!realTimeData) return;
+      const xValue = realTimeData.seriesData[0][0].toString();
+      const yValue = realTimeData.seriesData[0][1];
+      index === 0 && (x = xValue);
+      series.seriesData.push([xValue, yValue]);
+      series.seriesData.length > 50 && series.seriesData.shift() && (limitFlag = true); // 限制最大数据量为100
+    });
+    let limitCount = 50; // 限制最大数据量
+    let startIndex = 0; // 删除的索引位置，长度分析时是1，其他是0
+    echart.xAxisdata?.push(x.toString());
+    if (limitFlag && judgeLengthAnalysisOrNot(echart.xAxisdata, echart.data[0].seriesData, 2)) {
+      limitCount = 51;
+      startIndex = 1;
+    }
+    echart.xAxisdata?.length 
+    && echart.xAxisdata?.length > limitCount
+    && echart.xAxisdata?.splice(startIndex, 1);
+  });
+  if ((dataAbout.data[0].xAxisdata || []).length === 1) {
+    allUpdateHandleCommon();
+    return;
+  }
+  console.log('realTimeUpdate', dataAbout.data[0]);
+  requestAnimationFrame(() => {
+    // 赋值给所有实例，并且触发更新
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
+      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      const series = item.data.map((series: OneDataType) => {
+        return {
+          data: series.seriesData,
+        }
+      });
+      myChart.setOption({
+        xAxis: {
+          data: item.xAxisdata,
+        },
+        series: series,
+      });
+    });
+    animating = false;
+  });
+}
+
+// 判断标签是否一致，需要考虑customData
+const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
+  return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
+}
+
 // 下载包含所有echarts的图片 --- 导出
 const downloadAllEchartsImg = () => {
   const extraHeight = 10 * 2 + 10 * (dataAbout.data.length - 1); // 需要加上下padding的10px(10 * 2)，以及gap的和(10 * (count -1))
@@ -943,6 +1004,7 @@ const exposedMethods: ExposedMethods = {
   clearAllEchartsData,
   replaceAllEchartsData,
   downloadAllEchartsImg,
+  realTimeUpdate,
 };
 defineExpose(exposedMethods);
 

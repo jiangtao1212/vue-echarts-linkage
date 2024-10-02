@@ -1,23 +1,25 @@
 <template>
   <div class="btn-container">
-    <el-button type="primary" @click="addLinkageBtnClick">新增echarts实例</el-button>
-    <el-button type="primary" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts-多series</el-button>
-    <el-button type="primary" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
-    <el-button type="primary" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
-    <el-button type="primary" @click="clearAllEchartsData">批量清除echarts数据</el-button>
-    <el-button type="primary" @click="replaceAllEchartsData">批量替换echarts数据</el-button>
-    <el-button type="primary" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
-    <el-button type="primary" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
-    <el-button type="primary" @click="downloadImg">下载图片</el-button>
-    <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽进line-series图表</span></div>
-    <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽进bar-series图表</span></div>
-    <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽进开关量图表</span></div>
+    <el-button type="primary" size="small" @click="addLinkageBtnClick">新增echarts实例</el-button>
+    <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
+    <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
+    <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
+    <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
+    <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button>
+    <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
+    <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
+    <el-button type="primary" size="small" @click="realTimeUpdateBtnClick">实时更新</el-button>
+    <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
+    <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
+    <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽折线系列</span></div>
+    <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽柱状系列</span></div>
+    <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽开关量系列</span></div>
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
     :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
-    :is-linkage="true" :use-graphic-location="true" id="echarts-linkage-view" @drop-echart="dropEchart"
+    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
 </template>
@@ -136,6 +138,32 @@ const addLinkageBarSeriesBtnClick = () => {
   addLinkageSeriesCommon(seriesType);
 }
 
+// 实时更新按钮
+let count = 0;
+let mySetInterval = 0;
+const realTimeUpdateBtnClick = () => {
+  mySetInterval = setInterval(() => {
+    const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
+    console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+    const res: { [key: string]: Array<number[]> } = {};
+    count++;
+    allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+      if (item.dataType === 'switch') {
+        item.seriesData = [[count, RandomUtil.getSwitchData(1)[0][1]]];
+      } else {
+        item.seriesData = [[count, RandomUtil.getSeriesDataWithTime(1)[0][1]]];
+      }
+    });
+    console.log("count", count);
+    console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+    echartsLinkageRef.value?.realTimeUpdate(allDistinctSeriesTagInfo);
+  }, 500);
+}
+// 实时更新-关闭按钮
+const realTimeUpdateCancelBtnClick = () => {
+  clearInterval(mySetInterval);
+}
+
 // 下载图片
 const downloadImg = () => {
   echartsLinkageRef.value?.downloadAllEchartsImg();
@@ -210,11 +238,11 @@ onMounted(() => {
   padding: 10px;
   display: flex;
   align-items: center;
-  column-gap: 10px;
+  column-gap: 5px;
 
   .drag-rect {
-    border-radius: 10px;
-    padding: 8px 15px;
+    border-radius: 4px;
+    padding: 5px 5px;
     background-image: linear-gradient(to right, #4286f4, #00b4d8);
     border: 1px solid #00b4d8;
     display: flex;
@@ -223,8 +251,8 @@ onMounted(() => {
 
     span {
       color: #fff;
-      font-size: 14px;
-      line-height: 14px;
+      font-size: 12px;
+      line-height: 12px;
     }
   }
 }
