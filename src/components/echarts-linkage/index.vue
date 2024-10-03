@@ -892,32 +892,33 @@ const getMaxEchartsIdSeq = () => {
   return dataAbout.maxEchartsIdSeq;
 }
 
-// 新增实时数据更新 --- 导出 //todo: 现在默认每次只新增一个点，后续需要考虑每次新增多个点
-const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>) => {
+// 新增实时数据更新 --- 导出
+const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) => {
+  const LIMIT_COUNT = limitCount; // 限制最大数据量
   dataAbout.data.forEach((echart: SeriesIdDataType) => {
-    let x = ''; // 记录当前x轴新增数据
+    let addXs: Array<string> = []; // 记录当前x轴新增数据
     let limitFlag = false; // 记录是否超过最大数据量
     echart.data.forEach((series: OneDataType, index: number) => {
       const realTimeData: SeriesTagType | undefined = allRealTimeData.filter(item => judgeTagIsSame(item, series))[0];
       if (!realTimeData) return;
-      const xValue = realTimeData.seriesData[0][0].toString();
-      const yValue = realTimeData.seriesData[0][1];
-      index === 0 && (x = xValue);
-      series.seriesData.push([xValue, yValue]);
-      series.seriesData.length > 50 && series.seriesData.shift() && (limitFlag = true); // 限制最大数据量为100
+      realTimeData.seriesData.forEach(element => {
+        const xValue = element[0].toString();
+        const yValue = element[1];
+        index === 0 && (addXs.push(xValue));
+        series.seriesData.push([xValue, yValue]);
+        series.seriesData.length > LIMIT_COUNT && series.seriesData.shift() && (limitFlag = true); // 限制最大数据量为100
+      });
     });
-    let limitCount = 50; // 限制最大数据量
     let startIndex = 0; // 删除的索引位置，长度分析时是1，其他是0
-    echart.xAxisdata?.push(x.toString());
-    if (limitFlag && judgeLengthAnalysisOrNot(echart.xAxisdata, echart.data[0].seriesData, 2)) {
-      limitCount = 51;
+    echart.xAxisdata?.push(...addXs);
+    if (limitFlag && judgeLengthAnalysisOrNot(echart.xAxisdata, echart.data[0].seriesData, 1 + addXs.length)) {
       startIndex = 1;
     }
-    echart.xAxisdata?.length 
-    && echart.xAxisdata?.length > limitCount
-    && echart.xAxisdata?.splice(startIndex, 1);
+    // 限制x轴最大数据量
+    limitFlag && echart.xAxisdata?.length && echart.xAxisdata?.splice(startIndex, addXs.length);
   });
-  if ((dataAbout.data[0].xAxisdata || []).length === 1) {
+  if ((dataAbout.data[0].xAxisdata || []).length === allRealTimeData[0].seriesData.length) {
+    // 只有第一次实时更新时，才会初始化echarts的所有配置
     allUpdateHandleCommon();
     return;
   }

@@ -8,7 +8,8 @@
     <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button>
     <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
     <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
-    <el-button type="primary" size="small" @click="realTimeUpdateBtnClick">实时更新</el-button>
+    <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
+    <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
     <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
     <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽折线系列</span></div>
@@ -138,30 +139,63 @@ const addLinkageBarSeriesBtnClick = () => {
   addLinkageSeriesCommon(seriesType);
 }
 
-// 实时更新按钮
+// 实时更新按钮--长度
 let count = 0;
 let mySetInterval = 0;
-const realTimeUpdateBtnClick = () => {
+const randomCount = 10;
+const realTimeUpdateLengthBtnClick = () => {
   mySetInterval = setInterval(() => {
     const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
     console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-    const res: { [key: string]: Array<number[]> } = {};
-    count++;
     allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+      let seq = count;
+      let imitate: Array<(number | string)[]> = [];
       if (item.dataType === 'switch') {
-        item.seriesData = [[count, RandomUtil.getSwitchData(1)[0][1]]];
+        imitate = RandomUtil.getSwitchData(randomCount);
       } else {
-        item.seriesData = [[count, RandomUtil.getSeriesDataWithTime(1)[0][1]]];
+        imitate = RandomUtil.getSeriesData(randomCount);
       }
+      imitate.forEach((item, index) => {
+        seq++;
+        item[0] = seq;
+      });
+      item.seriesData = imitate;
     });
-    console.log("count", count);
-    console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+    count += randomCount;
+    // console.log("count", count);
+    // console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
     echartsLinkageRef.value?.realTimeUpdate(allDistinctSeriesTagInfo);
-  }, 500);
+  }, 2000);
 }
+
+// 实时更新按钮--时间
+let countTime = 0;
+let mySetIntervalTime = 0;
+const realTimeUpdateTimeBtnClick = () => {
+  mySetIntervalTime = setInterval(() => {
+    const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
+    console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+    allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+      let imitate: Array<(number | string)[]> = [];
+      if (item.dataType === 'switch') {
+        imitate = RandomUtil.getSwitchData(randomCount);
+      } else {
+        const startTime = new Date(new Date('2024-10-01 08:00:00').getTime() + countTime * 1000);
+        imitate = RandomUtil.getSeriesDataWithTime(randomCount, undefined, undefined, startTime);
+      }
+      item.seriesData = imitate;
+    });
+    countTime += randomCount;
+    console.log("count", countTime);
+    console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+    echartsLinkageRef.value?.realTimeUpdate(allDistinctSeriesTagInfo, 50);
+  }, 2000);
+}
+
 // 实时更新-关闭按钮
 const realTimeUpdateCancelBtnClick = () => {
   clearInterval(mySetInterval);
+  clearInterval(mySetIntervalTime);
 }
 
 // 下载图片

@@ -32,7 +32,7 @@ export interface ExposedMethods {
   clearAllEchartsData: () => void;
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
   downloadAllEchartsImg: () => void;
-  realTimeUpdate: (allRealTimeData: Array<SeriesTagType>) => void;
+  realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;
 }
 
 /**

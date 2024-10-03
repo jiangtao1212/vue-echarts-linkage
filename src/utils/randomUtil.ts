@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-20 13:51:03
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-02 00:40:43
+ * @LastEditTime: 2024-10-03 23:55:05
  * @FilePath: \vue-echarts-linkage\src\utils\randomUtil.ts
  * @Description: 随机数相关工具
  */
@@ -18,7 +18,6 @@ const getSeriesData = (count = 1000, min = 1, max = 10000) => {
   packageSeriesData(count, min, max, (index, value) => {
     seriesData.push([index + 1, value]);
   });
-  return seriesData;
   return seriesData;
 }
 
