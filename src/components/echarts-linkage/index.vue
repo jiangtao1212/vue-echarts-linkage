@@ -922,10 +922,11 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
     allUpdateHandleCommon();
     return;
   }
-  console.log('realTimeUpdate', dataAbout.data[0]);
+  console.log('realTimeUpdate', dataAbout.data);
   requestAnimationFrame(() => {
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!item.data || item.data.length === 0 ) return; // 防止空白echarts实例
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
       let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
       const series = item.data.map((series: OneDataType) => {
@@ -934,9 +935,9 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
         }
       });
       myChart.setOption({
-        xAxis: {
+        xAxis: [{
           data: item.xAxisdata,
-        },
+        }],
         series: series,
       });
     });
