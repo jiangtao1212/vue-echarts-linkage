@@ -42,6 +42,7 @@ const addLinkageBtnClick = () => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
+    yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: 'line',
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
@@ -215,6 +216,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const random = Math.floor(Math.random() * 100);
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
+    yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type, seriesData: seriesData,
     visualMapSeries: { pieces: [{ min: 1000, max: 8000 }] }
   };

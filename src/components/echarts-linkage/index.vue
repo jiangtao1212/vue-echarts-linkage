@@ -381,7 +381,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
-  const seriesData = {
+  const seriesData: OneDataType = {
     name: oneDataType.name,
     type: oneDataType.type,
     seriesData: oneDataType.seriesData,
@@ -389,6 +389,8 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     customData: oneDataType.customData,
     dataType: oneDataType.dataType || 'pulse',
     visualMapSeries: oneDataType.visualMapSeries,
+    yAxisName: oneDataType.yAxisName || '',
+    xAxisName: oneDataType.xAxisName || '',
   };
   console.log('seriesData', dataAbout.data[index]);
   //注意：这里有两种空数据情况
