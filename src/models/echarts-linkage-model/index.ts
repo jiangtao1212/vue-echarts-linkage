@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-02 00:36:11
+ * @LastEditTime: 2024-10-16 14:12:16
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,7 +18,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil } from "@/utils/index";
-import { type GraphicLocationInfoType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType } from "@/components/echarts-linkage/types/index";
 
 /**
  * @description 图表数据类型
@@ -31,6 +31,8 @@ import { type GraphicLocationInfoType } from "@/components/echarts-linkage/types
  * @param yAxisShow y轴是否显示
  * @param seriesShow series是否显示
  * @param seriesYAxisIndex series的y轴索引
+ * @param visualMapSeries 视觉映射系列
+ * @param dataType 数据类型：switch 开关量， pulse 脉冲量
  */
 export type SeriesOptionType = {
   type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
@@ -43,6 +45,7 @@ export type SeriesOptionType = {
   yAxisShow?: boolean; // y轴是否显示
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
+  visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
   dataType: 'switch' | 'pulse' // 数据类型：switch 开关量， pulse 脉冲量
 }
 
@@ -99,6 +102,7 @@ export class EchartsLinkageModel {
     this.setThemeButtonIcon();
     this.initOptionTemplate();
     this.setResultOption();
+    this.setVisualMap(); // 视觉映射，必须等所有series都设置完毕后再设置
   }
 
   // 设置图例
@@ -279,7 +283,7 @@ export class EchartsLinkageModel {
 
   /**
    * @description 添加自定义标记线
-   * @param markLineArray 自定义标记线数组 例如：[ 30, ... , 930 ]
+   * @param markLineArray 自定义标记线数组 例如：[ {value: 30, show: true}, {value: 60, show: true}, ... , {value: 900, show: true} ]
    * @returns this 链式调用 
    */
   addCustomSeriesMarkLine = (markLineArray: Array<number>) => {
@@ -304,6 +308,35 @@ export class EchartsLinkageModel {
    */
   setCustomSeriesMarkLine = () => {
     (this.resultOption.series as LineSeriesOption[]).length > 0 && ((this.resultOption.series as LineSeriesOption[])[0].markLine = this.lineSeriesMarkLineTemplate);
+    return this;
+  }
+
+  /**
+   * @description 设置自定义视觉映射
+   * @param visualMapSreies 自定义视觉映射 例如：[ {min: 0, max: 100, color: 'green'}, {min: 100, max: 200, color: 'yellow'} ]
+   * @returns this 链式调用
+   */
+  setVisualMap = () => {
+    this.resultOption.visualMap = [];
+    const visualMap = this.resultOption.visualMap as any;
+    this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+      if (!item.visualMapSeries) return;
+      const color = (this.resultOption.series as LineSeriesOption[])[index].lineStyle?.color;
+      (this.resultOption.series as LineSeriesOption[])[index].lineStyle = {};
+      item.visualMapSeries.pieces.forEach((piece: any) => {
+        piece.color = piece.color || 'red';
+      });
+      const visualMapOne: any = {
+        show: false,
+        type: 'piecewise',
+        pieces: item.visualMapSeries.pieces,
+        seriesIndex: index,
+        outOfRange: {
+          color: color
+        }
+      };
+      visualMap.push(visualMapOne);
+    });
     return this;
   }
 

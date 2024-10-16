@@ -212,7 +212,11 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
-  const oneDataType: OneDataType = { name: `新增图表${maxEchartsIdSeq}-${random}`, type: type, seriesData: seriesData };
+  const oneDataType: OneDataType = { 
+    name: `新增图表${maxEchartsIdSeq}-${random}`, 
+    type: type, seriesData: seriesData,
+    visualMapSeries: { pieces: [{min: 5000, max: 8000}] }
+  };
   if (switchFlag) {
     oneDataType.dataType = 'switch';
     switchFlag = false;

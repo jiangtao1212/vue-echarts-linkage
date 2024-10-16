@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 16:02:35
+ * @LastEditTime: 2024-10-16 10:16:19
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -70,7 +70,7 @@ export const optionTemplate: EChartsOption = {
           // 在这里添加你想要执行的代码
         }
       },
-      
+
       myDeleteButton: { // 自定义的删除功能
         show: true,
         title: `删除`,
@@ -119,6 +119,7 @@ export const optionTemplate: EChartsOption = {
       },
     }
   ],
+  visualMap: [],
   series: []
 } as EChartsOption;
 

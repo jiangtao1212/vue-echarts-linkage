@@ -25,7 +25,7 @@ import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
-import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType } from './types/index';
+import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, VisualMapSeriesType } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
 
@@ -249,8 +249,6 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
     theme,
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
-    // minMarkLine: 1,
-    // maxMarkLine: 5,
     useMergedLegend: props.useMergedLegend,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
@@ -383,7 +381,15 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
-  const seriesData = { name: oneDataType.name, type: oneDataType.type, seriesData: oneDataType.seriesData, seriesDataCache: oneDataType.seriesData, customData: oneDataType.customData, dataType: oneDataType.dataType || 'pulse' };
+  const seriesData = { 
+    name: oneDataType.name, 
+    type: oneDataType.type, 
+    seriesData: oneDataType.seriesData, 
+    seriesDataCache: oneDataType.seriesData, 
+    customData: oneDataType.customData, 
+    dataType: oneDataType.dataType || 'pulse', 
+    visualMapSeries: oneDataType.visualMapSeries, 
+  };
   console.log('seriesData', dataAbout.data[index]);
   //注意：这里有两种空数据情况
   // 情况1是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，除了type属性基本上都是空数据
@@ -524,6 +530,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
       dataType: item.dataType || 'pulse',
+      visualMapSeries: item.visualMapSeries,
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesData, dataArray.theme);
@@ -859,8 +866,10 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   });
 }
 
-//TODO: 待完善，更新单个echarts
-const updateOneEchart = (id: string, data: { [key: string]: Array<number[]> }) => {
+// 更新单个echarts的visualMap数据 --- 导出
+const updateOneEchartVisualMapSeries = (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => {
+  const echart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  //todo: 待完善，更新单个echarts的visualMap数据
 
 }
 
