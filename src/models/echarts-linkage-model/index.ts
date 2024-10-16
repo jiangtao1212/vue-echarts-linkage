@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-16 14:12:16
+ * @LastEditTime: 2024-10-16 15:02:36
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -209,8 +209,8 @@ export class EchartsLinkageModel {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
       if (toolbox.feature && toolbox.feature.myThemeButton) {
-        console.log('this.theme:', this.theme);
-        console.log('this.swichThemeIcon:', this.swichThemeIcon);
+        // console.log('this.theme:', this.theme);
+        // console.log('this.swichThemeIcon:', this.swichThemeIcon);
         const dark = FileUtil.getAssetsFile('svg/dark.svg');
         const light = FileUtil.getAssetsFile('svg/light.svg');
         const icon = this.swichThemeIcon === 'dark' ? dark : light;
@@ -273,7 +273,6 @@ export class EchartsLinkageModel {
       this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
         resOption = addOneSeries(resOption, item, index);
       });
-
     } else { // 单个series
       resOption = addOneSeries(resOption, this.seriesOptionArray[0], 0);
     }

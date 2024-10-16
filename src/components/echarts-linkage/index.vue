@@ -319,7 +319,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
 };
 // 组装数据
 const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
-  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: 'pulse' };
+  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: 'pulse', visualMapSeries: undefined };
 }
 // 新增echart，判断是否联动，如果联动并且已经有echart存在的情况，需要考虑新增echart的图形位置和主题
 const addEchartJudgeLinkage = () => {
@@ -381,14 +381,14 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
-  const seriesData = { 
-    name: oneDataType.name, 
-    type: oneDataType.type, 
-    seriesData: oneDataType.seriesData, 
-    seriesDataCache: oneDataType.seriesData, 
-    customData: oneDataType.customData, 
-    dataType: oneDataType.dataType || 'pulse', 
-    visualMapSeries: oneDataType.visualMapSeries, 
+  const seriesData = {
+    name: oneDataType.name,
+    type: oneDataType.type,
+    seriesData: oneDataType.seriesData,
+    seriesDataCache: oneDataType.seriesData,
+    customData: oneDataType.customData,
+    dataType: oneDataType.dataType || 'pulse',
+    visualMapSeries: oneDataType.visualMapSeries,
   };
   console.log('seriesData', dataAbout.data[index]);
   //注意：这里有两种空数据情况
@@ -464,6 +464,14 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
+    }
+    if (dataEcharts.id === dataAbout.currentHandleChartId 
+      && dataEcharts.data.length === 1 
+      && dataEcharts.data[0].visualMapSeries 
+      && dataEcharts.data[0].visualMapSeries.pieces.length === 1) {
+      // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
+      myChart.dispose();
+      myChart = echarts.init(element); // 切换主题时，需要重新初始化实例
     }
     if (dataAbout.isSwitchingTheme) {
       // 切换主题时，需要先销毁实例，然后重新初始化实例（注意这里必须要dispose实例，clear实例不能清除主题样式）
@@ -935,7 +943,7 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
   requestAnimationFrame(() => {
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
-      if (!item.data || item.data.length === 0 ) return; // 防止空白echarts实例
+      if (!item.data || item.data.length === 0) return; // 防止空白echarts实例
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
       let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
       const series = item.data.map((series: OneDataType) => {

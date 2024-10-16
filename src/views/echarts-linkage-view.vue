@@ -18,8 +18,8 @@
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10"
-    :echarts-colors="['red', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="2"
+    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
@@ -45,6 +45,7 @@ const addLinkageBtnClick = () => {
     type: 'line',
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
+    visualMapSeries: { pieces: [{ min: 1000, max: 8000 }] },
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
@@ -212,10 +213,10 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
-  const oneDataType: OneDataType = { 
-    name: `新增图表${maxEchartsIdSeq}-${random}`, 
+  const oneDataType: OneDataType = {
+    name: `新增图表${maxEchartsIdSeq}-${random}`,
     type: type, seriesData: seriesData,
-    visualMapSeries: { pieces: [{min: 5000, max: 8000}] }
+    visualMapSeries: { pieces: [{ min: 1000, max: 8000 }] }
   };
   if (switchFlag) {
     oneDataType.dataType = 'switch';
@@ -262,7 +263,7 @@ const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
 
 const init = () => {
   initLisener();
-  addLotEmptyLinkageBtnClick();
+  // addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-16 13:15:31
+ * @LastEditTime: 2024-10-16 15:44:26
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -44,7 +44,7 @@ export interface ExposedMethods {
  * @param {string} xAxisName x轴名称
  * @param {string} yAxisName y轴名称
  * @param {Array<number>} markLineArray 标记线数据
- * @param {Array<VisualMapType>} visualMapArray 视觉映射数据
+ * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {boolean} yAxisShow 是否显示y轴
  * @param {boolean} seriesShow 是否显示系列
@@ -111,7 +111,6 @@ export type SeriesIdDataType = {
   data: Array<OneDataType>;
   xAxisdata?: Array<string>;
   markLineArray?: Array<number>;
-  visualMapSeries?: VisualMapSeriesType;
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: 'dark' | 'light',
