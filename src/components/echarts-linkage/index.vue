@@ -473,7 +473,7 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       && dataEcharts.data[0].visualMapSeries.pieces.length === 1) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       myChart.dispose();
-      myChart = echarts.init(element); // 切换主题时，需要重新初始化实例
+      myChart = echarts.init(element, dataEcharts.theme); // 切换主题时，需要重新初始化实例
     }
     if (dataAbout.isSwitchingTheme) {
       // 切换主题时，需要先销毁实例，然后重新初始化实例（注意这里必须要dispose实例，clear实例不能清除主题样式）
