@@ -4,45 +4,39 @@
 
 vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动组件，可以实现多个图表之间的联动。
 
-组件基于版本
+## 2. demo演示
+### 2.1 基础联动
+> 多图表联动放缩，Y轴同步对齐
 
-```javascript
-"dependencies": {
-  "@element-plus/icons-vue": "^2.3.1",
-  "@vueuse/core": "^10.11.0",
-  "echarts": "^5.5.1",
-  "element-plus": "^2.7.8",
-  "vue": "^3.4.29",
-  ...
-},
-"devDependencies": {
-  "@rushstack/eslint-patch": "^1.8.0",
-  "@tsconfig/node20": "^20.1.4",
-  "@types/node": "^20.14.5",
-  "@vitejs/plugin-vue": "^5.0.5",
-  "@vitejs/plugin-vue-jsx": "^4.0.0",
-  "@vue/eslint-config-prettier": "^9.0.0",
-  "@vue/eslint-config-typescript": "^13.0.0",
-  "@vue/tsconfig": "^0.5.1",
-  "eslint": "^8.57.0",
-  "eslint-plugin-vue": "^9.23.0",
-  "less": "^4.2.0",
-  "npm-run-all2": "^6.2.0",
-  "prettier": "^3.2.5",
-  "typescript": "~5.4.0",
-  "unocss": "^0.61.9",
-  "unplugin-auto-import": "^0.18.2",
-  "unplugin-vue-components": "^0.27.3",
-  "vite": "^5.3.1",
-  "vite-plugin-dts": "^4.0.3",
-  "vite-plugin-static-copy": "^1.0.6",
-  "vue-tsc": "^2.0.21"
-}
-```
+![基础联动](./src/demo/demo1.gif)
 
-## 2. 安装及使用组件
+### 2.2 图例联动
+> 图例显示隐藏同步，重置图例位置显示，移除图例等
+![图例联动](./src/demo/demo2.gif)
 
-### 2.1 安装组件
+### 2.3 开关量显示
+![开关量显示](./src/demo/demo3.gif)
+
+### 2.4 图形定位
+![图形定位](./src/demo/demo4.gif)
+
+### 2.5 主题背景自定义
+> 背景色自定义，白天黑夜切换
+
+![主题背景自定义](./src/demo/demo5.gif)
+
+### 2.6 容器尺寸实时自适应
+> 容器尺寸实时自适应，图表内容字体和位置自适应容器大小
+
+![容器尺寸实时自适应](./src/demo/demo6.gif)
+
+### 2.7 联动模式切换
+> 非联动模式，开关量显示，图形定位，主题背景自定义，容器尺寸实时自适应
+![联动模式切换](./src/demo/demo7.gif)
+
+## 3. 安装及使用组件
+
+### 3.1 安装组件
 ```bash
 # 安装依赖
 npm install vue-echarts-linkage
@@ -61,7 +55,7 @@ import { VueEchartsLinkage } from "vue-echarts-linkage";
 import "vue-echarts-linkage/dist/style.css";
 ```
 
-### 2.2 使用组件
+### 3.2 使用组件
 
 ```html
 <template>
@@ -91,7 +85,7 @@ const dropEchart = (data: dropEchartType) => {
 }
 ```
 
-## 3. 组件属性
+## 4. 组件属性
 | 属性名 | 类型 | 说明 | 默认值 |
 | --- | --- | --- | --- |
 | cols | `number` | 自定义配置的显示列数 | 1，即单列 |
@@ -106,13 +100,13 @@ const dropEchart = (data: dropEchartType) => {
 | use-merged-legend | `boolean` | 是否使用合并图例 | true，即使用合并图例 |
 | use-graphic-location | `boolean` | 是否使用图形定位 | true，即使用图形定位 |
 
-## 4. 组件事件
+## 5. 组件事件
 | 事件名 | 说明 | 参数 |
 | --- | --- | --- |
 | drop-echart | 拖拽图表回调事件，返回当前拖拽的图表id(data.id) | `(data: DropEchartType)` |
 | listener-graphic-location | 监听图形定位事件，返回所有图形定位信息 | `(data: ListenerGrapicLocationType)` |
 
-## 5. 组件方法
+## 6. 组件方法
 | 方法名 | 说明 | 参数 |
 | --- | --- | --- |
 | addEchart | 添加一个echarts图表 | `(data?: OneDataType / OneDataType[]) => void` |
@@ -125,3 +119,6 @@ const dropEchart = (data: dropEchartType) => {
 | updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
 | clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
 | replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |
+| downloadAllEchartsImg | 下载包含所有echarts实例的图片 | `() => void` |
+| realTimeUpdate | 新增实时数据更新 | `(allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void` |
+| updateOneEchartsVisualMapSeries | 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色；如果未指定seriesName则更新指定echarts的所有series的visualMap数据 | `(id: string, data: VisualMapSeriesType[] / VisualMapSeriesType) => void` |

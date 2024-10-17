@@ -300,8 +300,8 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     oneDataType.forEach((item: OneDataType) => {
       data.push({ ...item });
     });
-    markLineArray = oneDataType[0].markLineArray || [], //todo: 标线数组暂时只取第一个，待优化
-      dataAll = data;
+    markLineArray = oneDataType[0].markLineArray || []; //todo: 标线数组暂时只取第一个，待优化
+    dataAll = data;
   } else {
     // 3.新增单个echarts，如果没有seriesData，则默认新增一个line
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
@@ -467,9 +467,9 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
-    if (dataEcharts.id === dataAbout.currentHandleChartId 
-      && dataEcharts.data.length === 1 
-      && dataEcharts.data[0].visualMapSeries 
+    if (dataEcharts.id === dataAbout.currentHandleChartId
+      && dataEcharts.data.length === 1
+      && dataEcharts.data[0].visualMapSeries
       && dataEcharts.data[0].visualMapSeries.pieces.length === 1) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       myChart.dispose();
@@ -876,11 +876,44 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   });
 }
 
-// 更新单个echarts的visualMap数据 --- 导出
-const updateOneEchartVisualMapSeries = (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => {
-  const echart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  //todo: 待完善，更新单个echarts的visualMap数据
+/**
+ * 导出
+ * @description 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色；如果未指定seriesName则更新指定echarts的所有series的visualMap数据
+ * @param id echarts实例id
+ * @param data 视觉映射数据
+ */
+const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => {
 
+  // 定义一个内部函数，更新单个系列的visualMap数据
+  function updateOneSeries(echart: SeriesIdDataType, visualMapSeries: VisualMapSeriesType) {
+    const seriesName = visualMapSeries.seriesName;
+    if (seriesName) {
+      echart.data.forEach((series: OneDataType) => {
+        if (series.name === seriesName) {
+          series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
+        }
+      });
+    } else {
+      // 未指定系列名称，更新所有系列
+      echart.data.forEach((series: OneDataType) => {
+        series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
+      });
+    }
+  }
+
+  const echart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  if (Array.isArray(data)) {
+    // 传入多个系列数据
+    if (data.length === 0) return;
+    data.forEach((item: VisualMapSeriesType) => updateOneSeries(echart, item));
+  } else {
+    // 传入单个系列数据
+    if (Object.keys(data).length === 0) return;
+    updateOneSeries(echart, data);
+  }
+  dataAbout.currentHandleChartId = id;
+  await nextTick();
+  initEcharts();
 }
 
 // 传入所有显示子项数据，更新所有echarts --- 导出
@@ -925,7 +958,7 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
         const yValue = element[1];
         index === 0 && (addXs.push(xValue));
         series.seriesData.push([xValue, yValue]);
-        series.seriesData.length > LIMIT_COUNT && series.seriesData.shift() && (limitFlag = true); // 限制最大数据量为100
+        series.seriesData.length > LIMIT_COUNT && series.seriesData.shift() && (limitFlag = true); // 限制最大数据量，超出则删除最前面的数据
       });
     });
     let startIndex = 0; // 删除的索引位置，长度分析时是1，其他是0
@@ -969,7 +1002,7 @@ const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
   return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
 }
 
-// 下载包含所有echarts的图片 --- 导出
+// 下载包含所有echarts实例的图片 --- 导出
 const downloadAllEchartsImg = () => {
   const extraHeight = 10 * 2 + 10 * (dataAbout.data.length - 1); // 需要加上下padding的10px(10 * 2)，以及gap的和(10 * (count -1))
   FileUtil.htmlElementToImage('.echarts-linkage-container', 'echarts-linkage.png', extraHeight);
@@ -1026,6 +1059,7 @@ const exposedMethods: ExposedMethods = {
   replaceAllEchartsData,
   downloadAllEchartsImg,
   realTimeUpdate,
+  updateOneEchartsVisualMapSeries,
 };
 defineExpose(exposedMethods);
 

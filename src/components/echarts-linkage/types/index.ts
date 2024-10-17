@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-16 15:44:26
+ * @LastEditTime: 2024-10-17 10:35:28
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -19,6 +19,9 @@
  * @param {Function} updateAllEcharts 更新所有echarts图表
  * @param {Function} clearAllEchartsData 清空所有echarts图表数据
  * @param {Function} replaceAllEchartsData 替换所有echarts图表数据
+ * @param {Function} downloadAllEchartsImg 下载所有echarts图表图片
+ * @param {Function} realTimeUpdate 实时更新echarts图表数据
+ * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -33,6 +36,7 @@ export interface ExposedMethods {
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
   downloadAllEchartsImg: () => void;
   realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;
+  updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
 }
 
 /**
@@ -44,7 +48,7 @@ export interface ExposedMethods {
  * @param {string} xAxisName x轴名称
  * @param {string} yAxisName y轴名称
  * @param {Array<number>} markLineArray 标记线数据
- * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据
+ * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {boolean} yAxisShow 是否显示y轴
  * @param {boolean} seriesShow 是否显示系列
@@ -82,8 +86,8 @@ export type GraphicLocationInfoType = {
 }
 
 /**
- * @description: 视觉映射数据类型
- * @param {string} seriesName 指定作用的系列名称
+ * @description: 视觉映射数据类型，自定义每个series中不同报警区间，默认报警色为红色
+ * @param {string} seriesName 指定作用的系列名称，在更新单个echarts的visualMap数据（updateOneEchartsVisualMapSeries方法）时使用
  * @param {number} min 最小值
  * @param {number} max 最大值
  * @param {string} color 颜色

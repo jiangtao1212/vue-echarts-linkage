@@ -119,3 +119,6 @@ const dropEchart = (data: dropEchartType) => {
 | updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
 | clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
 | replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |
+| downloadAllEchartsImg | 下载包含所有echarts实例的图片 | `() => void` |
+| realTimeUpdate | 新增实时数据更新 | `(allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void` |
+| updateOneEchartsVisualMapSeries | 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色 | `(id: string, data: VisualMapSeriesType[] / VisualMapSeriesType) => void` |
