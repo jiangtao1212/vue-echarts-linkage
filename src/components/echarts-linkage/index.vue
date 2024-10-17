@@ -887,18 +887,18 @@ const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeries
   // 定义一个内部函数，更新单个系列的visualMap数据
   function updateOneSeries(echart: SeriesIdDataType, visualMapSeries: VisualMapSeriesType) {
     const seriesName = visualMapSeries.seriesName;
-    if (seriesName) {
-      echart.data.forEach((series: OneDataType) => {
+    echart.data.forEach((series: OneDataType) => {
+      if (series.dataType === 'switch') return; // 跳过开关量
+      if (seriesName) {
+        // 指定系列名称，更新所指定的系列
         if (series.name === seriesName) {
           series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
         }
-      });
-    } else {
-      // 未指定系列名称，更新所有系列
-      echart.data.forEach((series: OneDataType) => {
+      } else {
+        // 未指定系列名称，更新所有系列
         series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
-      });
-    }
+      }
+    });
   }
 
   const echart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
