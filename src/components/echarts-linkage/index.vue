@@ -6,7 +6,8 @@
         <div :id="item.id" class="h-100% w-100%"></div>
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
           :group="item.id" :theme="item.theme" :item-font-size="dataAbout.drag.fontSize"
-          @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging" @update="(data) => update(data, index)"
+          @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging"
+          @update="(data) => dragUpdateHandle(data, index)"
           @delete-item="(data, number) => deleteItem(data, number, index)"
           @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
           @delete-items-all="deleteItemsAll(index)" />
@@ -41,6 +42,8 @@ import { type DragItemDataProps } from "@/components/drag/type/index";
  * @property {string} [theme='light'] - 主题
  * @property {string} [background] - 背景色
  * @property {boolean} [isLinkage=true] - 是否联动, 默认为true
+ * @property {boolean} [useMergedLegend=true] - 是否使用合并图例
+ * @property {boolean} [useGraphicLocation=true] - 是否使用图形定位
  */
 export type PropsType = {
   cols?: number;
@@ -55,6 +58,7 @@ export type PropsType = {
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
   useGraphicLocation?: boolean, // 是否使用图形定位
+  useSeriesDataSetYAxisMinMax?: boolean, // 是否使用series数据来设置对应Y轴的上下限
 }
 
 // 定义 props
@@ -67,6 +71,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
   useGraphicLocation: true, // 默认使用图形定位
+  useSeriesDataSetYAxisMinMax: false, // 默认不使用计算的上下限
 });
 
 // 自定义验证函数
@@ -139,8 +144,50 @@ const dragDataComputed = (number: number) => {
   return res;
 };
 
-// 拖拽更新数据
-const update = async (data: Array<any>, echartsIndex: number) => {
+/**
+ * @description 拖拽更新操作
+ * @param data 拖拽后的数据
+ * @param echartsIndex echarts索引，从0开始 
+ */
+const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
+
+  // 组装yAxisShowData --- 各个Y轴的显示状态
+  function packageYAxisShowData(data: Array<any>): boolean[] {
+    const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
+    // dataAbout.yAxisShowData = yAxisShowData;
+    // console.log('legendShowData', dataAbout.yAxisShowData);
+    console.log('yAxisShowData', yAxisShowData);
+    return yAxisShowData;
+  }
+
+  // 组装seriesOpacityData --- 各个series的透明度
+  function packageSeriesOpacityData(data: Array<any>): boolean[] {
+    const seriesOpacityData = new Array(data.length).fill(0);
+    data.forEach((item, index) => {
+      item.value.forEach((subItem: any, subIndex: number) => {
+        seriesOpacityData[+subItem.id - 1] = subItem.isShow;
+      });
+    });
+    // dataAbout.seriesOpacityData = seriesOpacityData;
+    // console.log('seriesOpacityData', dataAbout.seriesOpacityData);
+    console.log('seriesOpacityData', seriesOpacityData);
+    return seriesOpacityData;
+  }
+
+  // 组装seriesyAxisIndexData --- 各个series的yAxisIndex，用于关联Y轴
+  function packageSeriesyAxisIndexData(data: Array<any>): number[] {
+    const seriesyAxisIndexData = new Array(data.length).fill(0);
+    data.forEach((item, index) => {
+      item.value.forEach((subItem: any, subIndex: number) => {
+        seriesyAxisIndexData[+subItem.id - 1] = index;
+      });
+    });
+    // dataAbout.seriesyAxisIndexData = seriesyAxisIndexData;
+    // console.log('seriesyAxisIndexData', dataAbout.seriesyAxisIndexData);
+    console.log('seriesyAxisIndexData', seriesyAxisIndexData);
+    return seriesyAxisIndexData;
+  }
+
   console.groupCollapsed('update');
   console.log('data', data);
   const max = Math.max(...data.map(item => item.value.length));
@@ -168,7 +215,7 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
   console.groupCollapsed('deleteItem', data, deleteItemsIndex, echartsIndex);
   dataAbout.data[echartsIndex].data.splice(deleteItemsIndex, 1);
   dataAbout.data[echartsIndex].isDeleteItem = true;
-  update(data, echartsIndex);
+  dragUpdateHandle(data, echartsIndex);
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
   console.groupEnd();
@@ -185,12 +232,16 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
   dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
   console.log('dataAbout.data', dataAbout.data[echartsIndex]);
   dataAbout.data[echartsIndex].isDeleteItem = true;
-  update(data, echartsIndex);
+  dragUpdateHandle(data, echartsIndex);
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
   console.groupEnd();
 }
 
+/**
+ * @description 删除所有数据项
+ * @param echartsIndex echarts索引，从0开始 
+ */
 const deleteItemsAll = async (echartsIndex: number) => {
   console.groupCollapsed('deleteItemsAll', echartsIndex);
   dataAbout.data[echartsIndex].data = [];
@@ -199,43 +250,6 @@ const deleteItemsAll = async (echartsIndex: number) => {
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
   console.groupEnd();
-}
-
-// 组装yAxisShowData --- 各个Y轴的显示状态
-const packageYAxisShowData = (data: Array<any>): boolean[] => {
-  const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
-  // dataAbout.yAxisShowData = yAxisShowData;
-  // console.log('legendShowData', dataAbout.yAxisShowData);
-  console.log('yAxisShowData', yAxisShowData);
-  return yAxisShowData;
-}
-
-// 组装seriesOpacityData --- 各个series的透明度
-const packageSeriesOpacityData = (data: Array<any>): boolean[] => {
-  const seriesOpacityData = new Array(data.length).fill(0);
-  data.forEach((item, index) => {
-    item.value.forEach((subItem: any, subIndex: number) => {
-      seriesOpacityData[+subItem.id - 1] = subItem.isShow;
-    });
-  });
-  // dataAbout.seriesOpacityData = seriesOpacityData;
-  // console.log('seriesOpacityData', dataAbout.seriesOpacityData);
-  console.log('seriesOpacityData', seriesOpacityData);
-  return seriesOpacityData;
-}
-
-// 组装seriesyAxisIndexData --- 各个series的yAxisIndex，用于关联Y轴
-const packageSeriesyAxisIndexData = (data: Array<any>): number[] => {
-  const seriesyAxisIndexData = new Array(data.length).fill(0);
-  data.forEach((item, index) => {
-    item.value.forEach((subItem: any, subIndex: number) => {
-      seriesyAxisIndexData[+subItem.id - 1] = index;
-    });
-  });
-  // dataAbout.seriesyAxisIndexData = seriesyAxisIndexData;
-  // console.log('seriesyAxisIndexData', dataAbout.seriesyAxisIndexData);
-  console.log('seriesyAxisIndexData', seriesyAxisIndexData);
-  return seriesyAxisIndexData;
 }
 
 /**
@@ -250,6 +264,7 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
+    useSeriesDataSetYAxisMinMax: props.useSeriesDataSetYAxisMinMax,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
 }
@@ -555,12 +570,13 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
+  props.useSeriesDataSetYAxisMinMax && echartsLinkageModel.customYAxisMinMax() // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   myChart.setOption(option);
   // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
   dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
-  myChart.on('datazoom', () => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[])));
+  myChart.on('datazoom', (params: any) => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), params));
   console.log('option', option);
   // 联动
   myChart.group = groupName;
@@ -650,8 +666,9 @@ const computerDatazoomGraphic = (myChart: any, graphics: Array<GraphicLocationIn
  * @param currentEchartsId 当前实例id
  * @param xAxisData x轴数组数据
  */
-const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[]) => {
+const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[], params: any) => {
   // console.log('datazoomEvent', graphicLocation, currentEchartsId, xAxisData);
+  // console.log('datazoomEvent', params.batch[0].startValue, params.batch[0].endValue); // todo: 这里可以动态设置Y轴的最大最小值
   if (props.isLinkage && (dataAbout.data[0].id !== currentEchartsId)) return; // 联动模式下，只处理计算第一个实例的图形
   if (animating || !graphicLocation) return; // 防止动画过程中重复触发
   animating = true;
@@ -1084,7 +1101,7 @@ onBeforeUnmount(() => {
 @import '@/assets/styles/mixin.less';
 
 .echarts-linkage-container {
-  min-height: 80vh;
+  min-height: 20vh;
   max-height: 100vh;
   height: 100%;
   width: 100%;
