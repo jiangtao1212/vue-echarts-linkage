@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-17 16:28:43
+ * @LastEditTime: 2024-10-17 17:03:55
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -78,7 +78,6 @@ export class EchartsLinkageModel {
   private gridTopInit = 40; // 上方边距
   private echartsColors = ECHARTS_COLORS; // 颜色数组
   private legendShow = true; // 是否显示图例
-  private useSeriesDataSetYAxisMinMax = false; // 是否使用series数据来设置对应Y轴的上下限
   private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
@@ -94,7 +93,6 @@ export class EchartsLinkageModel {
     this.swichThemeIcon = this.theme === 'dark' ? 'light' : 'dark';
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
-    this.useSeriesDataSetYAxisMinMax = param.useSeriesDataSetYAxisMinMax;
     this.init();
     console.groupEnd();
   }
@@ -153,7 +151,7 @@ export class EchartsLinkageModel {
   }
 
   /**
-   * @description 根据series数据，自定义Y轴最小值和最大值
+   * @description 根据series数据，自定义Y轴最小值和最大值 --- 暂未使用，使用echarts自身的优化算法来自动设置
    * @returns this 链式调用   
    */
   customYAxisMinMax = () => {
@@ -197,6 +195,7 @@ export class EchartsLinkageModel {
         position: 'left',
         offset: 0,
         alignTicks: true,
+        scale: true, // 坐标刻度不强制包含零刻度
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
         nameTextStyle: { align: 'center', padding: [0, 0, -7, 0] },
         axisLabel: { margin: 2 },

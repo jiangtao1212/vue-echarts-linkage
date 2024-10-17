@@ -58,7 +58,6 @@ export type PropsType = {
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
   useGraphicLocation?: boolean, // 是否使用图形定位
-  useSeriesDataSetYAxisMinMax?: boolean, // 是否使用series数据来设置对应Y轴的上下限
 }
 
 // 定义 props
@@ -264,7 +263,6 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
-    useSeriesDataSetYAxisMinMax: props.useSeriesDataSetYAxisMinMax,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
 }
@@ -570,7 +568,6 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
-  props.useSeriesDataSetYAxisMinMax && echartsLinkageModel.customYAxisMinMax() // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   myChart.setOption(option);
