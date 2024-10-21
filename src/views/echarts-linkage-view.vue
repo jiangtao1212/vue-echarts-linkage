@@ -19,7 +19,7 @@
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="2"
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="0"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" />
@@ -48,6 +48,16 @@ const addLinkageBtnClick = () => {
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
     visualMapSeries: { pieces: [{ min: 5000, max: 8000 }] },
+    // 多卷首尾连接设置
+    seriesLink: {
+      isLinkMode: true,
+      linkData: [
+        { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
+      ]
+    },
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
@@ -82,6 +92,15 @@ const updateAllLinkageBtnClick = () => {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
       item.seriesData = RandomUtil.getSeriesData(1000);
+      item.seriesLink = {
+        isLinkMode: true,
+        linkData: [
+          { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+          { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
+          { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
+          { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
+        ]
+      }
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
@@ -227,8 +246,19 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
-    type: type, seriesData: seriesData,
-    visualMapSeries: { pieces: [{ min: 3000, max: 5000 }] }
+    type: type,
+    seriesData: seriesData,
+    visualMapSeries: { pieces: [{ min: 3000, max: 5000 }] },
+    // 多卷首尾连接设置
+    seriesLink: {
+      isLinkMode: true,
+      linkData: [
+        { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
+        { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
+      ]
+    },
   };
   if (switchFlag) {
     oneDataType.dataType = 'switch';
@@ -275,7 +305,7 @@ const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
 
 const init = () => {
   initLisener();
-  // addLotEmptyLinkageBtnClick();
+  addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {

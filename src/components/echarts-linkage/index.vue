@@ -26,7 +26,11 @@ import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
-import type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, VisualMapSeriesType } from './types/index';
+import type {
+  ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
+  DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, VisualMapSeriesType,
+  SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType
+} from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
 
@@ -294,13 +298,24 @@ const setStyleProperty = () => {
   }
 }
 
+// 判断和组装首尾连接数据
+const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[]) => {
+  if (!oneDataType) return oneDataType;
+  if (Array.isArray(oneDataType)) {
+    return oneDataType.map((item: OneDataType) => handleMultipleLinkData(item));
+  } else {
+    return handleMultipleLinkData(oneDataType);
+  }
+}
+
 /**
  * @description 新增echart, id最大序号自增操作 --- 导出
  */
 const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
+  oneDataType = judgeAndPackageLinkData(oneDataType);
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
-  let markLineArray: number[] = []; // 标线数组
+  let markLineArray: MarkLineDataType = []; // 标线数组
   let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
     // 1.空数据，默认新增一个line
@@ -383,7 +398,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
     return isExist;
   }
-
+  oneDataType = judgeAndPackageLinkData(oneDataType) as OneDataType;
   if (dataAbout.data.length < 1) {
     ElMessage.warning('请先添加1个echart图表！');
     return;
@@ -399,6 +414,8 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     type: oneDataType.type,
     seriesData: oneDataType.seriesData,
     seriesDataCache: oneDataType.seriesData,
+    seriesLink: oneDataType.seriesLink,
+    markLineArray: oneDataType.markLineArray,
     customData: oneDataType.customData,
     dataType: oneDataType.dataType || 'pulse',
     visualMapSeries: oneDataType.visualMapSeries,
@@ -411,11 +428,12 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   // 情况2是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，有name等数据，只是seriesData数据为空
   if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].name === '') {
     // 情况1，直接赋值
-    dataAbout.data[index].data[0] = seriesData;
+    dataAbout.data[index].data[0] = oneDataType;
   } else {
     // 情况2，新增数据; 其他为正常新增
-    dataAbout.data[index].data.push(seriesData);
+    dataAbout.data[index].data.push(oneDataType);
   }
+  oneDataType.markLineArray && (dataAbout.data[index].markLineArray = oneDataType.markLineArray);
   await nextTick();
   initEcharts();
   await nextTick();
@@ -554,6 +572,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
       seriesYAxisIndex: item.seriesYAxisIndex,
       dataType: item.dataType || 'pulse',
       visualMapSeries: item.visualMapSeries,
+      seriesLinkMode: item.seriesLink?.isLinkMode,
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesData, dataArray.theme);
@@ -566,7 +585,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
-    .setFontSizeAndMoreAuto(comsputerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
+    .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
@@ -590,7 +609,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
  * @description 计算echarts高度
  * @returns number
  */
-const comsputerEchartsHeight = () => {
+const computerEchartsHeight = () => {
   const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
   const gap = element.style.getPropertyValue('--gap');
   const count = dataAbout.data.length;
@@ -665,7 +684,7 @@ const computerDatazoomGraphic = (myChart: any, graphics: Array<GraphicLocationIn
  */
 const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[], params: any) => {
   // console.log('datazoomEvent', graphicLocation, currentEchartsId, xAxisData);
-  // console.log('datazoomEvent', params.batch[0].startValue, params.batch[0].endValue); // todo: 这里可以动态设置Y轴的最大最小值
+  // console.log('datazoomEvent', params.batch[0].startValue, params.batch[0].endValue); // 这里可以获取当前实例的datazoom范围
   if (props.isLinkage && (dataAbout.data[0].id !== currentEchartsId)) return; // 联动模式下，只处理计算第一个实例的图形
   if (animating || !graphicLocation) return; // 防止动画过程中重复触发
   animating = true;
@@ -930,14 +949,25 @@ const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeries
   initEcharts();
 }
 
-// 传入所有显示子项数据，更新所有echarts --- 导出
+// 传入所有显示子项数据，更新所有echarts --- 导出 //todo: 待优化
 const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
-  dataAbout.data.forEach((echart: SeriesIdDataType) => {
-    echart.data.forEach((series: OneDataType, index: number) => {
-      const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
-      newSeriesData && (series.seriesData = newSeriesData);
+  const isLink = newAllSeriesdata.some((item: SeriesTagType) => item.seriesLink?.isLinkMode); // 是否是首尾相连数据
+  if (isLink) {
+    // 首尾相连模式数据
+    newAllSeriesdata;
+
+
+  } else {
+    // 非首尾相连模式数据
+    dataAbout.data.forEach((echart: SeriesIdDataType) => {
+      echart.data.forEach((series: OneDataType, index: number) => {
+        // series = handleMultipleLinkData(series);
+        const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
+        newSeriesData && (series.seriesData = newSeriesData);
+      });
     });
-  });
+  }
+
   allUpdateHandleCommon();
 }
 
@@ -949,7 +979,7 @@ const allUpdateHandleCommon = async () => {
   dataAbout.isAllUpdate = true; // 标记全部更新
   initEcharts();
   await nextTick();
-  comsputerEchartsHeight();
+  computerEchartsHeight();
   dataAbout.isAllUpdate = false; // 标记全部更新完成
 }
 
@@ -1009,6 +1039,27 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
     });
     animating = false;
   });
+}
+
+// 处理连接数据，多条线首尾相连 --- 导出
+const handleMultipleLinkData = (primaryData: OneDataType) => {
+  if (!primaryData.seriesLink || primaryData.seriesLink.linkData.length === 0) return primaryData;
+  const linkData: LinkDataType[] = primaryData.seriesLink?.linkData;
+  let packageData: SeriesDataType = []; // 组装数据
+  const markLineData: Array<any> = []; // 标记线数据
+  linkData.forEach((item: LinkDataType, index: number) => {
+    const label = item.label || 'X' + index.toString().padStart(3, '0');
+    item.data.forEach((data: Array<number | string>) => data[0] = label + '--' + data[0]);
+    packageData = packageData.concat(item.data);
+    markLineData.push({
+      xAxis: item.data[item.data.length - 1][0],
+      label: { show: item.label ? true : false, position: 'insideMiddleTop', formatter: item.label }
+    });
+  });
+  primaryData.seriesData = packageData;
+  primaryData.markLineArray = markLineData;
+  primaryData.seriesLink.isLinkMode = true;
+  return primaryData;
 }
 
 // 判断标签是否一致，需要考虑customData
@@ -1074,6 +1125,7 @@ const exposedMethods: ExposedMethods = {
   downloadAllEchartsImg,
   realTimeUpdate,
   updateOneEchartsVisualMapSeries,
+  handleMultipleLinkData,
 };
 defineExpose(exposedMethods);
 

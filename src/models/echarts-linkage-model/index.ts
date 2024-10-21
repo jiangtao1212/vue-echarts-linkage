@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-17 17:03:55
+ * @LastEditTime: 2024-10-21 17:21:02
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,7 +18,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType } from "@/components/echarts-linkage/types/index";
 
 /**
  * @description 图表数据类型
@@ -41,12 +41,14 @@ export type SeriesOptionType = {
   seriesData: Array<Array<number | string>>, // 数据系列
   seriesDataCache: Array<Array<number | string>>, // 缓存数据系列
   xAxisName?: string, // x轴名称
+  xAxisShow?: boolean; // x轴是否显示
   yAxisName?: string, // y轴名称
   yAxisShow?: boolean; // y轴是否显示
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
   visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
   dataType: 'switch' | 'pulse' // 数据类型：switch 开关量， pulse 脉冲量
+  seriesLinkMode?: boolean // 是否为连接模式
 }
 
 /**
@@ -101,6 +103,7 @@ export class EchartsLinkageModel {
   init = () => {
     this.setLenged();
     this.setYAxis();
+    this.setToolTip();
     this.setThemeButtonIcon();
     this.initOptionTemplate();
     this.setResultOption();
@@ -145,9 +148,16 @@ export class EchartsLinkageModel {
     const xAxis = this.optionTemplate.xAxis as Array<any>;
     xAxis[0].data = this.setXAxisData();
     xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
-    xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
+    xAxis[0].show = this.seriesOptionArray[0].xAxisShow === false ? false : (this.xAxisData?.length > 0 ? true : false);
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
+    xAxis[0].axisLabel.formatter = (value: string | number) => {
+      const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode );
+      if (seriesLinkMode) {
+        value = value.toString().split('--')[1]
+      }
+      return value;
+    }
   }
 
   /**
@@ -156,7 +166,7 @@ export class EchartsLinkageModel {
    */
   customYAxisMinMax = () => {
     // 组装Y轴最小值和最大值，进行凑整处理，例如：最大值1013，凑整之后为1020；最小值-1013，凑整之后为-1020
-    function packageYAxisMinMax (seriesData: (string | number)[][]) {
+    function packageYAxisMinMax(seriesData: (string | number)[][]) {
       const yAxisDataArray: Array<number> = seriesData.map((point: Array<number | string>) => +point[1]);
       let min = Math.min(...yAxisDataArray);
       let max = Math.max(...yAxisDataArray);
@@ -175,7 +185,7 @@ export class EchartsLinkageModel {
       yAxisObj.min = min;
       yAxisObj.max = max;
       yAxisObj.alignTicks = false;
-    }); 
+    });
     return this;
   }
 
@@ -234,6 +244,25 @@ export class EchartsLinkageModel {
     } else {
       (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
     }
+  }
+
+  // todo: 暂不做，还要考虑series的显示隐藏
+  setToolTip = () => {
+    const tooltip = this.resultOption.tooltip as echarts.TooltipComponentOption;
+    // this.seriesOptionArray[0].seriesLinkMode 
+    // && 
+    // (tooltip.formatter = (params: any, ticket: string) => {
+    //   console.log("params", params);
+    //   console.log("ticket", ticket);
+    //   let res = params[0].name +'</br>';
+    //   params.forEach((item: any, index: number) => {
+    //     res += (item.marker + item.seriesName+'：'+ item.value[1]);
+    //     if (index !== params.length - 1) {
+    //       res += '</br>';
+    //     }
+    //   });
+    //   return res;
+    // });
   }
 
   // 设置主题按钮图标
@@ -314,12 +343,16 @@ export class EchartsLinkageModel {
 
   /**
    * @description 添加自定义标记线
-   * @param markLineArray 自定义标记线数组 例如：[ {value: 30, show: true}, {value: 60, show: true}, ... , {value: 900, show: true} ]
+   * @param markLineArray 自定义标记线数组
    * @returns this 链式调用 
    */
-  addCustomSeriesMarkLine = (markLineArray: Array<number>) => {
-    markLineArray.forEach((markLine: number) => {
-      (this.lineSeriesMarkLineTemplate.data as Array<any>).push({ yAxis: markLine });
+  addCustomSeriesMarkLine = (markLineArray: MarkLineDataType) => {
+    markLineArray.forEach((markLine: number | object) => {
+      if (typeof markLine === 'number') {
+        (this.lineSeriesMarkLineTemplate.data as Array<any>).push({ yAxis: markLine });
+      } else {
+        (this.lineSeriesMarkLineTemplate.data as Array<any>).push(markLine);
+      }
     });
     return this;
   }

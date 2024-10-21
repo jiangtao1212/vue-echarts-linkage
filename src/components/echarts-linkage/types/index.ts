@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-17 10:35:28
+ * @LastEditTime: 2024-10-21 17:43:03
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -22,6 +22,7 @@
  * @param {Function} downloadAllEchartsImg 下载所有echarts图表图片
  * @param {Function} realTimeUpdate 实时更新echarts图表数据
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
+ * @param {Function} handleMultipleLinkData 处理多条数据进行首尾相连，primaryData中必须设置linkData，否则不进行处理，直接返回
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -37,6 +38,18 @@ export interface ExposedMethods {
   downloadAllEchartsImg: () => void;
   realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;
   updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
+  handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
+}
+
+export type SeriesDataType = Array<(string | number)[]>;
+export type MarkLineDataType = Array<number | object>;
+export type LinkDataType = {
+  data: SeriesDataType,
+  label?: string
+}
+export type SeriesLinkType = {
+  isLinkMode?: boolean,
+  linkData: LinkDataType[],
 }
 
 /**
@@ -45,9 +58,10 @@ export interface ExposedMethods {
  * @param {'line' | 'bar'} type 图表类型
  * @param {Array<number[]>} seriesData 系列数据
  * @param {Array<number[]>} seriesDataCache 缓存的系列数据
+ * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
  * @param {string} xAxisName x轴名称
  * @param {string} yAxisName y轴名称
- * @param {Array<number>} markLineArray 标记线数据
+ * @param {MarkLineDataType} markLineArray 标记线数据
  * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {boolean} yAxisShow 是否显示y轴
@@ -58,13 +72,15 @@ export interface ExposedMethods {
 export type OneDataType = {
   name: string;
   type: 'line' | 'bar';
-  seriesData: Array<(string | number)[]>;
-  seriesDataCache?: Array<(string | number)[]>;
+  seriesData: SeriesDataType;
+  seriesDataCache?: SeriesDataType;
+  seriesLink?: SeriesLinkType;
   xAxisName?: string;
   yAxisName?: string;
-  markLineArray?: Array<number>;
+  markLineArray?: MarkLineDataType;
   visualMapSeries?: VisualMapSeriesType | undefined;
   customData?: any;
+  xAxisShow?: boolean;
   yAxisShow?: boolean;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
@@ -78,11 +94,11 @@ export type OneDataType = {
  * @param {number} xAxisSeq 图形元素x轴坐标序号：从0开始
  * @param {number} xAxisX 图形元素x轴坐标值：不定，可能是数值可能是时间等等
  */
-export type GraphicLocationInfoType = { 
-  graphicId: string, 
-  positionX: number, 
-  xAxisSeq: number, 
-  xAxisX: string 
+export type GraphicLocationInfoType = {
+  graphicId: string,
+  positionX: number,
+  xAxisSeq: number,
+  xAxisX: string
 }
 
 /**
@@ -105,7 +121,7 @@ export type VisualMapSeriesType = {
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
- * @param {Array<number>} markLineArray 标记线数据
+ * @param {MarkLineDataType} markLineArray 标记线数据
  * @param {Array<VisualMapType>} visualMapArray 视觉映射数据
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
@@ -114,7 +130,7 @@ export type SeriesIdDataType = {
   id: string;
   data: Array<OneDataType>;
   xAxisdata?: Array<string>;
-  markLineArray?: Array<number>;
+  markLineArray?: MarkLineDataType;
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: 'dark' | 'light',
@@ -150,7 +166,7 @@ export type DataAboutType = {
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {Array<number[]>} seriesData 系列数据
  */
-export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType'>;
+export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink'>;
 
 /**
  * @description: 接收drop事件的参数类型
