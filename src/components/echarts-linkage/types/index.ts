@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-22 10:45:28
+ * @LastEditTime: 2024-10-22 13:28:34
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -125,12 +125,17 @@ export type GraphicLocationInfoType = {
 /**
  * @description: 视觉映射数据类型，自定义每个series中不同报警区间，默认报警色为红色
  * @param {string} seriesName 指定作用的系列名称，在更新单个echarts的visualMap数据（updateOneEchartsVisualMapSeries方法）时使用
+ * @param {SeriesDataType} baseLine 基准线数据
  * @param {number} min 最小值
  * @param {number} max 最大值
  * @param {string} color 颜色
  */
 export type VisualMapSeriesType = {
   seriesName?: string,
+  baseLine?: {
+    mode: 'above' | 'below' | 'equal', // 基准线报警模式：above: 超出基准线，Below: 低于基准线，equal: 等于基准线
+    value: SeriesDataType // 基准线值
+  },
   pieces: Array<{
     min: number,
     max: number,

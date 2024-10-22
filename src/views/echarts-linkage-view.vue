@@ -1,6 +1,7 @@
 <template>
   <div class="btn-container">
     <el-button type="primary" size="small" @click="addLinkageBtnClick">新增echarts实例</el-button>
+    <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
     <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
     <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
     <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
@@ -60,6 +61,27 @@ const addLinkageBtnClick = () => {
     },
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
+}
+
+// 测试基准线按钮点击
+const testBaseLineBtnClick = () => {
+  const seriesData = RandomUtil.getSeriesData(1000);
+  const baseLineData = RandomUtil.getSeriesData(1000); 
+  const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+  const oneDataType1: OneDataType = {
+    name: `新增图表${maxEchartsIdSeq + 1}`,
+    yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+    type: 'line',
+    seriesData: seriesData,
+    visualMapSeries: {
+      pieces: [],
+      baseLine: {
+        mode: 'above',
+        value: baseLineData,
+      }
+    },
+  };
+  echartsLinkageRef.value!.addEchart([oneDataType1]);
 }
 
 // 批量新增空白echarts，携带legend数据
@@ -255,17 +277,19 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
     seriesData: seriesData,
-    visualMapSeries: { pieces: [{ min: 3000, max: 5000 }] },
-    // 多卷首尾连接设置
-    seriesLink: {
-      isLinkMode: true,
-      linkData: [
-        { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
-      ]
+    visualMapSeries: { 
+      pieces: [{ min: 3000, max: 5000 }], 
     },
+    // 多卷首尾连接设置
+    // seriesLink: {
+    //   isLinkMode: true,
+    //   linkData: [
+    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
+    //   ]
+    // },
   };
   if (switchFlag) {
     oneDataType.dataType = 'switch';

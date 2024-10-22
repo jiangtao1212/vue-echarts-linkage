@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-21 17:21:02
+ * @LastEditTime: 2024-10-22 15:59:52
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -17,8 +17,8 @@ import {
   type MarkLineComponentOption
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
-import { ObjUtil, FileUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType } from "@/components/echarts-linkage/types/index";
+import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType } from "@/components/echarts-linkage/types/index";
 
 /**
  * @description 图表数据类型
@@ -38,8 +38,8 @@ export type SeriesOptionType = {
   type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
   name?: string, // 图表名称
   smooth?: true,
-  seriesData: Array<Array<number | string>>, // 数据系列
-  seriesDataCache: Array<Array<number | string>>, // 缓存数据系列
+  seriesData: SeriesDataType, // 数据系列
+  seriesDataCache: SeriesDataType, // 缓存数据系列
   xAxisName?: string, // x轴名称
   xAxisShow?: boolean; // x轴是否显示
   yAxisName?: string, // y轴名称
@@ -152,7 +152,7 @@ export class EchartsLinkageModel {
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
     xAxis[0].axisLabel.formatter = (value: string | number) => {
-      const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode );
+      const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode);
       if (seriesLinkMode) {
         value = value.toString().split('--')[1]
       }
@@ -262,6 +262,14 @@ export class EchartsLinkageModel {
     //     }
     //   });
     //   return res;
+    // });
+    // todo: 考虑基准线模式时，在tootip中数据后面加上对应基准数据
+    // this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+    //   if (!item.visualMapSeries) return;
+    //   const color = (this.resultOption.series as LineSeriesOption[])[index].lineStyle?.color;
+    //   (this.resultOption.series as LineSeriesOption[])[index].lineStyle = {};
+    //   // const pieces = packagePieces(item.visualMapSeries, item.seriesData);
+
     // });
   }
 
@@ -382,20 +390,55 @@ export class EchartsLinkageModel {
    */
   setVisualMap = () => {
     // 组装pieces，将min和max转换为gte和lte
-    function packagePieces(pieces: Array<{
-      min: number;
-      max: number;
-      color?: string;
-    }>) {
+    function packagePieces(visualMapSeries: VisualMapSeriesType, seriesData: SeriesDataType) {
       const res: Array<any> = [];
-      pieces.forEach((item: any) => {
-        const obj = {
-          gte: item.min,
-          lte: item.max,
-          color: item.color || 'red'
-        };
-        res.push(obj);
-      });
+      const baseLine = visualMapSeries.baseLine;
+      if (baseLine) {
+        const mode = baseLine.mode;
+        const baseLineData = baseLine.value;
+        const baseValueArray = baseLineData.map((item: Array<number | string>) => +item[1]);
+        const compareArray = seriesData.map((item: Array<number | string>) => +item[1]);
+        const intervals = ArrayUtil.getGreaterValueIntervals(baseValueArray, compareArray, (baseValue: number, compareValue: number) => {
+          let flag = false;
+          switch (mode) {
+            case 'above':
+              flag = compareValue > baseValue;
+              break;
+            case 'below':
+              flag = compareValue < baseValue;
+              break;
+            case 'equal':
+              flag = compareValue === baseValue;
+              break;
+            default:
+              break;
+          }
+          return flag;
+        });
+        console.log("intervals---------------", intervals);
+        intervals.forEach((item: Array<number>) => {
+          let obj: any = {
+            gte: item[0],
+            color: 'red'
+          };
+          if (item[0] === item[1]) {
+            obj['lt'] = item[1] + 1;
+          } else {
+            obj['lte'] = item[1];
+          }
+          res.push(obj);
+        });
+      } else {
+        const pieces = visualMapSeries.pieces;
+        pieces.forEach((item: any) => {
+          const obj = {
+            gte: item.min,
+            lte: item.max,
+            color: item.color || 'red'
+          };
+          res.push(obj);
+        });
+      }
       return res;
     }
 
@@ -405,14 +448,17 @@ export class EchartsLinkageModel {
       if (!item.visualMapSeries) return;
       const color = (this.resultOption.series as LineSeriesOption[])[index].lineStyle?.color;
       (this.resultOption.series as LineSeriesOption[])[index].lineStyle = {};
+      const pieces = packagePieces(item.visualMapSeries, item.seriesData);
+      if (pieces.length === 0) return;
       const visualMapOne: any = {
         show: false,
         type: 'piecewise',
-        pieces: packagePieces(item.visualMapSeries.pieces),
+        pieces: pieces,
         seriesIndex: index,
         outOfRange: {
           color: color
-        }
+        },
+        dimension: item.visualMapSeries.baseLine ? 0 : 1, // 基准线存在时，dimension为0，否则为1
       };
       visualMap.push(visualMapOne);
     });
