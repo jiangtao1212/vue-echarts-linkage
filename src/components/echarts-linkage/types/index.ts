@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-21 17:43:03
+ * @LastEditTime: 2024-10-22 10:45:28
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -22,7 +22,7 @@
  * @param {Function} downloadAllEchartsImg 下载所有echarts图表图片
  * @param {Function} realTimeUpdate 实时更新echarts图表数据
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
- * @param {Function} handleMultipleLinkData 处理多条数据进行首尾相连，primaryData中必须设置linkData，否则不进行处理，直接返回
+ * @param {Function} handleMultipleLinkData 处理前后关联数据，多条关联数据进行首尾相连操作，primaryData中必须设置seriesLink，否则不进行处理，直接返回
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -41,12 +41,33 @@ export interface ExposedMethods {
   handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
 }
 
+/**
+ * @description: 系列数据类型
+ * @param {Array<(string | number)[]>} 系列数据二维数组，每一项为一个数组，数组的每一项为一个数据点
+ */
 export type SeriesDataType = Array<(string | number)[]>;
+
+/**
+ * @description: 标记线数据类型
+ * @param {number | object} 标记线数据，可以是数字([2, 4, 6, 8, 10])，也可以是对象(内容参考echarts官网文档中标线markLine的data属性)
+ */
 export type MarkLineDataType = Array<number | object>;
+
+/**
+ * @description: 多条数据进行首尾相连的单条数据类型
+ * @param {SeriesDataType} data 系列数据
+ * @param {string} label 标签名称
+ */
 export type LinkDataType = {
   data: SeriesDataType,
   label?: string
 }
+
+/**
+ * @description: 多条数据进行首尾相连的数据类型
+ * @param {boolean} isLinkMode 是否开启多条数据进行首尾相连模式
+ * @param {Array<LinkDataType>} linkData 进行首尾相连的多条数据
+ */
 export type SeriesLinkType = {
   isLinkMode?: boolean,
   linkData: LinkDataType[],
@@ -56,8 +77,8 @@ export type SeriesLinkType = {
  * @description: echarts图表中单个系列数据类型
  * @param {string} name 系列名称
  * @param {'line' | 'bar'} type 图表类型
- * @param {Array<number[]>} seriesData 系列数据
- * @param {Array<number[]>} seriesDataCache 缓存的系列数据
+ * @param {SeriesDataType} seriesData 系列数据
+ * @param {SeriesDataType} seriesDataCache 缓存的系列数据
  * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
  * @param {string} xAxisName x轴名称
  * @param {string} yAxisName y轴名称

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-21 10:33:47
+ * @LastEditTime: 2024-10-22 10:40:33
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */

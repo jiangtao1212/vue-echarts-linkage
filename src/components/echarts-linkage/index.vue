@@ -336,7 +336,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
     markLineArray = oneDataType.markLineArray || [],
-      dataAll = [{ ...oneDataType }];
+    dataAll = [{ ...oneDataType }];
   }
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, markLineArray, data: dataAll, theme, graphics };
@@ -949,25 +949,39 @@ const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeries
   initEcharts();
 }
 
-// 传入所有显示子项数据，更新所有echarts --- 导出 //todo: 待优化
+// 判断标签是否一致，需要考虑customData
+const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
+  return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
+}
+
+// 传入所有显示子项数据，更新所有echarts --- 导出
 const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
   const isLink = newAllSeriesdata.some((item: SeriesTagType) => item.seriesLink?.isLinkMode); // 是否是首尾相连数据
   if (isLink) {
-    // 首尾相连模式数据
-    newAllSeriesdata;
-
-
+    // 首尾相连模式数据，默认全部更新
+    dataAbout.data.forEach((echart: SeriesIdDataType) => {
+      echart.data.forEach((series: OneDataType, index: number) => {
+        const seriesTag: SeriesTagType = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0];
+        if (!seriesTag) return; // 未找到匹配的标签，跳过
+        const linkData = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0].seriesLink?.linkData as LinkDataType[];
+        const { packageData, markLineData } = linkToSeries(linkData);
+        series.seriesData = packageData;
+        series.markLineArray = markLineData;
+        series.seriesLink = { isLinkMode: true, linkData: [] };
+        index === 0 && (echart.markLineArray = markLineData); // 将第一个系列的markLineArray赋值给echarts的markLineArray
+      });
+    });
   } else {
     // 非首尾相连模式数据
     dataAbout.data.forEach((echart: SeriesIdDataType) => {
       echart.data.forEach((series: OneDataType, index: number) => {
-        // series = handleMultipleLinkData(series);
-        const newSeriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0] && (series.seriesData = newAllSeriesdata.filter(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData))[0].seriesData);
+        const seriesTag: SeriesTagType = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0];
+        if (!seriesTag) return; // 未找到匹配的标签，跳过
+        const newSeriesData = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0].seriesData;
         newSeriesData && (series.seriesData = newSeriesData);
       });
     });
   }
-
   allUpdateHandleCommon();
 }
 
@@ -1041,30 +1055,33 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
   });
 }
 
-// 处理连接数据，多条线首尾相连 --- 导出
+// 处理前后关联数据，多条关联数据进行首尾相连操作 --- 导出
 const handleMultipleLinkData = (primaryData: OneDataType) => {
   if (!primaryData.seriesLink || primaryData.seriesLink.linkData.length === 0) return primaryData;
   const linkData: LinkDataType[] = primaryData.seriesLink?.linkData;
-  let packageData: SeriesDataType = []; // 组装数据
-  const markLineData: Array<any> = []; // 标记线数据
-  linkData.forEach((item: LinkDataType, index: number) => {
-    const label = item.label || 'X' + index.toString().padStart(3, '0');
-    item.data.forEach((data: Array<number | string>) => data[0] = label + '--' + data[0]);
-    packageData = packageData.concat(item.data);
-    markLineData.push({
-      xAxis: item.data[item.data.length - 1][0],
-      label: { show: item.label ? true : false, position: 'insideMiddleTop', formatter: item.label }
-    });
-  });
+  const { packageData, markLineData } = linkToSeries(linkData);
   primaryData.seriesData = packageData;
   primaryData.markLineArray = markLineData;
   primaryData.seriesLink.isLinkMode = true;
   return primaryData;
 }
 
-// 判断标签是否一致，需要考虑customData
-const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
-  return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
+// 首尾相连数据转series数据
+const linkToSeries = (linkData: LinkDataType[]) => {
+  let arrays: Array<SeriesDataType> = []; // 三维数组，所有连接线的数据
+  const markLineData: Array<any> = []; // 标记线数据
+  linkData.forEach((item: LinkDataType, index: number) => {
+    const label = item.label || 'X' + index.toString().padStart(3, '0');
+    item.data.forEach((data: Array<number | string>) => data[0] = label + '--' + data[0]);
+    // packageData = packageData.concat(item.data);
+    arrays.push(item.data);
+    markLineData.push({
+      xAxis: item.data[item.data.length - 1][0],
+      label: { show: item.label ? true : false, position: 'insideMiddleTop', formatter: item.label }
+    });
+  });
+  let packageData: SeriesDataType = arrays.reduce((acc, curr) => acc.concat(curr), []);
+  return { packageData,markLineData };
 }
 
 // 下载包含所有echarts实例的图片 --- 导出

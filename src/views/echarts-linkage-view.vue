@@ -30,7 +30,7 @@
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType } from '@/components/echarts-linkage/types/index';
+import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType, SeriesDataType } from '@/components/echarts-linkage/types/index';
 
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
@@ -87,6 +87,7 @@ const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
+  const linkCount = Math.floor(Math.random() * 10) + 1; // 首尾连接的数量
   allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
@@ -94,16 +95,22 @@ const updateAllLinkageBtnClick = () => {
       item.seriesData = RandomUtil.getSeriesData(1000);
       item.seriesLink = {
         isLinkMode: true,
-        linkData: [
-          { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
-          { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
-          { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
-          { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
-        ]
+        linkData: getRandomCountLinkData(linkCount)
       }
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
+// 随机获取首尾连接数据
+const getRandomCountLinkData = (count: number) => {
+  const res: Array<{ label: string, data: SeriesDataType }> = [];
+  for (let i = 0; i < count; i++) {
+    const label = `P20241021000${i + 1}`;
+    const data = RandomUtil.getSeriesData(1000);
+    res.push({ label, data });
+  }
+  return res;
 }
 
 // 批量更新按钮
