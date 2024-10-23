@@ -276,7 +276,7 @@ const updateVisualMapBtnClick = () => {
   console.log("allSeriesTagInfo", allSeriesTagInfo);
   const id = allSeriesTagInfo[0].id;
   const seriesName = allSeriesTagInfo[0].series[0].name;
-  echartsLinkageRef.value?.updateOneEchartsVisualMapSeries(id, [{ pieces: [{ min: 1000, max: 2000 }] }]);
+  echartsLinkageRef.value?.updateOneEchartsVisualMapSeries(id, [{ seriesName: seriesName, pieces: [{ min: 1000, max: 3000 }] }]);
 }
 
 // 新增series按钮

@@ -907,9 +907,9 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
  * 导出
  * @description 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色；如果未指定seriesName则更新指定echarts的所有series的visualMap数据
  * @param id echarts实例id
- * @param data 视觉映射数据
+ * @param visualMapData 视觉映射数据
  */
-const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => {
+const updateOneEchartsVisualMapSeries = async (id: string, visualMapData: VisualMapSeriesType[] | VisualMapSeriesType) => {
 
   // 定义一个内部函数，更新单个系列的visualMap数据
   function updateOneSeries(echart: SeriesIdDataType, visualMapSeries: VisualMapSeriesType) {
@@ -919,24 +919,24 @@ const updateOneEchartsVisualMapSeries = async (id: string, data: VisualMapSeries
       if (seriesName) {
         // 指定系列名称，更新所指定的系列
         if (series.name === seriesName) {
-          series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
+          series.visualMapSeries && (series.visualMapSeries = visualMapSeries);
         }
       } else {
         // 未指定系列名称，更新所有系列
-        series.visualMapSeries && (series.visualMapSeries.pieces = visualMapSeries.pieces);
+        series.visualMapSeries && (series.visualMapSeries = visualMapSeries);
       }
     });
   }
 
   const echart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  if (Array.isArray(data)) {
+  if (Array.isArray(visualMapData)) {
     // 传入多个系列数据
-    if (data.length === 0) return;
-    data.forEach((item: VisualMapSeriesType) => updateOneSeries(echart, item));
+    if (visualMapData.length === 0) return;
+    visualMapData.forEach((item: VisualMapSeriesType) => updateOneSeries(echart, item));
   } else {
     // 传入单个系列数据
-    if (Object.keys(data).length === 0) return;
-    updateOneSeries(echart, data);
+    if (Object.keys(visualMapData).length === 0) return;
+    updateOneSeries(echart, visualMapData);
   }
   dataAbout.currentHandleChartId = id;
   await nextTick();
