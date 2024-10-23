@@ -29,7 +29,7 @@ import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, VisualMapSeriesType,
-  SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType
+  SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -40,7 +40,7 @@ import { type DragItemDataProps } from "@/components/drag/type/index";
  * @property {number} [echartsMaxCount=7] - Echarts最大数量
  * @property {number} [emptyEchartCount] - 初始化空白echarts数量
  * @property {string[]} [echartsColors] - echarts颜色数组
- * @property {number} [segment=5] - 标线分段数
+ * @property {SegementType} [segment] - 标线分段数 
  * @property {string} [language='zh-cn'] - 语言
  * @property {boolean} [gridAlign=false] - 多echarts图表是否对齐
  * @property {string} [theme='light'] - 主题
@@ -54,7 +54,7 @@ export type PropsType = {
   echartsMaxCount?: number;
   emptyEchartCount?: number;
   echartsColors?: string[];
-  segment?: number;
+  segment?: SegementType;
   language?: 'zh-cn' | 'en-us';
   gridAlign?: boolean, // 多echarts图表是否对齐
   theme?: 'light' | 'dark', // 主题
@@ -336,7 +336,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
     markLineArray = oneDataType.markLineArray || [],
-    dataAll = [{ ...oneDataType }];
+      dataAll = [{ ...oneDataType }];
   }
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, markLineArray, data: dataAll, theme, graphics };
@@ -558,9 +558,10 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
     myChart.resize();
     return myChart;
   }
-  const seriesData: SeriesOptionType[] = [];
+  const seriesAllData: SeriesOptionType[] = [];
   dataArray.data.forEach((item: OneDataType) => {
-    seriesData.push({
+    item.seriesData.forEach((item: Array<number | string>) => item[0] += ''); // 解决数据类型问题，将数字类型转为字符串类型
+    seriesAllData.push({
       type: item.type,
       name: item.name,
       seriesData: item.seriesData,
@@ -575,7 +576,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
       seriesLinkMode: item.seriesLink?.isLinkMode,
     });
   });
-  const echartsLinkageModel = getEchartsLikageModel(seriesData, dataArray.theme);
+  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme);
   // 添加自定义标记线
   dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
   console.log('数据', dataArray.data);
@@ -732,8 +733,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
         } else {
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
-          // 如果x轴最前面被加上了空值，这里的序号则需要减去1
-          const seq = judgeLengthAnalysisOrNot(item.xAxisdata, item.data[0].seriesData) ? notDragGraphic.xAxisSeq - 1 : notDragGraphic.xAxisSeq;
+          const seq = notDragGraphic.xAxisSeq;
           notDragGraphic.xAxisX = item.data[0].seriesData[seq][0].toString();
         }
       });
@@ -743,11 +743,6 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
     animating = false;
   });
 };
-
-// 判断是否为长度分析图表，长度分析图表X轴最前面被加上了空值，所以长度比series中数据多1
-const judgeLengthAnalysisOrNot = (xAxisdata: string[] | undefined, seriesData: (number | string)[][], diff: number = 1) => {
-  return xAxisdata?.length === (seriesData.length + diff);
-}
 
 /**
  * @description 渲染图形
@@ -1021,9 +1016,6 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
     });
     let startIndex = 0; // 删除的索引位置，长度分析时是1，其他是0
     echart.xAxisdata?.push(...addXs);
-    if (limitFlag && judgeLengthAnalysisOrNot(echart.xAxisdata, echart.data[0].seriesData, 1 + addXs.length)) {
-      startIndex = 1;
-    }
     // 限制x轴最大数据量
     limitFlag && echart.xAxisdata?.length && echart.xAxisdata?.splice(startIndex, addXs.length);
   });
@@ -1081,7 +1073,7 @@ const linkToSeries = (linkData: LinkDataType[]) => {
     });
   });
   let packageData: SeriesDataType = arrays.reduce((acc, curr) => acc.concat(curr), []);
-  return { packageData,markLineData };
+  return { packageData, markLineData };
 }
 
 // 下载包含所有echarts实例的图片 --- 导出

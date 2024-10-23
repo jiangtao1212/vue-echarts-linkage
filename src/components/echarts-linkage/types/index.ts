@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-22 13:28:34
+ * @LastEditTime: 2024-10-23 10:18:20
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -208,3 +208,18 @@ export type DropEchartType = {
  * @param {Array<GraphicLocationInfoType>} graphics 图形位置信息
  */
 export type ListenerGrapicLocationType = Array<Pick<SeriesIdDataType, 'id' | 'graphics'>>;
+
+/**
+ * @description 定义标线分段数
+ * @param {number} count 标线分段数
+ * @property {string} [mode='interval'] - 分段模式，可选值：'interval' | 'percent', 
+ * @property {number} [value] - 分段数，当mode为'interval'时，value表示分段数，当mode为'percent'时，表示显示能被value整除的数值
+ * @example
+ * 1. 5个分段：segment: 5
+ * 2. 5个分段：segment: { mode: 'interval', value: 5 }
+ * 3. 能被50整除的数值：segment: { mode: 'percent', value: 50 }
+ */
+export type SegementType = number | {
+  mode: 'interval' | 'percent',
+  value: number
+}

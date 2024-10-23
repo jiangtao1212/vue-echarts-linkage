@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-22 15:59:52
+ * @LastEditTime: 2024-10-23 10:09:48
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,7 +18,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType } from "@/components/echarts-linkage/types/index";
 
 /**
  * @description 图表数据类型
@@ -62,7 +62,7 @@ export type SeriesOptionType = {
 export type EchartsLinkageModelType = {
   seriesOptionArray: Array<SeriesOptionType>,
   theme: 'dark' | 'light',
-  segment?: number,
+  segment?: SegementType,
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
   useSeriesDataSetYAxisMinMax: boolean,
@@ -115,13 +115,31 @@ export class EchartsLinkageModel {
     (this.optionTemplate.legend as ToolboxComponentOption).show = this.legendShow;
   }
 
-  // 设置x轴刻度标签显示间隔
+  /**
+   * @description 设置x轴刻度标签显示间隔
+   * egment值300，表示间隔300，效果应该是0,300,600,...,； 
+   * 但在echarts中的含义其实是interval为299，表示『隔299个标签显示一个标签』；
+   * 也就是说，间隔300，实际上interval为299。
+   * @returns {number | boolean} x轴刻度标签显示间隔
+   */
   setXAxisInterval = () => {
     if (!this.segment) return false;
-    // segment值300，表示间隔300，效果应该是0,300,600,...,； 
-    // 但在echarts中的含义其实是interval为299，表示『隔299个标签显示一个标签』；
-    // 也就是说，间隔300，实际上interval为299。
-    this.xAxisInterval = this.segment - 1;
+    let segment = 1;
+    if (typeof this.segment === 'number') {
+      // number类型，直接赋值
+      segment = this.segment;
+    } else if (typeof this.segment === 'object') {
+      // object类型
+      // 如果mode为percent，则
+      // 如果mode为interval，则取value值
+      const { mode, value } = this.segment;
+      if (mode === 'percent') {
+        this.xAxisInterval = 0;
+        return true;
+      }
+      segment = value;
+    }
+    this.xAxisInterval = segment - 1;
     return this.xAxisInterval;
   }
 
@@ -133,9 +151,10 @@ export class EchartsLinkageModel {
       if (seriesData.length === 0) {
         continue;
       } else {
-        // 第一个值空字符串，用于隔开起始点---注意：这里会影响后续图形更新时的x轴seq序号数据，因为此时x轴数据长度比series数据长度多1
-        seriesData[0][0].toString() === '1' && xAxisData.unshift('');
-        xAxisData = [...xAxisData, ...seriesData.map((item: Array<(string | number)>) => item[0].toString())];
+        xAxisData = [...seriesData.map((item: Array<(string | number)>) => item[0].toString())];
+        // // 有基准线时，开始不新增空字符串
+        // // 第一个值空字符串，用于隔开起始点---注意：这里会影响后续图形更新时的x轴seq序号数据，因为此时x轴数据长度比series数据长度多1
+        // seriesData[0][0].toString() === '1' && xAxisData.unshift('');
         break;
       }
     }
@@ -151,13 +170,19 @@ export class EchartsLinkageModel {
     xAxis[0].show = this.seriesOptionArray[0].xAxisShow === false ? false : (this.xAxisData?.length > 0 ? true : false);
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
-    xAxis[0].axisLabel.formatter = (value: string | number) => {
+    xAxis[0].axisLabel.formatter = (value: string | number, index: number) => {
       const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode);
       if (seriesLinkMode) {
         value = value.toString().split('--')[1]
       }
+      if (typeof this.segment === 'object' && this.segment.mode === 'percent') {
+        // segment的mode为percent时，显示能被整除的数值
+        (+value) % this.segment.value !== 0 && (value = '');
+      }
       return value;
     }
+    // segment的mode为percent时，不显示x轴刻度标签
+    typeof this.segment === 'object' && this.segment.mode === 'percent' && (xAxis[0].axisTick.show = false);
   }
 
   /**

@@ -21,6 +21,7 @@
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="0"
+  :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" />
@@ -66,7 +67,11 @@ const addLinkageBtnClick = () => {
 // 测试基准线按钮点击
 const testBaseLineBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1000);
-  const baseLineData = RandomUtil.getSeriesData(1000); 
+  // const baseLineData = RandomUtil.getSeriesData(1000); 
+  const baseLineData = JSON.parse(JSON.stringify(seriesData));
+  for (let i = 0; i < 1; i++) {
+    baseLineData[i][1] = 10;
+  }
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   const oneDataType1: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,

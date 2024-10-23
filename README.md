@@ -92,6 +92,7 @@ const dropEchart = (data: dropEchartType) => {
 | echarts-max-count | `number` | 允许的最大图表数 | 7 |
 | empty-echart-count | `number` | 初始化生成的空白图表数 | — |
 | echarts-colors | `string[]` | legend、series和对应Y轴颜色数组  | ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'] |
+| segment | `number / { mode: 'interval' | 'percent', value: number }` | 标线分段数, number表示分段数，object表示分段配置；当mode为'interval'时，value表示分段数，当mode为'percent'时，表示显示能被value整除的数值  | - |
 | language | `zh-cn / en-us` | 语言设置，目前只支持中文（zh-cn）和英文（en-us）  | zh-cn，即中文 |
 | grid-align | `boolean` | 多echarts图表是否对齐 | false |
 | theme | `light / dark` | 主题，light为浅色，dark为深色 | light |
