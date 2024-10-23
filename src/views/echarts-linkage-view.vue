@@ -21,10 +21,9 @@
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="2"
-  :segment="{ mode: 'percent', value: 50 }"
-    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
-    :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
-    @listener-graphic-location="listenerGraphicLocation" />
+    :segment="{ mode: 'percent', value: 50 }" :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']"
+    language="zh-cn" grid-align theme="light" :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view"
+    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
   <!-- </div> -->
 </template>
 
@@ -119,11 +118,23 @@ const updateAllLinkageBtnClick = () => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
-      item.seriesData = RandomUtil.getSeriesData(1000);
-      item.seriesLink = {
-        isLinkMode: true,
-        linkData: getRandomCountLinkData(linkCount)
+      const seriesData = RandomUtil.getSeriesData(1001);
+      const baseLineData = JSON.parse(JSON.stringify(seriesData));
+      for (let i = 0; i < 100; i++) {
+        baseLineData[i][1] = 100000;
       }
+      item.seriesData = seriesData;
+      // item.seriesLink = {
+      //   isLinkMode: true,
+      //   linkData: getRandomCountLinkData(linkCount)
+      // },
+      item.visualMapSeries = {
+        pieces: [{ min: 5000, max: 8000 }],
+        baseLine: {
+          mode: 'below',
+          value: baseLineData,
+        }
+      };
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
@@ -140,7 +151,7 @@ const getRandomCountLinkData = (count: number) => {
   return res;
 }
 
-// 批量更新按钮
+// 批量更新按钮---时间
 const updateAllLinkageTimeBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
@@ -287,11 +298,11 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     type: type,
     seriesData: seriesData,
     visualMapSeries: {
-      pieces: [ { min: 5000, max: 8000 } ],
-      // baseLine: {
-      //   mode: 'below',
-      //   value: baseLineData,
-      // }
+      pieces: [{ min: 5000, max: 8000 }],
+      baseLine: {
+        mode: 'below',
+        value: baseLineData,
+      }
     },
     // 多卷首尾连接设置
     // seriesLink: {

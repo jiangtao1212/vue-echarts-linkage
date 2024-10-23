@@ -191,8 +191,10 @@ export type DataAboutType = {
  * @param {string} name 系列名称
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {Array<number[]>} seriesData 系列数据
+ * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
+ * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  */
-export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink'>;
+export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries'>;
 
 /**
  * @description: 接收drop事件的参数类型

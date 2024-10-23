@@ -962,6 +962,7 @@ const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
         series.seriesData = packageData;
         series.markLineArray = markLineData;
         series.seriesLink = { isLinkMode: true, linkData: [] };
+        seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
         index === 0 && (echart.markLineArray = markLineData); // 将第一个系列的markLineArray赋值给echarts的markLineArray
       });
     });
@@ -973,6 +974,7 @@ const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
         if (!seriesTag) return; // 未找到匹配的标签，跳过
         const newSeriesData = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0].seriesData;
         newSeriesData && (series.seriesData = newSeriesData);
+        seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
       });
     });
   }
