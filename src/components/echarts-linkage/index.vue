@@ -498,10 +498,12 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
-    if (dataEcharts.id === dataAbout.currentHandleChartId
-      && dataEcharts.data.length === 1
-      && dataEcharts.data[0].visualMapSeries) {
+    if ((dataAbout.isAllUpdate || (dataEcharts.id === dataAbout.currentHandleChartId && dataEcharts.data.length === 1)) 
+        && dataEcharts.data[0].visualMapSeries) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
+      // 注：这里有两种情况，首先第一个数据中visualMapSeries必须存在
+      // 情况1：整体更新时，传入了视觉映射数据，则需要重新渲染实例
+      // 情况2：拖入数据时，传入了视觉映射数据，如果当前echarts实例中只有一条数据，则需要重新渲染实例
       myChart.dispose();
       myChart = echarts.init(element, dataEcharts.theme); // 切换主题时，需要重新初始化实例
     }

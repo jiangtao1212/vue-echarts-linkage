@@ -13,7 +13,7 @@
     <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
     <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
     <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
-    <!-- <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button> -->
+    <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button>
     <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽折线系列</span></div>
     <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽柱状系列</span></div>
     <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽开关量系列</span></div>
@@ -120,9 +120,9 @@ const updateAllLinkageBtnClick = () => {
     } else {
       const seriesData = RandomUtil.getSeriesData(1001);
       const baseLineData = JSON.parse(JSON.stringify(seriesData));
-      for (let i = 0; i < 100; i++) {
-        baseLineData[i][1] = 100000;
-      }
+      // for (let i = 0; i < 100; i++) {
+      //   baseLineData[i][1] = 100000;
+      // }
       item.seriesData = seriesData;
       // item.seriesLink = {
       //   isLinkMode: true,
@@ -275,7 +275,7 @@ const updateVisualMapBtnClick = () => {
   const allSeriesTagInfo: Array<{ id: string, series: Array<SeriesTagType> }> = echartsLinkageRef.value?.getAllSeriesTagInfo() as Array<{ id: string, series: Array<SeriesTagType> }>;
   console.log("allSeriesTagInfo", allSeriesTagInfo);
   const id = allSeriesTagInfo[0].id;
-  const seriesName = allSeriesTagInfo[0].series[0].name;
+  const seriesName = allSeriesTagInfo[0].series[1].name;
   echartsLinkageRef.value?.updateOneEchartsVisualMapSeries(id, [{ seriesName: seriesName, pieces: [{ min: 1000, max: 3000 }] }]);
 }
 
@@ -283,8 +283,10 @@ const updateVisualMapBtnClick = () => {
 const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   let seriesData = RandomUtil.getSeriesData(1000);
   const baseLineData = JSON.parse(JSON.stringify(seriesData));
-  for (let i = 0; i < 10; i++) {
-    baseLineData[i][1] = 100000;
+  if (Math.random() > 0.5) {
+    for (let i = 0; i < 10; i++) {
+      baseLineData[i][1] = 100000;
+    }
   }
   if (switchFlag) {
     seriesData = RandomUtil.getSwitchData(1000);
