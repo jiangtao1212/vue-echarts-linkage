@@ -20,7 +20,7 @@
   </div>
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="0"
+  <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="2"
   :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view" @drop-echart="dropEchart"
@@ -69,8 +69,8 @@ const testBaseLineBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1000);
   // const baseLineData = RandomUtil.getSeriesData(1000); 
   const baseLineData = JSON.parse(JSON.stringify(seriesData));
-  for (let i = 0; i < 1; i++) {
-    baseLineData[i][1] = 10;
+  for (let i = 0; i < 10; i++) {
+    baseLineData[i][1] = 100000;
   }
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   const oneDataType1: OneDataType = {
@@ -81,7 +81,7 @@ const testBaseLineBtnClick = () => {
     visualMapSeries: {
       pieces: [],
       baseLine: {
-        mode: 'above',
+        mode: 'below',
         value: baseLineData,
       }
     },
@@ -271,6 +271,10 @@ const updateVisualMapBtnClick = () => {
 // 新增series按钮
 const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   let seriesData = RandomUtil.getSeriesData(1000);
+  const baseLineData = JSON.parse(JSON.stringify(seriesData));
+  for (let i = 0; i < 10; i++) {
+    baseLineData[i][1] = 100000;
+  }
   if (switchFlag) {
     seriesData = RandomUtil.getSwitchData(1000);
   }
@@ -282,8 +286,12 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
     seriesData: seriesData,
-    visualMapSeries: { 
-      pieces: [{ min: 3000, max: 5000 }], 
+    visualMapSeries: {
+      pieces: [ { min: 5000, max: 8000 } ],
+      // baseLine: {
+      //   mode: 'below',
+      //   value: baseLineData,
+      // }
     },
     // 多卷首尾连接设置
     // seriesLink: {
@@ -341,7 +349,7 @@ const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
 
 const init = () => {
   initLisener();
-  addLotEmptyLinkageBtnClick();
+  // addLotEmptyLinkageBtnClick();
 }
 
 onMounted(() => {

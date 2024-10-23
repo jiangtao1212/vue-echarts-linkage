@@ -500,8 +500,7 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
     }
     if (dataEcharts.id === dataAbout.currentHandleChartId
       && dataEcharts.data.length === 1
-      && dataEcharts.data[0].visualMapSeries
-      && dataEcharts.data[0].visualMapSeries.pieces.length === 1) {
+      && dataEcharts.data[0].visualMapSeries) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       myChart.dispose();
       myChart = echarts.init(element, dataEcharts.theme); // 切换主题时，需要重新初始化实例
