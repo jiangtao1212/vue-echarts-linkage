@@ -116,7 +116,7 @@ const dropEchart = (data: dropEchartType) => {
 | getDataLength | 获取数据总数 | `() => number` |
 | getMaxEchartsIdSeq | 获取最大的id序号 | `() => number` |
 | getAllDistinctSeriesTagInfo | 获取所有不重复系列的标签信息 | `() => Array<SeriesTagType>` |
-| getAllSeriesTagInfo, | 获取所有系列的标签信息 | `() => Array<{ id: string; series: Array<SeriesTagType>; }>` |
+| getAllSeriesTagInfo, | 获取所有系列的标签信息 | `(echartsId?: string) => Array<{ id: string; series: Array<SeriesTagType>; }>` |
 | updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
 | clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
 | replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |

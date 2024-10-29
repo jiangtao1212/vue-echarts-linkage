@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-20 13:51:03
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-03 23:55:05
+ * @LastEditTime: 2024-10-29 14:57:33
  * @FilePath: \vue-echarts-linkage\src\utils\randomUtil.ts
  * @Description: 随机数相关工具
  */
@@ -64,6 +64,7 @@ const getTimeData = (count: number, startTime: Date, segment: number): Array<str
   for (let i = 0; i < count; i++) {
     const current = new Date(startTime.getTime() + i * segment);
     const dateStr = current.toLocaleString();
+    // const dateStr = current.toLocaleString().split(' ').join('\n');
     timeData.push(dateStr);
   }
   return timeData;

@@ -863,10 +863,11 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
   return res;
 }
 
-// 获取所有echarts实例各个系列的标签信息 --- 导出
-const getAllSeriesTagInfo = (): Array<{ id: string, series: Array<SeriesTagType> }> => {
+// 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息 --- 导出
+const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<{ id: string, series: Array<SeriesTagType> }> => {
   const res: Array<{ id: string, series: Array<SeriesTagType> }> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType) => {
+    if (echartsId !== 'all' && echartsId !== echart.id) return; // 不是指定实例，跳过
     const oneEchartInfo: { id: string, series: Array<SeriesTagType> } = { id: echart.id, series: [] };
     echart.data.forEach((series: OneDataType) => {
       oneEchartInfo.series.push({

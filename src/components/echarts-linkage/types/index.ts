@@ -15,7 +15,7 @@
  * @param {Function} getDataLength 获取所有echarts图表数据长度
  * @param {Function} getMaxEchartsIdSeq 获取最大的echarts图表id序号
  * @param {Function} getAllDistinctSeriesTagInfo 获取所有系列的标签信息
- * @param {Function} getAllSeriesTagInfo 获取所有echarts图表的系列标签信息
+ * @param {Function} getAllSeriesTagInfo 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息
  * @param {Function} updateAllEcharts 更新所有echarts图表
  * @param {Function} clearAllEchartsData 清空所有echarts图表数据
  * @param {Function} replaceAllEchartsData 替换所有echarts图表数据
@@ -31,7 +31,7 @@ export interface ExposedMethods {
   getDataLength: () => number;
   getMaxEchartsIdSeq: () => number;
   getAllDistinctSeriesTagInfo: () => Array<SeriesTagType>;
-  getAllSeriesTagInfo: () => Array<{ id: string, series: Array<SeriesTagType> }>;
+  getAllSeriesTagInfo: (echartsId?: string) => Array<{ id: string, series: Array<SeriesTagType> }>;
   updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => void;
   clearAllEchartsData: () => void;
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
