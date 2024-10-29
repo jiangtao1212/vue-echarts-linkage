@@ -105,6 +105,7 @@ const dropEchart = (data: dropEchartType) => {
 | 事件名 | 说明 | 参数 |
 | --- | --- | --- |
 | drop-echart | 拖拽图表回调事件，返回当前拖拽的图表id(data.id) | `(data: DropEchartType)` |
+| delete-echart | 删除图表回调事件，返回当前删除的图表id(data.id) | `(data: DeleteEchartType)` |
 | listener-graphic-location | 监听图形定位事件，返回所有图形定位信息 | `(data: ListenerGrapicLocationType)` |
 
 ## 6. 组件方法

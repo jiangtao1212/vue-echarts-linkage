@@ -28,8 +28,8 @@ import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
-  DropEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, VisualMapSeriesType,
-  SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
+  DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, 
+  VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -88,7 +88,7 @@ const validateCols = (value: number) => {
 // 验证 props
 validateCols(props.cols);
 
-const emit = defineEmits(['drop-echart', 'listener-graphic-location']);
+const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart']);
 
 // 定义数据
 const dataAbout = reactive({
@@ -375,7 +375,7 @@ const judgeOverEchartsMaxCountHandle = () => {
 }
 
 /**
- * @description 根据索引删除echarts
+ * @description 根据索引删除echarts，发送给父组件
  * @param index 索引
  */
 const deleteEchart = async (id: string) => {
@@ -383,6 +383,8 @@ const deleteEchart = async (id: string) => {
   dataAbout.data.splice(index, 1);
   setStyleProperty();
   allUpdateHandleCommon();
+  await nextTick();
+  emit('delete-echart', { id, remainCount: dataAbout.data.length } as DeleteEchartType);
 }
 
 /**

@@ -3,7 +3,7 @@ import './assets/main.css'
 import 'virtual:uno.css'
 import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
 export type { ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType, 
-              SeriesDataType, DropEchartType, ListenerGrapicLocationType, MarkLineDataType, 
+              SeriesDataType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, MarkLineDataType, 
               VisualMapSeriesType, SeriesLinkType, LinkDataType } from '@/components/echarts-linkage/types/index';
 
 /** 

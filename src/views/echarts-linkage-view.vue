@@ -23,7 +23,7 @@
   <EchartsLinkag ref="echartsLinkageRef" :cols="1" :echarts-max-count="10" :empty-echart-count="2"
     :segment="{ mode: 'percent', value: 50 }" :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']"
     language="zh-cn" grid-align theme="light" :is-linkage="true" :use-graphic-location="false" id="echarts-linkage-view"
-    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" />
+    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart" />
   <!-- </div> -->
 </template>
 
@@ -31,7 +31,7 @@
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, SeriesTagType, DropEchartType, ListenerGrapicLocationType, SeriesDataType } from '@/components/echarts-linkage/types/index';
+import type { OneDataType, SeriesTagType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, SeriesDataType } from '@/components/echarts-linkage/types/index';
 
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
@@ -327,6 +327,12 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
 // 拖拽回调事件
 const dropEchart = (data: DropEchartType) => {
   addLinkageSeriesCommon(seriesType, data.id);
+}
+
+// 删除echarts实例的回调事件
+const deleteEchart = (data: DeleteEchartType) => {
+  // id: 删除的实例id，remainCount: 剩余实例数量
+  const { id, remainCount } = data;
 }
 
 // 监听拖拽事件
