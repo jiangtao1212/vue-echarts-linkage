@@ -395,7 +395,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   // 判断series是否已存在，存在则不新增
   const judgeSeriesExist = (echart: SeriesIdDataType, oneData: OneDataType) => {
     let isExist = false;
-    isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.parse(JSON.stringify(item.customData)) === JSON.parse(JSON.stringify(oneData.customData)));
+    isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.stringify(item.customData) === JSON.stringify(oneData.customData));
     return isExist;
   }
   oneDataType = judgeAndPackageLinkData(oneDataType) as OneDataType;
