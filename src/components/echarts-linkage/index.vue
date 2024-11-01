@@ -28,7 +28,7 @@ import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
-  DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType, 
+  DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
   VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -500,8 +500,8 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
-    if ((dataAbout.isAllUpdate || (dataEcharts.id === dataAbout.currentHandleChartId && dataEcharts.data.length === 1)) 
-        && dataEcharts.data[0].visualMapSeries) {
+    if ((dataAbout.isAllUpdate || (dataEcharts.id === dataAbout.currentHandleChartId && dataEcharts.data.length === 1))
+      && dataEcharts.data[0].visualMapSeries) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       // 注：这里有两种情况，首先第一个数据中visualMapSeries必须存在
       // 情况1：整体更新时，传入了视觉映射数据，则需要重新渲染实例
@@ -1066,9 +1066,10 @@ const handleMultipleLinkData = (primaryData: OneDataType) => {
 
 // 首尾相连数据转series数据
 const linkToSeries = (linkData: LinkDataType[]) => {
+  const primaryData = JSON.parse(JSON.stringify(linkData)); // 深拷贝数据，避免修改原数据导致相互关联
   let arrays: Array<SeriesDataType> = []; // 三维数组，所有连接线的数据
   const markLineData: Array<any> = []; // 标记线数据
-  linkData.forEach((item: LinkDataType, index: number) => {
+  primaryData.forEach((item: LinkDataType, index: number) => {
     const label = item.label || 'X' + index.toString().padStart(3, '0');
     item.data.forEach((data: Array<number | string>) => data[0] = label + '--' + data[0]);
     // packageData = packageData.concat(item.data);

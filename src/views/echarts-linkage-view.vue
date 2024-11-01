@@ -6,7 +6,8 @@
     <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
     <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
     <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
-    <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button>
+    <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
+    <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
     <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
     <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
     <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
@@ -113,7 +114,7 @@ const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   const res: { [key: string]: Array<number[]> } = {};
-  const linkCount = Math.floor(Math.random() * 10) + 1; // 首尾连接的数量
+  const linkCount = Math.floor(Math.random() * 2) + 1; // 首尾连接的数量
   allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
@@ -124,17 +125,17 @@ const updateAllLinkageBtnClick = () => {
       //   baseLineData[i][1] = 100000;
       // }
       item.seriesData = seriesData;
-      // item.seriesLink = {
-      //   isLinkMode: true,
-      //   linkData: getRandomCountLinkData(linkCount)
-      // },
-      item.visualMapSeries = {
-        pieces: [{ min: 5000, max: 8000 }],
-        baseLine: {
-          mode: 'below',
-          value: baseLineData,
-        }
+      item.seriesLink = {
+        isLinkMode: true,
+        linkData: getRandomCountLinkData(linkCount)
       };
+      // item.visualMapSeries = {
+      //   pieces: [{ min: 5000, max: 8000 }],
+      //   baseLine: {
+      //     mode: 'below',
+      //     value: baseLineData,
+      //   }
+      // };
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
@@ -191,6 +192,75 @@ const replaceAllEchartsData = () => {
     }
     res.push(oneDataTypeArray);
   }
+  echartsLinkageRef.value?.replaceAllEchartsData(res);
+}
+
+// 批量替换echarts实例数据-多卷
+const replaceAllEchartsData1 = () => {
+  const res: Array<OneDataType[]> = [];
+  const data1 = getRandomCountLinkData(2);
+  for (let i = 0; i < 3; i++) {
+    const oneDataTypeArray: OneDataType[] = [];
+    if (i === 0) {
+      const oneDataType: OneDataType = {
+        name: `开卷机外径`,
+        type: 'line',
+        seriesData: [],
+        customData: `开卷机外径`,
+        xAxisName: '[m]',
+        yAxisName: `[mm]`,
+        seriesLink: {
+          isLinkMode: true,
+          linkData: getRandomCountLinkData(2)
+        }
+      };
+      oneDataTypeArray.push(oneDataType);
+      const oneDataType1: OneDataType = {
+        name: `带头剪切实际值M`,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `开卷机外径`,
+        xAxisName: '[m]',
+        yAxisName: `[mm]`,
+        seriesLink: {
+          isLinkMode: true,
+          linkData: data1
+        }
+      };
+      oneDataTypeArray.push(oneDataType1);
+
+    } else if (i === 1) {
+      const oneDataType: OneDataType = {
+        name: `带头剪切实际值M`,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `开卷机外径`,
+        xAxisName: '[m]',
+        yAxisName: `[mm]`,
+        seriesLink: {
+          isLinkMode: true,
+          linkData: data1
+        }
+      };
+      oneDataTypeArray.push(oneDataType);
+    } else if (i === 2) {
+      const oneDataType: OneDataType = {
+        name: `液压站油箱液位`,
+        type: 'line',
+        seriesData: [],
+        customData: `液压站油箱液位`,
+        xAxisName: '[m]',
+        yAxisName: `[mm]`,
+        seriesLink: {
+          isLinkMode: true,
+          linkData: getRandomCountLinkData(2)
+        }
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    res.push(oneDataTypeArray);
+  }
+  console.log("res", res);
   echartsLinkageRef.value?.replaceAllEchartsData(res);
 }
 
