@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-29 17:15:37
+ * @LastEditTime: 2024-11-04 13:42:30
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -135,6 +135,7 @@ export type VisualMapSeriesType = {
   baseLine?: {
     mode: 'above' | 'below' | 'equal', // 基准线报警模式：above: 超出基准线，Below: 低于基准线，equal: 等于基准线
     value: SeriesDataType // 基准线值
+    isShowOnToolTip?: boolean // 是否显示在tooltip中
   },
   pieces: Array<{
     min: number,

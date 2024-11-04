@@ -374,6 +374,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
       baseLine: {
         mode: 'below',
         value: baseLineData,
+        isShowOnToolTip: true,
       }
     },
     // 多卷首尾连接设置
