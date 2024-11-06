@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-04 16:06:53
+ * @LastEditTime: 2024-11-06 17:18:05
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -83,12 +83,15 @@ export class EchartsLinkageModel {
   private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
-  private optionTemplate: EChartsOption = optionTemplate; // 折线图表模板
-  private resultOption: EChartsOption = optionTemplate; // 最终的option
+  // private optionTemplate: EChartsOption; // 折线图表模板
+  private resultOption: EChartsOption; // 最终的option
 
   constructor(param: EchartsLinkageModelType) {
     console.groupCollapsed('EchartsLinkageModel')
     console.log('param', param);
+    const myOptionTemplate = ObjUtil.deepCopy(optionTemplate);
+    // this.optionTemplate = myOptionTemplate;
+    this.resultOption = myOptionTemplate;
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.theme = param.theme;
@@ -112,7 +115,7 @@ export class EchartsLinkageModel {
 
   // 设置图例，在图例中设置selected来显示和隐藏series
   setLenged = () => {
-    (this.optionTemplate.legend as echarts.LegendComponentOption).show = this.legendShow;
+    (this.resultOption.legend as echarts.LegendComponentOption).show = this.legendShow;
     const selected: any = {}
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       const { name } = item;
@@ -120,7 +123,7 @@ export class EchartsLinkageModel {
         selected[name] = item.seriesShow === false ? false : true;
       }
     });
-    (this.optionTemplate.legend as echarts.LegendComponentOption).selected = selected;
+    (this.resultOption.legend as echarts.LegendComponentOption).selected = selected;
 
   }
 
@@ -173,7 +176,7 @@ export class EchartsLinkageModel {
 
   // 折线图表模板
   initOptionTemplate = () => {
-    const xAxis = this.optionTemplate.xAxis as Array<any>;
+    const xAxis = this.resultOption.xAxis as Array<any>;
     xAxis[0].data = this.setXAxisData();
     xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
     xAxis[0].show = this.seriesOptionArray[0].xAxisShow === false ? false : (this.xAxisData?.length > 0 ? true : false);
@@ -269,14 +272,14 @@ export class EchartsLinkageModel {
     });
 
     // console.log("current", current);
-    this.optionTemplate.yAxis = current;
+    this.resultOption.yAxis = current;
     console.log("yAxisShowArray", yAxisShowArray);
     // 计算grid的left值对齐
     const showYCount = yAxisShowArray.filter((item: boolean) => item === true).length;
     if (showYCount === 0 || showYCount === 1) {
-      (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit;
+      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit;
     } else {
-      (this.optionTemplate.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
+      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
     }
   }
 
@@ -293,6 +296,7 @@ export class EchartsLinkageModel {
     let someIsShowOnToolTip = false; // 是否有series的isShowOnToolTip为true
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       const isShowOnToolTip = item.visualMapSeries?.baseLine?.isShowOnToolTip;
+      console.log("isShowOnToolTip", isShowOnToolTip);
       isShowOnToolTip && (someIsShowOnToolTip = true);
       const baseLineValue = item.visualMapSeries?.baseLine?.value;
       const data = {
@@ -302,22 +306,23 @@ export class EchartsLinkageModel {
       };
       baseLines.push(data);
     });
+    console.log("someIsShowOnToolTip", someIsShowOnToolTip);
     if (!someIsShowOnToolTip) return;
     if (someIsShowOnToolTip) {
       tooltip.formatter = (params: any) => {
         let tooltipHtml = '';
-        console.log("params", params);
+        // console.log("params", params);
         if (params && params.length > 0) {
           tooltipHtml += `${params[0].name}</br>`;
           params.forEach((item: any) => {
             const index = item.componentIndex; // 未被隐藏系列的索引，params中不含有隐藏系列的数据
             const seriesShow = baseLines[index].seriesShow;
             const isShowOnToolTip = baseLines[index].isShowOnToolTip;
-            const baseLineValue = baseLines[index].baseLineValue as SeriesDataType;
-            const pointBaseValue = Array.isArray(baseLineValue[item.dataIndex]) ? baseLineValue[item.dataIndex][1] : baseLineValue[item.dataIndex];
-            let value = Array.isArray(item.value) ? item.value[1] : item.value;
+            let value = Array.isArray(item.value) ? item.value[1] : item.value; // 实际值
             if (isShowOnToolTip) {
-              // 实际值 (基线值)
+              // 显示在tooltip中，实际值 (基线值)
+              const baseLineValue = baseLines[index].baseLineValue as SeriesDataType;
+              const pointBaseValue = Array.isArray(baseLineValue[item.dataIndex]) ? baseLineValue[item.dataIndex][1] : baseLineValue[item.dataIndex];
               value = `${value}&nbsp;<span style="color: green;">(${pointBaseValue})<span>`;
             }
             // 获取对应series的opacity值
@@ -395,7 +400,7 @@ export class EchartsLinkageModel {
       series.push(obj);
       return option;
     }
-    let resOption: EChartsOption = ObjUtil.deepCopy(this.optionTemplate) as EChartsOption;
+    let resOption: EChartsOption = ObjUtil.deepCopy(this.resultOption) as EChartsOption;
     if (Array.isArray(this.seriesOptionArray)) { // 多个series
       this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
         resOption = addOneSeries(resOption, item, index);
@@ -909,9 +914,9 @@ export class EchartsLinkageModel {
     return this;
   }
 
-  getOptionTemplate = () => {
-    return this.optionTemplate;
-  }
+  // getOptionTemplate = () => {
+  //   return this.optionTemplate;
+  // }
 
   getXAxisData = () => {
     return this.xAxisData;

@@ -51,15 +51,15 @@ const addLinkageBtnClick = () => {
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
     visualMapSeries: { pieces: [{ min: 5000, max: 8000 }] },
     // 多卷首尾连接设置
-    seriesLink: {
-      isLinkMode: true,
-      linkData: [
-        { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
-        { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
-      ]
-    },
+    // seriesLink: {
+    //   isLinkMode: true,
+    //   linkData: [
+    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
+    //   ]
+    // },
   };
   echartsLinkageRef.value!.addEchart(oneDataType);
 }
@@ -113,31 +113,31 @@ const addLotEmptyLinkageBtnClick = () => {
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-  const res: { [key: string]: Array<number[]> } = {};
-  const linkCount = Math.floor(Math.random() * 2) + 1; // 首尾连接的数量
-  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
-    if (item.dataType === 'switch') {
-      item.seriesData = RandomUtil.getSwitchData(1000);
-    } else {
-      const seriesData = RandomUtil.getSeriesData(1001);
-      const baseLineData = JSON.parse(JSON.stringify(seriesData));
-      // for (let i = 0; i < 100; i++) {
-      //   baseLineData[i][1] = 100000;
-      // }
-      item.seriesData = seriesData;
-      item.seriesLink = {
-        isLinkMode: true,
-        linkData: getRandomCountLinkData(linkCount)
-      };
-      // item.visualMapSeries = {
-      //   pieces: [{ min: 5000, max: 8000 }],
-      //   baseLine: {
-      //     mode: 'below',
-      //     value: baseLineData,
-      //   }
-      // };
-    }
-  });
+  // const res: { [key: string]: Array<number[]> } = {};
+  // const linkCount = Math.floor(Math.random() * 2) + 1; // 首尾连接的数量
+  // allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+  //   if (item.dataType === 'switch') {
+  //     item.seriesData = RandomUtil.getSwitchData(1000);
+  //   } else {
+  //     const seriesData = RandomUtil.getSeriesData(1001);
+  //     const baseLineData = JSON.parse(JSON.stringify(seriesData));
+  //     // for (let i = 0; i < 100; i++) {
+  //     //   baseLineData[i][1] = 100000;
+  //     // }
+  //     item.seriesData = seriesData;
+  //     item.seriesLink = {
+  //       isLinkMode: true,
+  //       linkData: getRandomCountLinkData(linkCount)
+  //     };
+  //     // item.visualMapSeries = {
+  //     //   pieces: [{ min: 5000, max: 8000 }],
+  //     //   baseLine: {
+  //     //     mode: 'below',
+  //     //     value: baseLineData,
+  //     //   }
+  //     // };
+  //   }
+  // });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
 }
 
