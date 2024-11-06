@@ -49,7 +49,10 @@ const addLinkageBtnClick = () => {
     type: 'line',
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
-    visualMapSeries: { pieces: [{ min: 5000, max: 8000 }] },
+    visualMapSeries: { 
+      pieces: [{ min: 5000, max: 8000 }], 
+      piecesOnTooltip: { show: true, value: '自定义pieces' } 
+    },
     // 多卷首尾连接设置
     // seriesLink: {
     //   isLinkMode: true,

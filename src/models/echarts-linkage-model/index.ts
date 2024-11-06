@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-06 17:18:05
+ * @LastEditTime: 2024-11-06 22:30:14
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -67,6 +67,8 @@ export type EchartsLinkageModelType = {
   useMergedLegend?: boolean,
   useSeriesDataSetYAxisMinMax: boolean,
 }
+
+type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
 
 // 联动图表模型 ----------- 实体类
 export class EchartsLinkageModel {
@@ -291,48 +293,70 @@ export class EchartsLinkageModel {
 
   // 设置基准线值在tooltip中显示
   setBaseLineOnToolTip = (tooltip: echarts.TooltipComponentOption) => {
-    // 考虑基准线模式时，若isShowOnToolTip为true，则在tootip中数据后面加上对应基准数据
-    const baseLines: Array<{ seriesShow: boolean, isShowOnToolTip: boolean, baseLineValue: SeriesDataType | undefined }> = [];
+    // // 显示在tooltip中的模式：pieces（非基线模式，自定义模式）| baseLine（基线模式）| false（不显示）
+    const baseLines: Array<{ seriesShow: boolean, showOnToolTipMode: VisualMapShowOnToolTipModeType, baseLineValue: SeriesDataType | undefined, piecesOnTooltipValue: string }> = [];
     let someIsShowOnToolTip = false; // 是否有series的isShowOnToolTip为true
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
-      const isShowOnToolTip = item.visualMapSeries?.baseLine?.isShowOnToolTip;
+      const seriesShow = item.seriesShow === false ? false : true;
+      if (!item.visualMapSeries) {
+        // 视觉映射不存在
+        const data = {
+          seriesShow,
+          showOnToolTipMode: 'not' as VisualMapShowOnToolTipModeType,
+          baseLineValue: undefined,
+          piecesOnTooltipValue: '',
+        };
+        baseLines.push(data);
+        return;
+      }
+      const visualMapSeries = item.visualMapSeries;
+      const isShowOnToolTip = visualMapSeries?.baseLine?.isShowOnToolTip; // 基线是否显示在tooltip中
+      const piecesOnTooltip = visualMapSeries?.piecesOnTooltip?.show; // 非基线模式时，是否显示在tooltip
+      const piecesOnTooltipValue = visualMapSeries?.piecesOnTooltip?.value || ''; // 非基线模式时，自定义组装内容数据
       console.log("isShowOnToolTip", isShowOnToolTip);
-      isShowOnToolTip && (someIsShowOnToolTip = true);
-      const baseLineValue = item.visualMapSeries?.baseLine?.value;
+      const showOnToolTipMode: VisualMapShowOnToolTipModeType = (!isShowOnToolTip && !piecesOnTooltip) ? 'not' : (piecesOnTooltip ? 'pieces' : 'baseLine');
+      (isShowOnToolTip || piecesOnTooltip) && (someIsShowOnToolTip = true);
+      const baseLineValue = visualMapSeries?.baseLine?.value;
       const data = {
-        seriesShow: item.seriesShow === false ? false : true,
-        isShowOnToolTip: isShowOnToolTip || false,
+        seriesShow,
+        showOnToolTipMode,
         baseLineValue,
+        piecesOnTooltipValue,
       };
       baseLines.push(data);
     });
     console.log("someIsShowOnToolTip", someIsShowOnToolTip);
+    // 没有series的isShowOnToolTip为true，则返回；有，则组装tooltip的formatter
     if (!someIsShowOnToolTip) return;
-    if (someIsShowOnToolTip) {
-      tooltip.formatter = (params: any) => {
-        let tooltipHtml = '';
-        // console.log("params", params);
-        if (params && params.length > 0) {
-          tooltipHtml += `${params[0].name}</br>`;
-          params.forEach((item: any) => {
-            const index = item.componentIndex; // 未被隐藏系列的索引，params中不含有隐藏系列的数据
-            const seriesShow = baseLines[index].seriesShow;
-            const isShowOnToolTip = baseLines[index].isShowOnToolTip;
-            let value = Array.isArray(item.value) ? item.value[1] : item.value; // 实际值
-            if (isShowOnToolTip) {
-              // 显示在tooltip中，实际值 (基线值)
-              const baseLineValue = baseLines[index].baseLineValue as SeriesDataType;
-              const pointBaseValue = Array.isArray(baseLineValue[item.dataIndex]) ? baseLineValue[item.dataIndex][1] : baseLineValue[item.dataIndex];
-              value = `${value}&nbsp;<span style="color: green;">(${pointBaseValue})<span>`;
-            }
-            // 获取对应series的opacity值
-            if (seriesShow) { // 检查series中lineStyle的opacity值
-              tooltipHtml += `${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<p style="float: right;">${value}</p><br/>`;
-            }
-          });
-        }
-        return tooltipHtml;
+    tooltip.formatter = (params: any) => {
+      let tooltipHtml = '';
+      // console.log("params", params);
+      if (params && params.length > 0) {
+        tooltipHtml += `${params[0].name}</br>`;
+        params.forEach((item: any) => {
+          const index = item.componentIndex; // 未被隐藏系列的索引，params中不含有隐藏系列的数据
+          const seriesShow = baseLines[index].seriesShow;
+          const showOnToolTipMode = baseLines[index].showOnToolTipMode;
+          let value = Array.isArray(item.value) ? item.value[1] : item.value; // 实际值
+          if (showOnToolTipMode === 'pieces') {
+            // 非基线模式，自定义模式
+            const autoValue = baseLines[index].piecesOnTooltipValue;
+            value = `${value}&nbsp;<span style="color: green;">(${autoValue})<span>`;
+          } else if (showOnToolTipMode === 'baseLine') {
+            // 显示在tooltip中，实际值 (基线值)
+            const baseLineValue = baseLines[index].baseLineValue as SeriesDataType;
+            const pointBaseValue = Array.isArray(baseLineValue[item.dataIndex]) ? baseLineValue[item.dataIndex][1] : baseLineValue[item.dataIndex];
+            value = `${value}&nbsp;<span style="color: green;">(${pointBaseValue})<span>`;
+          } else {
+            // 预留，未来可能支持其他模式
+          }
+          // 获取对应series的opacity值
+          if (seriesShow) { // 检查series中lineStyle的opacity值
+            tooltipHtml += `${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<p style="float: right;">${value}</p><br/>`;
+          }
+        });
       }
+      return tooltipHtml;
     }
   }
 
