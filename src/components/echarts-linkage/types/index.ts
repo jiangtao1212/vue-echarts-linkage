@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-04 13:42:30
+ * @LastEditTime: 2024-11-06 15:33:40
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -140,7 +140,7 @@ export type VisualMapSeriesType = {
   pieces: Array<{
     min: number,
     max: number,
-    color?: string
+    color?: string,
   }>,
 }
 

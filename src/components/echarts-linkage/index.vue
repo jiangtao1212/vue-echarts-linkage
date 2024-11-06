@@ -858,7 +858,7 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
         name: series.name,
         customData: series.customData,
         dataType: series.dataType,
-        seriesData: [],
+        seriesData: JSON.parse(JSON.stringify(series.seriesData)), // 暴露缓存数据，原因是外部可能还会使用缓存数据进行渲染
       })
     });
   });
@@ -1135,7 +1135,7 @@ const exposedMethods: ExposedMethods = {
   getMaxEchartsIdSeq,
   getAllDistinctSeriesTagInfo,
   getAllSeriesTagInfo,
-  updateAllEcharts,
+  updateAllEcharts, // todo: 新增单个echarts更新方法
   clearAllEchartsData,
   replaceAllEchartsData,
   downloadAllEchartsImg,
