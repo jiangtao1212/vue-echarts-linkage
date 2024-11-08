@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-07-26 09:51:44
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-26 17:09:49
+ * @LastEditTime: 2024-11-08 14:31:55
  * @FilePath: \echarts-legend-drage\src\utils\fileType.ts
  * @Description: 文件类型工具
  */
@@ -74,12 +74,13 @@ const getFileExtension = (fileName: string): string => {
 }
 
 /**
- * @description 导出html元素为图片
+ * @description 导出html元素为图片 
+ * 注：如果容器存在滚动条，则先修改容器的宽度和高度，隐藏滚动条，再导出图片，最后恢复容器的宽度和高度，显示滚动条。
  * @param selectorsOrElement 选择器 或 HTMLElement
  * @param imgName 图片名称 
  * @param extraHeight 额外的高度
  */
-const htmlElementToImage = (selectorsOrElement: string | HTMLElement, imgName: string = 'htmlElementToImage.png', extraHeight: number = 0): void => {
+const htmlElementToImage = (selectorsOrElement: string | HTMLElement, imgName: string = 'htmlElementToImage.png', preHandle?: Function, callBack?: Function): void => {
   console.log("打印图片");
   const element: HTMLElement = typeof selectorsOrElement === 'string' ? document.querySelector(selectorsOrElement) as HTMLElement : selectorsOrElement;
   // console.log('clientHeight:', element.clientHeight);
@@ -88,12 +89,13 @@ const htmlElementToImage = (selectorsOrElement: string | HTMLElement, imgName: s
   // const scrollHeight = element?.scrollHeight + extraHeight;
   // console.log(scrollHeight);
   // console.log('devicePixelRatio: ', window.devicePixelRatio);
+  preHandle && preHandle(element);
   html2canvas(element, {
     backgroundColor: null,
     useCORS: true,
-    // windowHeight: scrollHeight, // 不能设置高度，否则会导致图片大小不正确
-    scale: window.devicePixelRatio * 2, // 图片放大两倍，解决高清屏下图片模糊问题
+    scale: window.devicePixelRatio * 1, // 图片放大两倍，解决高清屏下图片模糊问题
   }).then((canvas) => {
+    callBack && callBack(element);
     canvas.getContext("2d", { willReadFrequently: true }); // 设置 willReadFrequently 属性提高浏览器性能
     const url = canvas.toDataURL();
     const a = document.createElement('a');

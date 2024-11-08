@@ -1,6 +1,6 @@
 <template>
   <div class='echarts-linkage-container'>
-    <div class="main-container">
+    <div class="main-container" :class="{ 'hide-scroll': isEchartsHeightChange }">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container"
         :style="{ 'background-color': computedBackgroundColor(item), '--drag-top': dataAbout.drag.top + 'px' }">
         <div :id="item.id" class="h-100% w-100%"></div>
@@ -48,6 +48,8 @@ import { type DragItemDataProps } from "@/components/drag/type/index";
  * @property {boolean} [isLinkage=true] - 是否联动, 默认为true
  * @property {boolean} [useMergedLegend=true] - 是否使用合并图例
  * @property {boolean} [useGraphicLocation=true] - 是否使用图形定位
+ * @property {boolean} [isEchartsHeightChange=true] - 是否根据数量，改变echarts的高度，默认true改变
+ * @property {number} [echartsHeightFixedCount=3] - echarts高度固定数量，默认为3
  */
 export type PropsType = {
   cols?: number;
@@ -62,6 +64,8 @@ export type PropsType = {
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
   useGraphicLocation?: boolean, // 是否使用图形定位
+  isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
+  echartsHeightFixedCount?: number, // echarts高度固定数量
 }
 
 // 定义 props
@@ -74,7 +78,8 @@ const props = withDefaults(defineProps<PropsType>(), {
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
   useGraphicLocation: true, // 默认使用图形定位
-  useSeriesDataSetYAxisMinMax: false, // 默认不使用计算的上下限
+  isEchartsHeightChange: true, // 默认改变echarts的高度
+  echartsHeightFixedCount: 3, // echarts高度固定数量
 });
 
 // 自定义验证函数
@@ -89,6 +94,9 @@ const validateCols = (value: number) => {
 validateCols(props.cols);
 
 const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart']);
+
+const baseEchartsCount = ref(0); // 基础echarts数量，也就是初始化时，显示的echarts数量
+
 
 // 定义数据
 const dataAbout = reactive({
@@ -106,6 +114,10 @@ const dataAbout = reactive({
     isDragging: false, // 是否拖拽中
   }
 }) as DataAboutType;
+
+const styleAbout = {
+  gap: 10, // 图表间距
+}
 
 // 计算每个echarts的父级容器颜色
 const computedBackgroundColor = (data: SeriesIdDataType) => {
@@ -282,10 +294,12 @@ const setStyleProperty = () => {
   const element = document.querySelector('.main-container') as HTMLElement;
   const count = dataAbout.data.length;
   const rows = Math.ceil(count / cols);
+  const fixedRows = computedFixedRows(); // 固定行数
+  const gap = styleAbout.gap;
   element.style.setProperty('--count', count.toString());
-  element.style.setProperty('--rows', rows.toString());
-  element.style.setProperty('--gap', '10px');
-  const gap = 10;
+  element.style.setProperty('--rows', fixedRows ? fixedRows.toString() : rows.toString());
+  element.style.setProperty('--gap', gap + 'px');
+  element.style.setProperty('--main-container-height', element.clientHeight - gap + 'px');
   if (cols === 1) { // 单列，宽度为100%
     element.style.setProperty('--item-width', '100%');
   } else { // 多列---大于1列
@@ -296,6 +310,17 @@ const setStyleProperty = () => {
       element.style.setProperty('--item-width', `calc((100% - ${gap} * ${currentCount - 1} * 1px) / ${currentCount})`);
     }
   }
+}
+
+// 计算固定行数
+const computedFixedRows = (): number | undefined => {
+  if (props.isEchartsHeightChange) return; // 如果echarts的高度是可改变的，则直接返回
+  let count = props.echartsHeightFixedCount;
+  if (count <= 0) {
+    // 如果没有echarts实例，则默认为3个，用来后续计算echarts容器的固定高度
+    count = 3;
+  }
+  return count;
 }
 
 // 判断和组装首尾连接数据
@@ -615,9 +640,10 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
  */
 const computerEchartsHeight = () => {
   const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
-  const gap = element.style.getPropertyValue('--gap');
-  const count = dataAbout.data.length;
-  const height = Math.floor((element.offsetHeight - (count - 1) * parseInt(gap.substring(0, gap.length - 2))) / count);
+  const gap = styleAbout.gap;
+  const fixedRows = computedFixedRows();
+  const count = fixedRows || dataAbout.data.length;
+  const height = Math.floor((element.offsetHeight - (count - 1) * gap) / count);
   // console.log('height', height);
   setDragPosition(height);
   return height;
@@ -646,7 +672,7 @@ const initEmptyEcharts = (count: number) => {
 }
 
 // 初始化echarts
-const initEcharts = () => {
+const initEcharts = async () => {
   // 基于准备好的dom，初始化echarts图表
   const groupName: string = dataAbout.groupName;
   echarts.dispose(groupName);
@@ -830,6 +856,12 @@ const initLisener = () => {
   });
   // 开始观察 mainContainer
   resizeObserver.observe(echartsLinkageContainer);
+}
+
+// 将初始化标识设置为false
+const setInitFlag = async () => {
+  await nextTick();
+  initFlag = false;
 }
 
 // 移除事件监听
@@ -1085,8 +1117,21 @@ const linkToSeries = (linkData: LinkDataType[]) => {
 
 // 下载包含所有echarts实例的图片 --- 导出
 const downloadAllEchartsImg = () => {
-  const extraHeight = 10 * 2 + 10 * (dataAbout.data.length - 1); // 需要加上下padding的10px(10 * 2)，以及gap的和(10 * (count -1))
-  FileUtil.htmlElementToImage('.echarts-linkage-container', 'echarts-linkage.png', extraHeight);
+  if (!props.isEchartsHeightChange && dataAbout.data.length > props.echartsHeightFixedCount) {
+    // 高度固定模式时，当echarts数量大于固定数量出现滚动条时，需要调整容器高度和宽度以适应打印
+    FileUtil.htmlElementToImage('.main-container', 'echarts-linkage.png', (element: HTMLElement) => {
+      element.style.setProperty('--height', element.scrollHeight + 'px'); // 将滚动条高度加到高度上
+      element.style.width = element.clientWidth - 10 + 'px'; // 减去滚动条宽度
+      element.classList.add('hide-scroll'); // 隐藏滚动条
+    }, (element: HTMLElement) => {
+      // 下载完成后，恢复样式
+      element.style.setProperty('--height', '100%');
+      element.style.width = element.clientWidth + 10 + 'px';
+      element.classList.remove('hide-scroll');
+    });
+    return;
+  }
+  FileUtil.htmlElementToImage('.main-container', 'echarts-linkage.png');
 }
 
 // echarts上的按钮保存图片事件
@@ -1126,6 +1171,7 @@ const switchEchartsTheme = async (e: any, id: string) => {
   dataAbout.isSwitchingTheme = false;
 }
 
+
 // 子组件暴露变量和方法
 const exposedMethods: ExposedMethods = {
   addEchart,
@@ -1153,6 +1199,7 @@ watch(() => dataAbout.data.length, () => {
 onMounted(() => {
   initLisener();
   props.emptyEchartCount && initEmptyEcharts(props.emptyEchartCount);
+  setInitFlag();
 });
 
 onBeforeUnmount(() => {
@@ -1170,24 +1217,31 @@ onBeforeUnmount(() => {
   max-height: 100vh;
   height: 100%;
   width: 100%;
-  overflow: auto;
-  padding: 10px 0;
+  --padding: 10px;
+  padding: var(--padding) var(--padding) 0;
 
   .main-container {
-    height: 100%;
+    /* --height用于打印时修改高度 */
+    --height: 100%;
+    height: var(--height);
     width: 100%;
+    overflow-y: auto;
+    padding-bottom: var(--padding);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    align-content: flex-start;
     gap: var(--gap);
     --gap: 10px;
     --count: 0;
     --rows: 0;
     --item-width: 100%;
+    /* --main-container-height用于缓存main-container的高度 */
+    --main-container-height: 100%;
 
     .echarts-container {
-      height: calc((100% - var(--gap) * (var(--rows) - 1)) / var(--rows));
+      height: calc((var(--main-container-height) - var(--gap) * (var(--rows) - 1)) / var(--rows));
       width: var(--item-width);
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -1205,7 +1259,7 @@ onBeforeUnmount(() => {
 }
 
 /* 隐藏滚动条 */
-::-webkit-scrollbar {
+.main-container.hide-scroll::-webkit-scrollbar {
   display: none;
 }
 
