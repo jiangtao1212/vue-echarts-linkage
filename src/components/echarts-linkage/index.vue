@@ -29,7 +29,8 @@ import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
-  VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType
+  VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
+  AppointEchartsTagType,
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -103,7 +104,7 @@ const dataAbout = reactive({
   groupName: 'group1', // 组名
   maxEchartsIdSeq: 0, // 最大序号
   data: [] as Array<SeriesIdDataType>, // 所有echarts数据
-  currentHandleChartId: '', // 当前操作的echart图表id
+  currentHandleChartIds: [''], // 当前操作的echart图表id集合
   restoreClickBool: false, // 监听restore是否触发点击
   isAllUpdate: false, // 是否全部更新
   isSwitchingTheme: false, // 是否正在切换主题
@@ -209,7 +210,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   const yAxisShowData = packageYAxisShowData(data);
   const seriesOpacityData = packageSeriesOpacityData(data);
   const seriesyAxisIndexData = packageSeriesyAxisIndexData(data);
-  dataAbout.currentHandleChartId = dataAbout.data[echartsIndex].id;
+  dataAbout.currentHandleChartIds = [dataAbout.data[echartsIndex].id];
   dataAbout.data[echartsIndex].data.forEach((item: OneDataType, index: number) => {
     item.yAxisShow = yAxisShowData[index];
     item.seriesShow = seriesOpacityData[index];
@@ -430,7 +431,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('请先添加1个echart图表！');
     return;
   }
-  dataAbout.currentHandleChartId = id;
+  dataAbout.currentHandleChartIds = [id];
   const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
     ElMessage.warning('该子项已存在，请选择其他子项！');
@@ -464,7 +465,7 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
   await nextTick();
   initEcharts();
   await nextTick();
-  dataAbout.currentHandleChartId = '';
+  dataAbout.currentHandleChartIds = [''];
 }
 
 // 监听，赋值最大的id序号
@@ -501,7 +502,8 @@ const judgeShowYAxisCommon = (data: OneDataType) => {
  * @param id echarts id
  * @returns {myChart: EChartsType, needHandle: boolean}
  */
-const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
+const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
+  const id = dataEcharts.id;
   console.groupCollapsed('judgeEchartInstance', id);
   const element: HTMLElement = document.getElementById(id) as HTMLElement;
   let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
@@ -519,13 +521,13 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
       myChart.clear();
       currentData.data.length > 0 && (needHandle = true); // 非空数据，需要渲染
     } else { // 实例存在且不是删除子项item操作，判断是否需要更新
-      dataAbout.currentHandleChartId === id && (needHandle = true); // 判断当前实例是否在操作
+      dataAbout.currentHandleChartIds.includes(id) && (needHandle = true); // 判断当前实例是否在操作
       // 当前还未渲染
       currentShowYCount < lastMaxShowYCount && (needHandle = true); // 当前小于上次渲染后的最大值，则需要更新
       currentShowYCount < currentMaxShowYCount && (needHandle = true); // 当前小于实时数据中的最大值，则需要更新 
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
-    if ((dataAbout.isAllUpdate || (dataEcharts.id === dataAbout.currentHandleChartId && dataEcharts.data.length === 1))
+    if ((dataAbout.isAllUpdate || (dataAbout.currentHandleChartIds.includes(id) && dataEcharts.data.length === 1))
       && dataEcharts.data[0].visualMapSeries) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       // 注：这里有两种情况，首先第一个数据中visualMapSeries必须存在
@@ -537,7 +539,7 @@ const judgeEchartInstance = (id: string, dataEcharts: SeriesIdDataType) => {
     if (dataAbout.isSwitchingTheme) {
       // 切换主题时，需要先销毁实例，然后重新初始化实例（注意这里必须要dispose实例，clear实例不能清除主题样式）
       const currentTheme = dataEcharts.theme;
-      if (props.isLinkage || (!props.isLinkage && (dataEcharts.id === dataAbout.currentHandleChartId))) {
+      if (props.isLinkage || (!props.isLinkage && dataAbout.currentHandleChartIds.includes(id))) {
         // 联动模式下，处理所有图表；非联动模式下，只处理当前实例的图表
         myChart.dispose();
         myChart = echarts.init(element, currentTheme); // 切换主题时，需要重新初始化实例
@@ -581,7 +583,7 @@ const containerResizeFn = useDebounceFn(() => {
  */
 const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   console.groupCollapsed('initOneEcharts', dataArray.id);
-  const { myChart, needHandle } = judgeEchartInstance(dataArray.id, dataArray);
+  const { myChart, needHandle } = judgeEchartInstance(dataArray);
   if (!needHandle) { // 不需要操作
     myChart.resize();
     return myChart;
@@ -640,6 +642,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
  */
 const computerEchartsHeight = () => {
   const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
+  if (!element) return 0;
   const gap = styleAbout.gap;
   const fixedRows = computedFixedRows();
   const count = fixedRows || dataAbout.data.length;
@@ -898,7 +901,7 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
 }
 
 // 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息 --- 导出
-const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<{ id: string, series: Array<SeriesTagType> }> => {
+const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTagType> => {
   const res: Array<{ id: string, series: Array<SeriesTagType> }> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType) => {
     if (echartsId !== 'all' && echartsId !== echart.id) return; // 不是指定实例，跳过
@@ -907,7 +910,8 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<{ id: string, ser
       oneEchartInfo.series.push({
         name: series.name,
         customData: series.customData,
-        seriesData: [],
+        dataType: series.dataType,
+        seriesData: JSON.parse(JSON.stringify(series.seriesData)),
       })
     });
     res.push(oneEchartInfo);
@@ -975,7 +979,7 @@ const updateOneEchartsVisualMapSeries = async (id: string, visualMapData: Visual
     if (Object.keys(visualMapData).length === 0) return;
     updateOneSeries(echart, visualMapData);
   }
-  dataAbout.currentHandleChartId = id;
+  dataAbout.currentHandleChartIds = [id];
   await nextTick();
   initEcharts();
 }
@@ -985,37 +989,80 @@ const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
   return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
 }
 
-// 传入所有显示子项数据，更新所有echarts --- 导出
-const updateAllEcharts = (newAllSeriesdata: Array<SeriesTagType>) => {
-  const isLink = newAllSeriesdata.some((item: SeriesTagType) => item.seriesLink?.isLinkMode); // 是否是首尾相连数据
+/**
+ * @description 更新单个图表数据的公共方法
+ * @param echart 单个echarts图表数据
+ * @param updateSeries 单个echarts图表的更新数据集合 
+ * @param isLink 首尾相连模式，true：首尾相连，false：非首尾相连
+ */
+const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<SeriesTagType>, isLink: boolean) => {
   if (isLink) {
-    // 首尾相连模式数据，默认全部更新
-    dataAbout.data.forEach((echart: SeriesIdDataType) => {
-      echart.data.forEach((series: OneDataType, index: number) => {
-        const seriesTag: SeriesTagType = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0];
-        if (!seriesTag) return; // 未找到匹配的标签，跳过
-        const linkData = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0].seriesLink?.linkData as LinkDataType[];
-        const { packageData, markLineData } = linkToSeries(linkData);
-        series.seriesData = packageData;
-        series.markLineArray = markLineData;
-        series.seriesLink = { isLinkMode: true, linkData: [] };
-        seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
-        index === 0 && (echart.markLineArray = markLineData); // 将第一个系列的markLineArray赋值给echarts的markLineArray
-      });
+    // 首尾相连模式
+    echart.data.forEach((series: OneDataType, index: number) => {
+      const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
+      if (!seriesTag) return; // 未找到匹配的标签，跳过
+      const linkData = seriesTag.seriesLink?.linkData as LinkDataType[];
+      const { packageData, markLineData } = linkToSeries(linkData);
+      series.seriesData = packageData;
+      series.markLineArray = markLineData;
+      series.seriesLink = { isLinkMode: true, linkData: [] };
+      seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
+      index === 0 && (echart.markLineArray = markLineData); // 将第一个系列的markLineArray赋值给echarts的markLineArray
     });
   } else {
-    // 非首尾相连模式数据
-    dataAbout.data.forEach((echart: SeriesIdDataType) => {
-      echart.data.forEach((series: OneDataType, index: number) => {
-        const seriesTag: SeriesTagType = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0];
-        if (!seriesTag) return; // 未找到匹配的标签，跳过
-        const newSeriesData = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0].seriesData;
-        newSeriesData && (series.seriesData = newSeriesData);
-        seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
-      });
+    // 非首尾相连模式
+    echart.data.forEach((series: OneDataType, index: number) => {
+      const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
+      if (!seriesTag) return; // 未找到匹配的标签，跳过
+      const newSeriesData = seriesTag.seriesData;
+      newSeriesData && (series.seriesData = newSeriesData);
+      seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
     });
   }
-  allUpdateHandleCommon();
+}
+
+// 更新单个或者多个echarts图表 //todo: 需要测试
+const updateOneOrMoreEcharts = async (updateData: AppointEchartsTagType | Array<AppointEchartsTagType>) => {
+  if (Array.isArray(updateData)) {
+    // 数组，更新多个echarts图表
+    dataAbout.currentHandleChartIds = [];
+    updateData.forEach((item: AppointEchartsTagType) => {
+      dataAbout.data.forEach((echart: SeriesIdDataType) => {
+        if (item.id !== echart.id) return;
+        dataAbout.currentHandleChartIds.push(echart.id);
+        const isLink = item.series.some((item: SeriesTagType) => item.seriesLink?.isLinkMode);
+        updateOneEchartCommon(echart, item.series, isLink);
+      })
+    });
+  } else {
+    const echart = dataAbout.data.filter((item: SeriesIdDataType) => item.id === updateData.id)[0];
+    const isLink = updateData.series.some((item: SeriesTagType) => item.seriesLink?.isLinkMode);
+    updateOneEchartCommon(echart, updateData.series, isLink);
+    dataAbout.currentHandleChartIds = [updateData.id];
+  }
+  try {
+    await nextTick();
+    await initEcharts();;
+    return true;
+  } catch (e: any) {
+    console.log(e);
+    return false;
+  }
+}
+
+// 传入所有显示子项数据，更新所有echarts --- 导出
+const updateAllEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
+  const isLink = newAllSeriesdata.some((item: SeriesTagType) => item.seriesLink?.isLinkMode); // 是否是首尾相连模式
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
+    updateOneEchartCommon(echart, newAllSeriesdata, isLink);
+  });
+  try {
+    await allUpdateHandleCommon();
+    return true;
+  } catch (e: any) {
+    console.log(e);
+    return false;
+  }
 }
 
 /**
@@ -1163,7 +1210,7 @@ const switchEchartsTheme = async (e: any, id: string) => {
     // 非联动状态，切换主题时，只切换当前图表的主题
     const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
     dataAbout.data[index].theme = theme;
-    dataAbout.currentHandleChartId = id;
+    dataAbout.currentHandleChartIds = [id];
     await nextTick();
     initEcharts();
   }
@@ -1181,7 +1228,8 @@ const exposedMethods: ExposedMethods = {
   getMaxEchartsIdSeq,
   getAllDistinctSeriesTagInfo,
   getAllSeriesTagInfo,
-  updateAllEcharts, // todo: 新增单个echarts更新方法
+  updateOneOrMoreEcharts,
+  updateAllEcharts,
   clearAllEchartsData,
   replaceAllEchartsData,
   downloadAllEchartsImg,

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-06 21:40:36
+ * @LastEditTime: 2024-11-09 16:38:49
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -16,6 +16,7 @@
  * @param {Function} getMaxEchartsIdSeq 获取最大的echarts图表id序号
  * @param {Function} getAllDistinctSeriesTagInfo 获取所有系列的标签信息
  * @param {Function} getAllSeriesTagInfo 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息
+ * @param {Function} updateOneOrMoreEcharts 更新单个或者多个echarts图表
  * @param {Function} updateAllEcharts 更新所有echarts图表
  * @param {Function} clearAllEchartsData 清空所有echarts图表数据
  * @param {Function} replaceAllEchartsData 替换所有echarts图表数据
@@ -32,7 +33,8 @@ export interface ExposedMethods {
   getMaxEchartsIdSeq: () => number;
   getAllDistinctSeriesTagInfo: () => Array<SeriesTagType>;
   getAllSeriesTagInfo: (echartsId?: string) => Array<{ id: string, series: Array<SeriesTagType> }>;
-  updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => void;
+  updateOneOrMoreEcharts: (updateData: AppointEchartsTagType | Array<AppointEchartsTagType>) => Promise<boolean>;
+  updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
   clearAllEchartsData: () => void;
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
   downloadAllEchartsImg: () => void;
@@ -172,7 +174,7 @@ export type SeriesIdDataType = {
  * @param {string} groupName echarts所有关联图表组名
  * @param {number} maxEchartsIdSeq 最大的echarts图表id序号
  * @param {Array<seriesIdDataType>} data 所有echarts图表数据
- * @param {string} currentHandleChartId 当前操作的echarts图表id
+ * @param {string} currentHandleChartIds 当前操作的echarts图表id集合
  * @param {boolean} restoreClickBool 监听restore是否触发点击
  * @param {boolean} isAllUpdate 是否全部更新
  * @param {boolean} isSwitchingTheme 是否正在切换主题
@@ -182,7 +184,7 @@ export type DataAboutType = {
   groupName: string;
   maxEchartsIdSeq: number;
   data: Array<SeriesIdDataType>;
-  currentHandleChartId: string;
+  currentHandleChartIds: Array<string>;
   restoreClickBool: boolean;
   isAllUpdate: boolean;
   isSwitchingTheme: boolean;
@@ -200,6 +202,17 @@ export type DataAboutType = {
  * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  */
 export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries'>;
+
+/**
+ * @description 指定echarts图表的标签信息类型
+ * @param {string} id 指定图表的id
+ * @param {Array<SeriesTagType>} series 更新的数据 
+ * 
+ */
+export type AppointEchartsTagType = {
+  id: string,
+  series: Array<SeriesTagType>,
+}
 
 /**
  * @description: 接收drop事件的参数类型
