@@ -1150,11 +1150,6 @@ const handleMultipleLinkData = (primaryData: OneDataType) => {
   return primaryData;
 }
 
-const aaa = (seriesLink: SeriesLinkType) => {
-  return seriesLink.linkData.filter(item => item.data.length > 0);
-
-}
-
 // 首尾相连数据转series数据
 const linkToSeries = (linkData: LinkDataType[]) => {
   const primaryData = JSON.parse(JSON.stringify(linkData)); // 深拷贝数据，避免修改原数据导致相互关联
