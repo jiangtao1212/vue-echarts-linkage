@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-10-23 10:11:08
+ * @LastEditTime: 2024-12-04 09:17:41
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -92,12 +92,13 @@ export const optionTemplate: EChartsOption = {
     type: 'category',
     id: XAXIS_ID,
     name: '',
+    position: 'bottom',
     axisLabel: {
       fontSize: 12,
     },
     axisTick: {
 
-    },
+    }, 
     nameTextStyle: {
       fontSize: 12,
       align: 'center',
@@ -114,6 +115,7 @@ export const optionTemplate: EChartsOption = {
         padding: 0,
         align: 'right',
       },
+      scale: true, //坐标刻度不会强制包含零刻度
       axisLine: {
         show: true,
       },
