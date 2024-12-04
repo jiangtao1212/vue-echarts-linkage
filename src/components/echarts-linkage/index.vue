@@ -1134,13 +1134,25 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
 
 // 处理前后关联数据，多条关联数据进行首尾相连操作 --- 导出
 const handleMultipleLinkData = (primaryData: OneDataType) => {
-  if (!primaryData.seriesLink || primaryData.seriesLink.linkData.length === 0) return primaryData;
+  if (!primaryData.seriesLink || primaryData.seriesLink.linkData.length === 0) {
+    // 无关联数据，直接返回
+    return primaryData;
+  } else {
+    // 处理关联数据linkData中data存在空数据的情况
+    primaryData.seriesLink.linkData = primaryData.seriesLink.linkData.filter(item => item.data.length > 0); // 过滤掉空数据
+    if (primaryData.seriesLink.linkData.length === 0) return primaryData; // 如果全是空数据，直接返回
+  }
   const linkData: LinkDataType[] = primaryData.seriesLink?.linkData;
   const { packageData, markLineData } = linkToSeries(linkData);
   primaryData.seriesData = packageData;
   primaryData.markLineArray = markLineData;
   primaryData.seriesLink.isLinkMode = true;
   return primaryData;
+}
+
+const aaa = (seriesLink: SeriesLinkType) => {
+  return seriesLink.linkData.filter(item => item.data.length > 0);
+
 }
 
 // 首尾相连数据转series数据
