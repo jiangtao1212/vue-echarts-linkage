@@ -1,5 +1,6 @@
 <template>
   <div class='echarts-linkage-container'>
+    <!-- 主容器 -->
     <div class="main-container" :class="{ 'hide-scroll': isEchartsHeightChange }">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container"
         :style="{ 'background-color': computedBackgroundColor(item), '--drag-top': dataAbout.drag.top + 'px' }">
@@ -13,6 +14,11 @@
           @delete-items-all="deleteItemsAll(index)" />
       </div>
     </div>
+
+    <!-- 数据视窗 -->
+    <el-dialog v-model="dialogVisible" title="数据视图" height="600" >
+      <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
+    </el-dialog>
   </div>
 </template>
 
@@ -34,6 +40,10 @@ import type {
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
+import MySheet from "../sheet/index.vue";
+import { type SheetHeadType } from '@/components/sheet/type/index';
+
+const dialogVisible = ref(false);
 
 /**
  * @description 组件props类型
@@ -96,9 +106,6 @@ validateCols(props.cols);
 
 const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart']);
 
-const baseEchartsCount = ref(0); // 基础echarts数量，也就是初始化时，显示的echarts数量
-
-
 // 定义数据
 const dataAbout = reactive({
   groupName: 'group1', // 组名
@@ -115,6 +122,12 @@ const dataAbout = reactive({
     isDragging: false, // 是否拖拽中
   }
 }) as DataAboutType;
+
+// 定义子画面中表格数据
+const sheetAbout = reactive({
+  head: [] as Array<SheetHeadType>, // 表头数据
+  body: [] as Array<any>, // 表格数据
+});
 
 const styleAbout = {
   gap: 10, // 图表间距
@@ -437,20 +450,6 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
-  const seriesData: OneDataType = {
-    name: oneDataType.name,
-    type: oneDataType.type,
-    seriesData: oneDataType.seriesData,
-    seriesDataCache: oneDataType.seriesData,
-    seriesLink: oneDataType.seriesLink,
-    markLineArray: oneDataType.markLineArray,
-    customData: oneDataType.customData,
-    dataType: oneDataType.dataType || 'pulse',
-    visualMapSeries: oneDataType.visualMapSeries,
-    yAxisName: oneDataType.yAxisName || '',
-    xAxisName: oneDataType.xAxisName || '',
-  };
-  console.log('seriesData', dataAbout.data[index]);
   //注意：这里有两种空数据情况
   // 情况1是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，除了type属性基本上都是空数据
   // 情况2是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，有name等数据，只是seriesData数据为空
@@ -614,6 +613,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
+    .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
@@ -1001,7 +1001,15 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
     echart.data.forEach((series: OneDataType, index: number) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
-      const linkData = seriesTag.seriesLink?.linkData as LinkDataType[];
+      let linkData = seriesTag.seriesLink?.linkData as LinkDataType[];
+      if (linkData.length === 0) {
+        // 无关联数据，直接返回
+        return;
+      } else {
+        // 处理关联数据linkData中data存在空数据的情况
+        linkData = linkData.filter(item => item.data.length > 0); // 过滤掉空数据
+        if (linkData.length === 0) return; // 如果全是空数据，直接返回
+      }
       const { packageData, markLineData } = linkToSeries(linkData);
       series.seriesData = packageData;
       series.markLineArray = markLineData;
@@ -1225,6 +1233,52 @@ const switchEchartsTheme = async (e: any, id: string) => {
   dataAbout.isSwitchingTheme = false;
 }
 
+// echarts上的excel 视窗事件
+const setExcelView = (e: any, id: string) => {
+  // 组装head和body数据, primaryKey为数据主键
+  function packageHeadAndBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
+    const body = data.xAxisdata?.map((item: string, index: number) => callBack(item)) || [];
+    const series = data.data.map((item: OneDataType) => {
+      const key = head.find(item1 => item1.label === item.name)?.prop;
+      return { 'prop': key, 'value': item.seriesData.reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {}) };
+    });
+    body.forEach((item: any, index: number) => {
+      series.forEach((item1: any) => {
+        item[item1.prop] = item1.value[item[primaryKey]];
+      });
+    });
+    return { head, body };
+  }
+
+  // console.log('setExcelView', id);
+  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  // console.log('data', data);
+  let head: SheetHeadType[] = []; // 表头
+  let body: Array<any> = []; // 表体
+  const itemNameArray = data.data.map((item: OneDataType, index: number): SheetHeadType => ({ 'label': item.name, 'prop': 'prop' + index }));
+  head = [...itemNameArray];
+  const isLinkMode = data.data[0].seriesLink?.isLinkMode;
+  if (isLinkMode) {
+    // 多卷关联
+    const primaryKey = 'primary'; // 数据主键
+    head.unshift(...[{ 'label': '自定义', 'prop': 'auto' }, { 'label': '自定义', 'prop': 'xProp' }]); // 表头，多卷关联时，最前面增加卷号列和X轴列
+    const res = packageHeadAndBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item, 'auto': item.split('--')[0], 'xProp': item.split('--')[1] }))
+    head = res.head;
+    body = res.body;
+  } else {
+    // 非多卷关联
+    const primaryKey = 'xProp'; // 数据主键
+    head.unshift(...[{ 'label': '自定义', 'prop': 'xProp' }]); // 表头前面增加X轴列
+    const res = packageHeadAndBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }))
+    head = res.head;
+    body = res.body;
+  }
+  // console.log('head', head);
+  // console.log('body', body);
+  sheetAbout.head = head;
+  sheetAbout.body = body;
+  dialogVisible.value = true;
+}
 
 // 子组件暴露变量和方法
 const exposedMethods: ExposedMethods = {
@@ -1305,7 +1359,7 @@ onBeforeUnmount(() => {
       .drag-container {
         position: absolute;
         top: var(--drag-top);
-        right: 150px;
+        right: 180px;
         padding: 2px;
         z-index: 20;
       }

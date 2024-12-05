@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-04 09:17:41
+ * @LastEditTime: 2024-12-04 14:41:21
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -10,6 +10,7 @@
 import { type EChartsOption, type MarkLineComponentOption } from "echarts";
 import SaveAsImageSvg from '@/assets/svg/save-image.svg';
 import DeleteSvg from '@/assets/svg/delete.svg';
+import ExcelSvg from "@/assets/svg/file-excel.svg";
 
 // x轴id
 export const XAXIS_ID = 'X1';
@@ -60,6 +61,17 @@ export const optionTemplate: EChartsOption = {
           // 在这里添加你想要执行的代码
         }
       },
+
+      myExcelView: {
+        show: true,
+        title: `数据视图`,
+        icon: 'image://' + ExcelSvg,
+        onclick: (e: any) => {
+          // console.log(e);
+          // 在这里添加你想要执行的代码
+        }
+      },
+
       mySaveAsImage: { // 自定义的保存图片功能
         show: true,
         // title: `保存为图片`,

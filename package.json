@@ -1,6 +1,6 @@
 {
   "name": "vue-echarts-linkage",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -48,8 +48,9 @@
     "print-js": "^1.6.0",
     "vue": "^3.4.29",
     "vue-draggable-plus": "^0.5.0",
-    "vue-echarts-linkage": "1.5.1",
-    "vue-router": "^4.3.3"
+    "vue-echarts-linkage": "1.5.3",
+    "vue-router": "^4.3.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",

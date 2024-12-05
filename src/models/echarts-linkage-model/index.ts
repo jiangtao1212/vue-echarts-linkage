@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-06 22:30:14
+ * @LastEditTime: 2024-12-04 16:44:51
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -602,6 +602,25 @@ export class EchartsLinkageModel {
         toolbox.feature.myThemeButton.onclick = callback;
       } else {
         console.error("myThemeButton is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /**
+   * @description 设置echarts实例的myExcelView按钮的点击事件
+   * @param callback myExcelView按钮的自定义点击事件回调函数
+   * @returns this 链式调用
+   */
+  setMyExcelViewClickEvent = (callback: Function) => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.myExcelView) {
+        toolbox.feature.myExcelView.onclick = callback;
+      } else {
+        console.error("myExcelView is not defined in toolbox feature");
       }
     } else {
       console.error("toolbox is not defined in resultOption");
