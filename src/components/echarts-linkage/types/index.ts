@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-11-09 16:38:49
+ * @LastEditTime: 2024-12-06 14:00:32
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -151,6 +151,35 @@ export type VisualMapSeriesType = {
 }
 
 /**
+ * @description: 数据视图中新增列的数据类型
+ * @param {string} name 新增列的名称
+ * @param {string | number | Array<string | number>} value 新增列的值，可以是字符串、数字、数组，数组情况是用于多卷关联
+ * @example
+ * 1. 新增字符串：{ name: '卷号', value: 'P20210101', isPrimaryKey: true }
+ * 2. 新增数字：{ name: '宽度', value: 1000 }
+ * 3. 新增数组：{ name: '卷号', value: ['P20210101', 'P20210102'], isPrimaryKey: true } | { name: '宽度', value: [1000, 1200] } 卷号和宽度分别对应
+ */
+export type excelViewHeadType = {
+  name: string, // 新增列的名称
+  value: string | number | Array<string | number>, // 新增列的值,
+  isPrimaryKey?: boolean, // 是否是主键，默认false
+}
+
+/**
+ * @description: 数据视图类型
+ * @param {string} headXname 表头中X轴列的名称
+ * @param {Array<excelViewHeadType>} preAdd 在前面新增列
+ * @param {Array<excelViewHeadType>} postAdd 在后面新增列
+ */
+export type excelViewType = {
+  headXname: string,
+  // 在前面新增列
+  preAdd?: Array<excelViewHeadType>,
+  // 在后面新增列
+  postAdd?: Array<excelViewHeadType>,
+}
+
+/**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
@@ -158,6 +187,7 @@ export type VisualMapSeriesType = {
  * @param {Array<VisualMapType>} visualMapArray 视觉映射数据
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
+ * @param {string} theme 主题
  */
 export type SeriesIdDataType = {
   id: string;
@@ -252,4 +282,16 @@ export type ListenerGrapicLocationType = Array<Pick<SeriesIdDataType, 'id' | 'gr
 export type SegementType = number | {
   mode: 'interval' | 'percent',
   value: number
+}
+
+/**
+ * @description: 数据视图按钮点击回调的参数类型
+ * @param {string} id 图表id
+ * @param {SeriesLinkType} seriesLink 首尾相连的数据
+ * @param {Function} callback 回调函数, 接收excelViewType参数
+ */
+export type ListenerExcelViewType = {
+  id: string,
+  seriesLink?: SeriesLinkType,
+  callback: (excelView: excelViewType) => void,
 }

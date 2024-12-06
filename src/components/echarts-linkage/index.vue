@@ -16,7 +16,7 @@
     </div>
 
     <!-- 数据视窗 -->
-    <el-dialog v-model="dialogVisible" title="数据视图" height="600" >
+    <el-dialog v-model="dialogVisible" title="数据视图" height="600">
       <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
     </el-dialog>
   </div>
@@ -36,7 +36,7 @@ import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
   VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
-  AppointEchartsTagType,
+  AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -104,7 +104,7 @@ const validateCols = (value: number) => {
 // 验证 props
 validateCols(props.cols);
 
-const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart']);
+const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart', 'listener-excel-view']);
 
 // 定义数据
 const dataAbout = reactive({
@@ -1235,8 +1235,126 @@ const switchEchartsTheme = async (e: any, id: string) => {
 
 // echarts上的excel 视窗事件
 const setExcelView = (e: any, id: string) => {
-  // 组装head和body数据, primaryKey为数据主键
-  function packageHeadAndBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
+
+  // 判定数组数据中某个属性的类型是否一致，如果不一致，则抛出异常
+  function isAutoPropertyTypeConsistent(arr: Array<any>, prop: string) {
+    if (arr.length === 0) return true; // 空数组视为一致
+    // 获取第一个对象的prop属性类型
+    const firstType = typeof arr[0][prop];
+    // 检查每个对象的prop属性类型是否与第一个一致
+    const isConsistent = arr.every(item => typeof item[prop] === firstType);
+    if (!isConsistent) {
+      throw new Error(`数据视图的${prop}属性类型不一致，请保持一致!`);
+    }
+  }
+
+  // excel数据视图点击事件发送给外部，外部处理之后的回调函数
+  function excelViewCallback(excelView: excelViewType) {
+    const headXname = excelView.headXname;
+    const preAdd = excelView.preAdd;
+    const postAdd = excelView.postAdd;
+    preAdd && isAutoPropertyTypeConsistent(preAdd, 'value'); // 检查前置数据value属性类型是否一致
+    postAdd && isAutoPropertyTypeConsistent(postAdd, 'value'); // 检查后置数据value属性类型是否一致
+    let head: SheetHeadType[] = []; // 表头
+    let body: Array<any> = []; // 表体
+    const itemNameArray = data.data.map((item: OneDataType, index: number): SheetHeadType => ({ 'label': item.name, 'prop': 'prop' + index }));
+    head = [...itemNameArray];
+    if (params.seriesLink) { // 考虑到尽管是多卷关联模式，但有些系列只有name，并没有数据，因此需要用params.seriesLink进行判断
+      // --多卷关联--
+      // 1.新增两列表头数据，一个是卷号列（关联的label），一个是X轴列
+      const primaryKey = 'primary'; // 数据主键
+      const mainProp = 'auto'; // 主数据列
+      head.unshift(...[{ 'label': '自定义', 'prop': mainProp }, { 'label': headXname, 'prop': 'xProp' }]); // 表头，多卷关联时，最前面增加卷号列和X轴列
+      // 2.第一次组装body数据
+      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item, 'auto': item.split('--')[0], 'xProp': item.split('--')[1] }))
+      // 3.处理传入的前置数据
+      if (preAdd && preAdd!.length > 0) {
+        // 3.1 提取前置数据，并且加入到表头数据中
+        const preAddHead = preAdd.map((item: excelViewHeadType, index: number) => {
+          if (item.isPrimaryKey) {
+            return { 'label': item.name, 'prop': mainProp }
+          } else {
+            return { 'label': item.name, 'prop': 'preAdd' + index }
+          }
+        });
+        res.head.shift(); // 先删除第一列, 是为了保持和传入的顺序一致，这样外部就可以自定义列的顺序了
+        res.head.unshift(...preAddHead); // 表头前面增加自定义列
+        // 3.2 提取主数据数组和其他数据数组
+        let mainDataArray: (string | number)[] = []; // 主数据数组
+        let otherDataArray: Array<{ value: any, prop: string }> = []; // 其他数据数组
+        preAdd.forEach((item: excelViewHeadType, index: number) => {
+          if (Array.isArray(item.value)) {
+            if (item.isPrimaryKey) {
+              mainDataArray = item.value;
+            } else {
+              otherDataArray.push({ value: item.value, 'prop': 'preAdd' + index })
+            }
+          } else {
+            if (item.isPrimaryKey) {
+              mainDataArray.push(item.value);
+            } else {
+              otherDataArray.push({ value: [item.value], 'prop': 'preAdd' + index })
+            }
+          }
+        });
+        // 3.3 组装数据，用于后续给body添加属性数据 { main1: { other1: value, other2: value }, main2: { other1: value, other2: value }
+        const packageData: { [key: string]: { [prop: string]: any } } = {};
+        mainDataArray.forEach((item: any, index: number) => {
+          const key = item + ''; // 防止key为数字时报错
+          packageData[key] = {} as any;
+          otherDataArray.forEach((item1: any) => {
+            packageData[key][item1.prop] = item1.value[index];
+          });
+        });
+        // console.log('packageData', packageData);
+        // 3.4 遍历body，给对象添加其他属性数据
+        res.body.forEach((item: any) => {
+          const mainKey = item[mainProp];
+          const addDataObj = packageData[mainKey];
+          if (!addDataObj) return;
+          for (const key in addDataObj) {
+            if (Object.prototype.hasOwnProperty.call(addDataObj, key)) {
+              item[key] = addDataObj[key];
+            }
+          }
+        });
+      }
+      // todo: 4.处理传入的后置数据...
+      head = res.head;
+      body = res.body;
+    } else {
+      // --非多卷关联--
+      const primaryKey = 'xProp'; // 数据主键
+      head.unshift(...[{ 'label': headXname, 'prop': 'xProp' }]); // 表头前面增加X轴列
+      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }))
+      if (preAdd && preAdd!.length > 0) {
+        res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'preAdd' + 0 }))); // 表头前面增加自定义列
+        res.body.forEach((item: any) => {
+          preAdd.forEach((item1: excelViewHeadType, index: number) => {
+            item['preAdd' + index] = item1.value;
+          });
+        });
+      }
+      if (postAdd && postAdd!.length > 0) {
+        res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'postAdd' + 0 }))); // 表头后面增加自定义列
+        res.body.forEach((item: any) => {
+          postAdd.forEach((item1: excelViewHeadType, index: number) => {
+            item['postAdd' + index] = item1.value;
+          });
+        });
+      }
+      head = res.head;
+      body = res.body;
+    }
+    console.log('head', head);
+    console.log('body', body);
+    sheetAbout.head = head;
+    sheetAbout.body = body;
+    dialogVisible.value = true;
+  }
+
+  // 组装body数据, primaryKey为数据主键
+  function packageExcelViewBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
     const body = data.xAxisdata?.map((item: string, index: number) => callBack(item)) || [];
     const series = data.data.map((item: OneDataType) => {
       const key = head.find(item1 => item1.label === item.name)?.prop;
@@ -1252,32 +1370,14 @@ const setExcelView = (e: any, id: string) => {
 
   // console.log('setExcelView', id);
   const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  // console.log('data', data);
-  let head: SheetHeadType[] = []; // 表头
-  let body: Array<any> = []; // 表体
-  const itemNameArray = data.data.map((item: OneDataType, index: number): SheetHeadType => ({ 'label': item.name, 'prop': 'prop' + index }));
-  head = [...itemNameArray];
-  const isLinkMode = data.data[0].seriesLink?.isLinkMode;
-  if (isLinkMode) {
-    // 多卷关联
-    const primaryKey = 'primary'; // 数据主键
-    head.unshift(...[{ 'label': '自定义', 'prop': 'auto' }, { 'label': '自定义', 'prop': 'xProp' }]); // 表头，多卷关联时，最前面增加卷号列和X轴列
-    const res = packageHeadAndBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item, 'auto': item.split('--')[0], 'xProp': item.split('--')[1] }))
-    head = res.head;
-    body = res.body;
-  } else {
-    // 非多卷关联
-    const primaryKey = 'xProp'; // 数据主键
-    head.unshift(...[{ 'label': '自定义', 'prop': 'xProp' }]); // 表头前面增加X轴列
-    const res = packageHeadAndBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }))
-    head = res.head;
-    body = res.body;
+  // 筛选出多卷关联的系列数据，然后取第一个发送给外部
+  const seriesData = data.data.filter((item: OneDataType) => item.seriesLink?.isLinkMode && item.seriesLink!.linkData.length > 0);
+  const params: ListenerExcelViewType = { id: id, callback: excelViewCallback };
+  if (seriesData.length > 0) {
+    params.seriesLink = JSON.parse(JSON.stringify(seriesData[0].seriesLink)); // 深拷贝数据，避免修改原数据导致相互关联
+    params.seriesLink?.linkData.forEach((item: LinkDataType) => item.data = []); // 将关联的series数据置空，减少数据量
   }
-  // console.log('head', head);
-  // console.log('body', body);
-  sheetAbout.head = head;
-  sheetAbout.body = body;
-  dialogVisible.value = true;
+  emit('listener-excel-view', params);
 }
 
 // 子组件暴露变量和方法

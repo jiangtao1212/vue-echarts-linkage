@@ -25,7 +25,8 @@
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart" />
+    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
+    @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
 
@@ -33,7 +34,10 @@
 import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
-import type { OneDataType, SeriesTagType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, SeriesDataType } from '@/components/echarts-linkage/types/index';
+import type {
+  OneDataType, SeriesTagType, DropEchartType, DeleteEchartType,
+  ListenerGrapicLocationType, SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType
+} from '@/components/echarts-linkage/types/index';
 
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
@@ -439,8 +443,32 @@ const initLisener = () => {
   });
 }
 
+// 监听图形位置变化事件
 const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
   console.log("listenerGraphicLocation", data);
+}
+
+// 监听excel数据视图按钮点击事件
+const listenerExcelView = (data: ListenerExcelViewType) => {
+  console.log("listenerExcelView", data);
+  const { id, seriesLink, callback } = data;
+  console.log("id", id);
+  console.log("seriesLink", seriesLink);
+  // const params: excelViewType = { // 单卷
+  //   headXname: '长度',
+  //   preAdd: [{ name: '卷号', value: 'P202410210001', isPrimaryKey: true } as excelViewHeadType],
+  //   postAdd: [{ name: '备注', value: '备注信息' } as excelViewHeadType],
+  // }
+  const primaryKeyValues = seriesLink?.linkData.map(item => item.label); // 提取主键值
+  const params: excelViewType = { // 多卷
+    headXname: '长度',
+    preAdd: [
+      { name: '卷号', value: primaryKeyValues, isPrimaryKey: true },
+      { name: '宽度', value: [1000, 1500] },
+      { name: '厚度', value: [0.35, 0.40] },
+    ] as excelViewHeadType[],
+  }
+  callback(params);
 }
 
 const init = () => {
