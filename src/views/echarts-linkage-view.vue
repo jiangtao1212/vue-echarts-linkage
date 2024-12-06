@@ -57,8 +57,10 @@ const addLinkageBtnClick = () => {
     // 多卷首尾连接设置
     // seriesLink: {
     //   isLinkMode: true,
+    //   head: [{ lebel: '宽度', prop: 'width' }, { lebel: '高度', prop: 'height' }],
+    //   linkName: '卷号',
     //   linkData: [
-    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000) },
+    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000), custum: { width: 1000, height: 100000 },
     //     { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
     //     { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
     //     { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },

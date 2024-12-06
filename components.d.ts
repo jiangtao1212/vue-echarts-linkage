@@ -23,4 +23,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Sheet: typeof import('./src/components/sheet/index.vue')['default']
   }
+  export interface ComponentCustomProperties {
+    vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
+  }
 }
