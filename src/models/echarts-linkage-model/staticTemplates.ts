@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-04 14:41:21
+ * @LastEditTime: 2024-12-09 14:51:45
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -50,7 +50,9 @@ export const optionTemplate: EChartsOption = {
       },
       // dataView: { readOnly: false },
       // magicType: { type: ['line', 'bar'] },
-      restore: {},
+      restore: {
+        show: true, // 这里要加上，否则后续为拖拽组件设置右偏移时，计算显示的feature数量会少一个
+      },
       // saveAsImage: {}, //注：echarts自带的saveAsImage功能，不能将自定义legend等元素保存到图片中，因此这里使用下面自定义的mySaveAsImage功能
       myThemeButton: { // 自定义的主题切换功能
         show: true,

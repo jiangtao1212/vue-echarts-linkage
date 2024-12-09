@@ -102,6 +102,7 @@ const dropEchart = (data: dropEchartType) => {
 | use-graphic-location | `boolean` | 是否使用图形定位 | true，即使用图形定位 |
 | is-echarts-height-change | `boolean` | 每个echarts图表高度是否可变 | true，即可变 |
 | echarts-height-fixed-count | `boolean` | echarts高度固定数量，初始化时根据固定数量，计算每个echarts的固定高度，当is-echarts-height-change为false时生效 | 3 |
+| is-show-excel-view | `boolean` | 是否显示excel数据视图 | true，即显示 |
 
 ## 5. 组件事件
 | 事件名 | 说明 | 参数 |

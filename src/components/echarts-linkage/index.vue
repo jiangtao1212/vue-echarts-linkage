@@ -27,7 +27,7 @@ import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount } 
 import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
-import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption } from "echarts";
+import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption, type ToolboxComponentOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
@@ -77,6 +77,7 @@ export type PropsType = {
   useGraphicLocation?: boolean, // 是否使用图形定位
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
+  isShowExcelView?: boolean, // 是否显示excel数据视图
 }
 
 // 定义 props
@@ -91,6 +92,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   useGraphicLocation: true, // 默认使用图形定位
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
+  isShowExcelView: false, // 默认不显示excel数据视图
 });
 
 // 自定义验证函数
@@ -562,6 +564,31 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
   return { myChart, needHandle };
 }
 
+/**
+ * @description 根据option数据，做一些其他地方的额外处理
+ * @param option echarts option
+ */
+const extraHandleByOption = (option: EChartsOption) => {
+  // 根据option中toolbox的feature数量，给拖拽组件设置右偏移量
+  const toolbox = option.toolbox as ToolboxComponentOption;
+  let size = 0;
+  if (toolbox.feature) {
+    for (const key in toolbox.feature) {
+      if (!Object.prototype.hasOwnProperty.call(toolbox.feature, key)) return;
+      const valObj = toolbox.feature[key];
+      if (!valObj?.show) return;
+      if (key === 'dataZoom') {
+        size += 2; // dataZoom是两个图标
+      } else {
+        size++;
+      }
+    }
+  }
+  const element = document.querySelector('.echarts-container') as HTMLElement;
+  element.style.setProperty('--toolbox-size', size.toString());
+
+}
+
 // 监听 restore 事件，使用防抖函数
 const debouncedFn = useDebounceFn(() => {
   console.log('restore');
@@ -613,7 +640,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
-    .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
+    .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id), props.isShowExcelView)
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
@@ -621,6 +648,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
   myChart.setOption(option);
+  extraHandleByOption(option); // 获取option数据，用于其他一些额外操作
   // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
   dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
   myChart.on('datazoom', (params: any) => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), params));
@@ -1455,11 +1483,12 @@ onBeforeUnmount(() => {
       border: 1px solid #ccc;
       border-radius: 10px;
       position: relative;
+      --toolbox-size: 6;
 
       .drag-container {
         position: absolute;
         top: var(--drag-top);
-        right: 180px;
+        right: calc(var(--toolbox-size) * 25px);
         padding: 2px;
         z-index: 20;
       }

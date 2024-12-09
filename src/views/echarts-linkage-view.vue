@@ -25,8 +25,8 @@
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
-    @listener-excel-view="listenerExcelView" />
+    is-show-excel-view @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
+    @delete-echart="deleteEchart" @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
 
@@ -454,19 +454,23 @@ const listenerExcelView = (data: ListenerExcelViewType) => {
   const { id, seriesLink, callback } = data;
   console.log("id", id);
   console.log("seriesLink", seriesLink);
-  // const params: excelViewType = { // 单卷
-  //   headXname: '长度',
-  //   preAdd: [{ name: '卷号', value: 'P202410210001', isPrimaryKey: true } as excelViewHeadType],
-  //   postAdd: [{ name: '备注', value: '备注信息' } as excelViewHeadType],
-  // }
-  const primaryKeyValues = seriesLink?.linkData.map(item => item.label); // 提取主键值
-  const params: excelViewType = { // 多卷
-    headXname: '长度',
-    preAdd: [
-      { name: '卷号', value: primaryKeyValues, isPrimaryKey: true },
-      { name: '宽度', value: [1000, 1500] },
-      { name: '厚度', value: [0.35, 0.40] },
-    ] as excelViewHeadType[],
+  let params: excelViewType;
+  if (seriesLink && seriesLink.isLinkMode) {
+    const primaryKeyValues = seriesLink?.linkData.map(item => item.label); // 提取主键值
+    params = { // 多卷
+      headXname: '长度',
+      preAdd: [
+        { name: '卷号', value: primaryKeyValues, isPrimaryKey: true },
+        { name: '宽度', value: [1000, 1500] },
+        { name: '厚度', value: [0.35, 0.40] },
+      ] as excelViewHeadType[],
+    }
+  } else {
+    params = { // 单卷
+      headXname: '长度',
+      preAdd: [{ name: '卷号', value: 'P202410210001', isPrimaryKey: true } as excelViewHeadType],
+      postAdd: [{ name: '备注', value: '备注信息' } as excelViewHeadType],
+    }
   }
   callback(params);
 }

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-04 16:44:51
+ * @LastEditTime: 2024-12-09 12:25:25
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -612,12 +612,14 @@ export class EchartsLinkageModel {
   /**
    * @description 设置echarts实例的myExcelView按钮的点击事件
    * @param callback myExcelView按钮的自定义点击事件回调函数
+   * @param isShowExcelView 是否显示myExcelView按钮
    * @returns this 链式调用
    */
-  setMyExcelViewClickEvent = (callback: Function) => {
+  setMyExcelViewClickEvent = (callback: Function, isShowExcelView: boolean) => {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
       if (toolbox.feature && toolbox.feature.myExcelView) {
+        toolbox.feature.myExcelView.show = isShowExcelView;
         toolbox.feature.myExcelView.onclick = callback;
       } else {
         console.error("myExcelView is not defined in toolbox feature");
