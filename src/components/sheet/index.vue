@@ -1,6 +1,9 @@
 <template>
   <div class='sheet-container'>
-    <div ref="tableRef" class="table-container" :data-body="bodyComputed" v-infinite-scroll="loadMore" :infinite-scroll-disabled="scrollDisabled">
+    <div ref="tableRef" class="table-container" :data-body="bodyComputed" 
+    v-infinite-scroll="loadMore" 
+    :infinite-scroll-disabled="scrollDisabled"
+    :infinite-scroll-distance="50">
       <table class="border-collapse table-auto w-full" border="1">
         <thead>
           <tr>
