@@ -369,7 +369,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     }
   }
   if (switchFlag) {
-    seriesData = RandomUtil.getSwitchData(1000);
+    seriesData = RandomUtil.getSwitchData(6000);
   }
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;

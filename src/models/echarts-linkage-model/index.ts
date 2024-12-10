@@ -442,6 +442,10 @@ export class EchartsLinkageModel {
    * @returns this 链式调用 
    */
   addCustomSeriesMarkLine = (markLineArray: MarkLineDataType) => {
+    if (markLineArray.length === 0) {
+      this.lineSeriesMarkLineTemplate.data = [];
+      return this;
+    }
     markLineArray.forEach((markLine: number | object) => {
       if (typeof markLine === 'number') {
         (this.lineSeriesMarkLineTemplate.data as Array<any>).push({ yAxis: markLine });

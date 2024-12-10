@@ -584,7 +584,7 @@ const extraHandleByOption = (option: EChartsOption) => {
       }
     }
   }
-  const element = document.querySelector('.echarts-container') as HTMLElement;
+  const element = document.querySelector('.main-container') as HTMLElement;
   element.style.setProperty('--toolbox-size', size.toString());
 
 }
@@ -1029,21 +1029,29 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
     echart.data.forEach((series: OneDataType, index: number) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
-      let linkData = seriesTag.seriesLink?.linkData as LinkDataType[];
+      let linkData: LinkDataType[] = JSON.parse(JSON.stringify(seriesTag.seriesLink?.linkData as LinkDataType[]));
       if (linkData.length === 0) {
-        // 无关联数据，直接返回
+        // 无关联数据，置空直接返回
+        series.seriesData = [];
+        series.markLineArray = [];
         return;
       } else {
+        const preLength = linkData.length;
         // 处理关联数据linkData中data存在空数据的情况
         linkData = linkData.filter(item => item.data.length > 0); // 过滤掉空数据
-        if (linkData.length === 0) return; // 如果全是空数据，直接返回
+        const nextLength = linkData.length;
+        if (nextLength === 0) {
+          // 如果全是空数据，将seriesData置空，并返回
+          series.seriesData = [];
+          series.markLineArray = [];
+          return;
+        }
       }
       const { packageData, markLineData } = linkToSeries(linkData);
       series.seriesData = packageData;
-      series.markLineArray = markLineData;
-      series.seriesLink = { isLinkMode: true, linkData: [] };
+      series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
       seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
-      index === 0 && (echart.markLineArray = markLineData); // 将第一个系列的markLineArray赋值给echarts的markLineArray
+      index === 0 && (echart.markLineArray = series.markLineArray); // 将第一个系列的markLineArray赋值给echarts的markLineArray
     });
   } else {
     // 非首尾相连模式
@@ -1170,20 +1178,45 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
 
 // 处理前后关联数据，多条关联数据进行首尾相连操作 --- 导出
 const handleMultipleLinkData = (primaryData: OneDataType) => {
-  if (!primaryData.seriesLink || primaryData.seriesLink.linkData.length === 0) {
-    // 无关联数据，直接返回
+  let linkData: LinkDataType[] = []; // 处理后的数据
+  if (!primaryData.seriesLink?.isLinkMode) {
+    // 非首尾相连模式，直接返回
+    return primaryData;
+  } else if (primaryData.seriesLink.linkData.length === 0) {
+    // 首尾相连模式, 但是没有关联数据，置空后直接返回
+    primaryData.seriesData = [];
+    primaryData.markLineArray = [];
     return primaryData;
   } else {
     // 处理关联数据linkData中data存在空数据的情况
-    primaryData.seriesLink.linkData = primaryData.seriesLink.linkData.filter(item => item.data.length > 0); // 过滤掉空数据
-    if (primaryData.seriesLink.linkData.length === 0) return primaryData; // 如果全是空数据，直接返回
+    linkData = primaryData.seriesLink.linkData.filter(item => item.data.length > 0); // 过滤掉空数据 
+    if (linkData.length === 0) {
+      // 如果全是空数据，将seriesData置空，并返回
+      primaryData.seriesData = [];
+      primaryData.markLineArray = [];
+      return primaryData;
+    }
   }
-  const linkData: LinkDataType[] = primaryData.seriesLink?.linkData;
   const { packageData, markLineData } = linkToSeries(linkData);
   primaryData.seriesData = packageData;
-  primaryData.markLineArray = markLineData;
+  primaryData.markLineArray = packageMarkLineOnLink(primaryData.seriesLink.linkData, linkData, markLineData);
   primaryData.seriesLink.isLinkMode = true;
   return primaryData;
+}
+
+/**
+ * @description 在多卷关联模式下，组装MarkLine数据
+ * @param linkDataPre 原始seriesLink下的linkData数据
+ * @param linkDataPost 处理筛选后的seriesLink下的linkData数据 
+ * @param markLineData 标记线数据 
+ */
+const packageMarkLineOnLink = (linkDataPre: LinkDataType[], linkDataPost: LinkDataType[], markLineData: Array<any>) => {
+  console.log('packageMarkLineOnLink', linkDataPre, linkDataPost, markLineData);
+  if (linkDataPre.length === 1 && linkDataPost.length === 1) {
+    // 首尾相连模式下，只有一个关联数据时，并且这个关联数据中内部的data不为空，则不显示markLine
+    markLineData = [];
+  }
+  return markLineData;
 }
 
 // 首尾相连数据转series数据
@@ -1278,6 +1311,9 @@ const setExcelView = (e: any, id: string) => {
 
   // excel数据视图点击事件发送给外部，外部处理之后的回调函数
   function excelViewCallback(excelView: excelViewType) {
+    console.groupCollapsed('excelViewCallback');
+    console.time('excelViewCallback');
+    dialogVisible.value = true;
     const headXname = excelView.headXname;
     const preAdd = excelView.preAdd;
     const postAdd = excelView.postAdd;
@@ -1354,9 +1390,9 @@ const setExcelView = (e: any, id: string) => {
       // --非多卷关联--
       const primaryKey = 'xProp'; // 数据主键
       head.unshift(...[{ 'label': headXname, 'prop': 'xProp' }]); // 表头前面增加X轴列
-      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }))
+      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }));
       if (preAdd && preAdd!.length > 0) {
-        res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'preAdd' + 0 }))); // 表头前面增加自定义列
+        res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'preAdd' + index }))); // 表头前面增加自定义列
         res.body.forEach((item: any) => {
           preAdd.forEach((item1: excelViewHeadType, index: number) => {
             item['preAdd' + index] = item1.value;
@@ -1364,7 +1400,7 @@ const setExcelView = (e: any, id: string) => {
         });
       }
       if (postAdd && postAdd!.length > 0) {
-        res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'postAdd' + 0 }))); // 表头后面增加自定义列
+        res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'postAdd' + index }))); // 表头后面增加自定义列
         res.body.forEach((item: any) => {
           postAdd.forEach((item1: excelViewHeadType, index: number) => {
             item['postAdd' + index] = item1.value;
@@ -1378,19 +1414,22 @@ const setExcelView = (e: any, id: string) => {
     console.log('body', body);
     sheetAbout.head = head;
     sheetAbout.body = body;
-    dialogVisible.value = true;
+    console.log('计算结束---开启子画面');
+    console.timeEnd('excelViewCallback');
+    console.groupEnd();
   }
 
   // 组装body数据, primaryKey为数据主键
   function packageExcelViewBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
     const body = data.xAxisdata?.map((item: string, index: number) => callBack(item)) || [];
+    const headProps = head.map(item => item.prop);
     const series = data.data.map((item: OneDataType) => {
       const key = head.find(item1 => item1.label === item.name)?.prop;
-      return { 'prop': key, 'value': item.seriesData.reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {}) };
+      return { 'prop': key, 'value': item.seriesData };
     });
     body.forEach((item: any, index: number) => {
       series.forEach((item1: any) => {
-        item[item1.prop] = item1.value[item[primaryKey]];
+        item[item1.prop] = item1.value[index][1];
       });
     });
     return { head, body };
@@ -1476,6 +1515,7 @@ onBeforeUnmount(() => {
     --item-width: 100%;
     /* --main-container-height用于缓存main-container的高度 */
     --main-container-height: 100%;
+    --toolbox-size: 6;
 
     .echarts-container {
       height: calc((var(--main-container-height) - var(--gap) * (var(--rows) - 1)) / var(--rows));
@@ -1483,7 +1523,6 @@ onBeforeUnmount(() => {
       border: 1px solid #ccc;
       border-radius: 10px;
       position: relative;
-      --toolbox-size: 6;
 
       .drag-container {
         position: absolute;
