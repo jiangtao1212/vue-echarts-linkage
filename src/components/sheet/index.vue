@@ -63,12 +63,18 @@ const loadMore = () => {
 
 // 导出excel文件
 const exportFile = () => {
-  const ws = utils.json_to_sheet(dataAbout.body);
+  // 这个需要根据head中的顺序来对body中的对象数据属性进行排序，避免在后续转换为excel时出现顺序问题
+  let data: any[] = [];
+  dataAbout.body.forEach((item) => {
+    let obj: any = {};
+    dataAbout.head.forEach((head) => { obj[head.prop] = item[head.prop]; });
+    data.push(obj);
+  });
+  const ws = utils.json_to_sheet(data);
   // 替换第一行的数据
   if (ws['!ref']) { // 确保工作表有有效的范围
     const range = utils.decode_range(ws['!ref']); // 获取当前范围
     const firstRow = range.s.r; // 第一行的索引
-
     // 假设我们想要替换第一行的所有值
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellAddress = utils.encode_cell({ r: firstRow, c: col });
@@ -87,6 +93,7 @@ const scrollDisabled = computed(() => {
 
 // 表头数据监听
 const headComputed = computed((): SheetHeadType[] => {
+  dataAbout.head = props.head;
   return props.head;
 });
 
