@@ -98,10 +98,10 @@ const headComputed = computed((): SheetHeadType[] => {
 });
 
 // 表格数据监听
-const bodyComputed = computed((): any[] => {
+const bodyComputed = computed((): any => {
   dataAbout.body = props.body;
   dataAbout.showBody = props.body.slice(0, 50); // 限制显示的行数
-  return props.body;
+  return props.body.length;
 });
 
 // 初始化页面
