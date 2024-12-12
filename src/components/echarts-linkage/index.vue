@@ -1487,6 +1487,7 @@ onBeforeUnmount(() => {
 </script>
 <style scoped lang='less'>
 @import '@/assets/styles/mixin.less';
+@import '@/assets/styles/common.less';
 
 .echarts-linkage-container {
   min-height: 20vh;
@@ -1503,10 +1504,8 @@ onBeforeUnmount(() => {
     width: 100%;
     overflow-y: auto;
     padding-bottom: var(--padding);
-    display: flex;
+    .flex-row(center);
     flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
     align-content: flex-start;
     gap: var(--gap);
     --gap: 10px;
@@ -1520,8 +1519,7 @@ onBeforeUnmount(() => {
     .echarts-container {
       height: calc((var(--main-container-height) - var(--gap) * (var(--rows) - 1)) / var(--rows));
       width: var(--item-width);
-      border: 1px solid #ccc;
-      border-radius: 10px;
+      .border-radius(10px, #ccc);
       position: relative;
 
       .drag-container {

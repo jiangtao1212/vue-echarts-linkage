@@ -579,10 +579,12 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 @import '@/assets/styles/mixin.less';
+@import '@/assets/styles/common.less';
 
 .main {
   display: flex;
   justify-content: center;
+  .flex-row(center, normal);
   flex-wrap: wrap;
   gap: 5px;
 
@@ -596,7 +598,6 @@ onBeforeUnmount(() => {
     display: block;
     width: 100%;
     height: 100%;
-    // padding-left: 0 17px;
     margin-top: -20px;
     opacity: 0;
     z-index: 1;
@@ -636,10 +637,7 @@ onBeforeUnmount(() => {
 
       &::after {
         content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        .absolute-center();
         width: 50%;
         height: calc(var(--height) / 2);
         border-radius: 50%;

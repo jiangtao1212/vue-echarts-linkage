@@ -1,15 +1,15 @@
-.flex-row (@position: center) {
+.flex-row (@position: center, @align: center) {
   display: flex;
   justify-content: @position;
-  align-items: center; 
+  align-items: @align; 
 }
 
-.flex-column (@position: center) {
-  .flex-row(@position);
+.flex-column (@position: center, @align: center) {
+  .flex-row(@position, @align);
   flex-direction: column;
 }
 
-.position-center (@position: absolute) {
+.absolute-center (@position: absolute) {
   position: @position;
   top: 50%;
   left: 50%;

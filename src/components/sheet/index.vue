@@ -117,15 +117,16 @@ onMounted(() => {
 });
 </script>
 <style scoped lang="less">
+@import '@/assets/styles/mixin.less';
+@import '@/assets/styles/common.less';
+
 .sheet-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  .flex-column(center, normal);
   gap: 10px;
 
   .table-container {
-    padding-bottom: 5px;
     height: 50vh;
+    padding-bottom: 5px;
     overflow: auto;
 
     /** 
