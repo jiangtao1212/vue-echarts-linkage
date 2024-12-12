@@ -1,5 +1,5 @@
 import type { App } from 'vue'
-import './assets/main.css'
+// import './assets/main.css'
 import 'virtual:uno.css'
 import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
 export type {

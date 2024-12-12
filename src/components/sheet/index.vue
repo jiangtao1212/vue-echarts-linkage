@@ -1,9 +1,7 @@
 <template>
   <div class='sheet-container'>
-    <div ref="tableRef" class="table-container" :data-body="bodyComputed" 
-    v-infinite-scroll="loadMore" 
-    :infinite-scroll-disabled="scrollDisabled"
-    :infinite-scroll-distance="50">
+    <div ref="tableRef" class="table-container" :data-body="bodyComputed" v-infinite-scroll="loadMore"
+      :infinite-scroll-disabled="scrollDisabled">
       <table class="border-collapse table-auto w-full" border="1">
         <thead>
           <tr>
@@ -124,6 +122,23 @@ onMounted(() => {
   flex-direction: column;
   justify-content: center;
   gap: 10px;
+  /* 对于Firefox */
+  scrollbar-width: auto;
+  /* 对于Firefox */
+  scrollbar-color: auto;
+
+  /* 对于Webkit浏览器（如Chrome、Safari） */
+  &::-webkit-scrollbar {
+    /* 滚动条宽度 */
+    width: auto;
+    /* 滚动条背景颜色 */
+    background-color: auto;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    /* 滚动条滑块颜色 */
+    background-color: auto;
+  }
 
   .table-container {
     max-height: 50vh;
