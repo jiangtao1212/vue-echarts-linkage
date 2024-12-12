@@ -16,7 +16,7 @@
     </div>
 
     <!-- 数据视窗 -->
-    <el-dialog v-model="dialogVisible" title="数据视图" height="600">
+    <el-dialog v-model="dialogVisible" title="数据视图">
       <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
     </el-dialog>
   </div>
