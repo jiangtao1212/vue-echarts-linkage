@@ -25,7 +25,7 @@
 
 <script setup lang='ts'>
 import { ref, reactive, onMounted, computed } from 'vue';
-import { read, utils, writeFileXLSX } from 'xlsx';
+import { utils, writeFileXLSX } from 'xlsx';
 import { type SheetHeadType } from './type/index';
 import infiniteScroll from 'vue3-infinite-scroll-better';
 

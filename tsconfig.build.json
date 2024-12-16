@@ -10,12 +10,12 @@
     "declarationMap": true,
     "types": ["vite/client"]
   },
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
-    }
-  ]
+  // "references": [
+  //   {
+  //     "path": "./tsconfig.node.json"
+  //   },
+  //   {
+  //     "path": "./tsconfig.app.json"
+  //   }
+  // ]
 }

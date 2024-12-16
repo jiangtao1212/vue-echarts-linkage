@@ -48,6 +48,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  publicDir: 'empty',
   build: {
     outDir: 'dist',
     // assetsDir: 'assets',
@@ -60,13 +61,31 @@ export default defineConfig({
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ['vue'],
+      external: [
+        'vue',
+        "@element-plus/icons-vue",
+        "@vueuse/core",
+        "echarts",
+        "element-plus",
+        "html2canvas",
+        "print-js",
+        "vue-draggable-plus",
+        "vue3-infinite-scroll-better",
+        "xlsx"
+      ],
       output: {
         // 解决在混合模式下（全局引入+按需引入）的警告
         exports: 'named',
         // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
         globals: {
           vue: 'Vue',
+          'element-plus': 'elementPlus',
+          'echarts': 'echarts',
+          'html2canvas': 'html2canvas',
+          'print-js': 'printJS',
+          'vue-draggable-plus': 'VueDraggablePlus',
+          'vue3-infinite-scroll-better': 'infiniteScroll',
+          'xlsx': 'xlsx'
         }
       }
     }
