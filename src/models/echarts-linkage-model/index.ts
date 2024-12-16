@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-09 12:25:25
+ * @LastEditTime: 2024-12-16 09:56:26
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -14,7 +14,8 @@ import {
   type LineSeriesOption,
   type BarSeriesOption,
   type ToolboxComponentOption,
-  type MarkLineComponentOption
+  type MarkLineComponentOption,
+  type XAXisComponentOption,
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
@@ -364,13 +365,25 @@ export class EchartsLinkageModel {
   setThemeButtonIcon = () => {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      const xAxis = this.resultOption.xAxis as XAXisComponentOption[];
       if (toolbox.feature && toolbox.feature.myThemeButton) {
         // console.log('this.theme:', this.theme);
         // console.log('this.swichThemeIcon:', this.swichThemeIcon);
         const dark = FileUtil.getAssetsFile('svg/dark.svg');
         const light = FileUtil.getAssetsFile('svg/light.svg');
-        const icon = this.swichThemeIcon === 'dark' ? dark : light;
+        let icon = dark;
+        let axisLabelColor = '#000';
+        if (this.swichThemeIcon === 'dark') {
+          // 切换图标为dark，则当前主题为light
+          icon = dark;
+          axisLabelColor = '#000';
+        } else {
+          // 切换图标为light，则当前主题为dark
+          icon = light;
+          axisLabelColor = '#fff';
+        }
         toolbox.feature.myThemeButton.icon = 'image://' + icon;
+        xAxis[0].axisLabel!.color = axisLabelColor;
       } else {
         console.error("myThemeButton is not defined in toolbox feature");
       }
