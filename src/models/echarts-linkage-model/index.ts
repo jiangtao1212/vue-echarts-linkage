@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-16 09:56:26
+ * @LastEditTime: 2024-12-30 16:37:00
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -19,7 +19,13 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType, ThemeType } from "@/components/echarts-linkage/types/index";
+
+let mergedOptionTemplate: EChartsOption = optionTemplate; // 合并后的option模板
+const COLOR_KEY = 'color';
+const COLOR_CACHE_KEY = 'colorCache';
+const THEME_DARK = 'dark';
+const THEME_LIGHT = 'light';
 
 /**
  * @description 图表数据类型
@@ -42,7 +48,6 @@ export type SeriesOptionType = {
   seriesData: SeriesDataType, // 数据系列
   seriesDataCache: SeriesDataType, // 缓存数据系列
   xAxisName?: string, // x轴名称
-  xAxisShow?: boolean; // x轴是否显示
   yAxisName?: string, // y轴名称
   yAxisShow?: boolean; // y轴是否显示
   seriesShow?: boolean; // series是否显示
@@ -54,7 +59,7 @@ export type SeriesOptionType = {
 
 /**
  * @param {Array<Array<number>>} originData - 原始数据
- * @param {'dark' | 'light'} theme - 主题
+ * @param {ThemeType} theme - 主题
  * @param {number} segment - 图表分段数
  * @param {Array<string>} colors - 颜色数组
  * @param {boolean} useMergedLegend - 是否使用合并图例
@@ -62,7 +67,7 @@ export type SeriesOptionType = {
  */
 export type EchartsLinkageModelType = {
   seriesOptionArray: Array<SeriesOptionType>,
-  theme: 'dark' | 'light',
+  theme: ThemeType,
   segment?: SegementType,
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
@@ -75,8 +80,8 @@ type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
 export class EchartsLinkageModel {
   private seriesOptionArray: Array<SeriesOptionType>; // 原始数据
   private segment; // 图表分段数
-  private theme: 'dark' | 'light'; // 主题
-  private swichThemeIcon: 'dark' | 'light'; // 切换按钮的icon主题，与theme相反
+  private theme: ThemeType; // 主题
+  private swichThemeIcon: ThemeType; // 切换按钮的icon主题，与theme相反
   private xAxisInterval = 1; // x轴刻度标签显示间隔
   private offsetNum = 40; // Y轴偏移量
   private gridLeftInit = 45; // 左侧边距 --- 由于设置了containLabel: true，包含Y轴刻度标签，所以这里不需要设置
@@ -92,13 +97,13 @@ export class EchartsLinkageModel {
   constructor(param: EchartsLinkageModelType) {
     console.groupCollapsed('EchartsLinkageModel')
     console.log('param', param);
-    const myOptionTemplate = ObjUtil.deepCopy(optionTemplate);
+    const myOptionTemplate = ObjUtil.deepCopy(mergedOptionTemplate);
     // this.optionTemplate = myOptionTemplate;
     this.resultOption = myOptionTemplate;
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.theme = param.theme;
-    this.swichThemeIcon = this.theme === 'dark' ? 'light' : 'dark';
+    this.swichThemeIcon = this.theme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
     this.init();
@@ -181,8 +186,9 @@ export class EchartsLinkageModel {
   initOptionTemplate = () => {
     const xAxis = this.resultOption.xAxis as Array<any>;
     xAxis[0].data = this.setXAxisData();
-    xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
-    xAxis[0].show = this.seriesOptionArray[0].xAxisShow === false ? false : (this.xAxisData?.length > 0 ? true : false);
+    // xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
+    (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName && (xAxis[0].name = this.seriesOptionArray[0].xAxisName));
+    xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
     xAxis[0].axisLabel.formatter = (value: string | number, index: number) => {
@@ -369,21 +375,19 @@ export class EchartsLinkageModel {
       if (toolbox.feature && toolbox.feature.myThemeButton) {
         // console.log('this.theme:', this.theme);
         // console.log('this.swichThemeIcon:', this.swichThemeIcon);
-        const dark = FileUtil.getAssetsFile('svg/dark.svg');
-        const light = FileUtil.getAssetsFile('svg/light.svg');
-        let icon = dark;
-        let axisLabelColor = '#000';
-        if (this.swichThemeIcon === 'dark') {
+        const darkSvg = FileUtil.getAssetsFile('svg/dark.svg');
+        const lightSvg = FileUtil.getAssetsFile('svg/light.svg');
+        let icon = darkSvg;
+        if (this.swichThemeIcon === THEME_DARK) {
           // 切换图标为dark，则当前主题为light
-          icon = dark;
-          axisLabelColor = '#000';
+          icon = darkSvg;
         } else {
           // 切换图标为light，则当前主题为dark
-          icon = light;
-          axisLabelColor = '#fff';
+          icon = lightSvg;
         }
         toolbox.feature.myThemeButton.icon = 'image://' + icon;
-        xAxis[0].axisLabel!.color = axisLabelColor;
+        // xAxis[0].axisLabel!.color = axisLabelColor;
+        this.setOptionColorsByTheme(this.resultOption, this.swichThemeIcon);
       } else {
         console.error("myThemeButton is not defined in toolbox feature");
       }
@@ -391,6 +395,30 @@ export class EchartsLinkageModel {
       console.error("toolbox is not defined in resultOption");
     }
     return this;
+  }
+
+  /**
+   * @description 根据主题设置所有颜色，主要是坐标轴相关的颜色
+   * @param option 配置项
+   * @param swichThemeIcon 切换图标 
+   */
+  setOptionColorsByTheme = (option: any, swichThemeIcon: string) => {
+    if (option !== null && typeof option === 'object') {
+      for (const key in option) {
+        if (option.hasOwnProperty(key)) {
+          // 如果键是 'color'，就替换值
+          if (key === COLOR_CACHE_KEY) {
+            const colorCache = option[COLOR_CACHE_KEY];
+            if (!colorCache) continue;
+            // 数组第一项为light主题，第二项为dark主题
+            option[COLOR_KEY] = swichThemeIcon === THEME_DARK ? colorCache[0] : colorCache[1];
+          } else {
+            // 如果值是对象，则递归调用
+            this.setOptionColorsByTheme(option[key], swichThemeIcon);
+          }
+        }
+      }
+    }
   }
 
   // 组装option
@@ -629,14 +657,12 @@ export class EchartsLinkageModel {
   /**
    * @description 设置echarts实例的myExcelView按钮的点击事件
    * @param callback myExcelView按钮的自定义点击事件回调函数
-   * @param isShowExcelView 是否显示myExcelView按钮
    * @returns this 链式调用
    */
-  setMyExcelViewClickEvent = (callback: Function, isShowExcelView: boolean) => {
+  setMyExcelViewClickEvent = (callback: Function) => {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
       if (toolbox.feature && toolbox.feature.myExcelView) {
-        toolbox.feature.myExcelView.show = isShowExcelView;
         toolbox.feature.myExcelView.onclick = callback;
       } else {
         console.error("myExcelView is not defined in toolbox feature");
@@ -656,7 +682,7 @@ export class EchartsLinkageModel {
     const feature = (this.resultOption?.toolbox as any).feature;
     feature.dataZoom.title = { zoom: lang === 'zh-cn' ? '区域缩放' : 'Zoom', back: lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset' };
     feature.restore.title = lang === 'zh-cn' ? '还原' : 'Restore';
-    feature.myThemeButton.title = lang === 'zh-cn' ? (this.swichThemeIcon === 'dark' ? '黑夜' : '白天') : (this.swichThemeIcon === 'dark' ? 'Night' : 'Day');
+    feature.myThemeButton.title = lang === 'zh-cn' ? (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : (this.swichThemeIcon === THEME_DARK ? 'Night' : 'Day');
     feature.myDeleteButton.title = lang === 'zh-cn' ? '删除' : 'Delete';
     return this;
   }
@@ -987,4 +1013,71 @@ export class EchartsLinkageModel {
   getResultOption = () => {
     return this.resultOption;
   }
+}
+
+// 颜色判断
+const colorJudge = (colorValue: Array<string> | string) => {
+  // 如果是颜色属性，则值必须是数组，且长度为2，否则抛出异常
+  if (Array.isArray(colorValue) && colorValue.length === 2) {
+    return colorValue;
+  } else {
+    throw new Error('color属性值必须是长度为2的数组');
+  }
+}
+
+/**
+ * @description 递归合并option，主要是grid、toolbox、xAxis等属性的合并
+ * 1.自定义配置优先级更高, 相同属性值进行合并, 不同属性值直接赋值
+ * 2.颜色属性判断是否符合要求, 单独处理
+ * @param target 目标对象
+ * @param extraOption 自定义的额外配置
+ */
+export const mergeDeepOption = (target: any, extraOption: { [key: string]: any } | undefined) => {
+  if (!extraOption) return target;
+  for (const key in extraOption) {
+    if (!extraOption.hasOwnProperty(key)) continue;
+    if (key === COLOR_KEY) {
+      // 1.颜色属性，判断是否符合要求，单独处理
+      target[COLOR_CACHE_KEY] = colorJudge(extraOption[key] as Array<string> | string);
+      continue;
+    }
+    if (!target.hasOwnProperty(key)) {
+      // 2.新属性，目标对象中不存在该属性，直接赋值
+      target[key] = extraOption[key];
+      continue;
+    }
+    // 3.属性存在
+    if (typeof extraOption[key] === 'object' && extraOption[key] !== null) {
+      // 自定义属性值是对象或者数组，归一化
+      let customOptionValue = extraOption[key];
+      if (Array.isArray(extraOption[key])) {
+        // 如果是数组，取第一个元素作为自定义属性值
+        customOptionValue = extraOption[key][0];
+      }
+      // 递归合并
+      if (typeof target[key] === 'object') {
+        if (Array.isArray(target[key])) {
+          // 如果是数组，取第一个元素作为自定义属性值
+          target[key][0] = mergeDeepOption(target[key][0], customOptionValue);
+        } else {
+          // 自定义属性值是对象，目标对象也是对象，递归合并
+          target[key] = mergeDeepOption(target[key], customOptionValue);
+        }
+      }
+    } else {
+      // 属性值是简单类型，直接赋值
+      target[key] = extraOption[key];
+    }
+  }
+  return target;
+}
+
+// 设置模版option
+export const setMergedOptionTemplate = (extraOption: { [key: string]: any } | undefined) => {
+  const res = mergeDeepOption(optionTemplate, extraOption);
+  console.log('mergedOptionTemplate-----------', res);
+  if (res && Object.keys(res).length !== 0) {
+    mergedOptionTemplate = res;
+  }
+  mergedOptionTemplate = optionTemplate;
 }

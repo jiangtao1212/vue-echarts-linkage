@@ -25,7 +25,7 @@
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    is-show-excel-view @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
+    is-show-excel-view :extra-option="extraOption" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
     @delete-echart="deleteEchart" @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
@@ -44,6 +44,34 @@ const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
 let switchFlag = false;
 
+// 额外的配置项
+const extraOption = {
+  grid: {
+    right: '1.8%', // 只有right属性会影响图表的布局，其他都是内部动态计算出来的
+  },
+  toolbox: {
+    feature: {
+      myThemeButton: {
+        show: false
+      },
+      myExcelView: {
+        show: false
+      },
+      mySaveAsImage: {
+        show: false
+      },
+    }
+  },
+  xAxis: [
+    {
+      name: '[米]',
+      axisLabel: {
+        color: ['#F00', '#fff']
+      }
+    }
+  ],
+}
+
 // 新增按钮
 const addLinkageBtnClick = () => {
   const seriesData = RandomUtil.getSeriesData(1000);
@@ -51,6 +79,7 @@ const addLinkageBtnClick = () => {
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+    xAxisName: '[m]',
     type: 'line',
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]

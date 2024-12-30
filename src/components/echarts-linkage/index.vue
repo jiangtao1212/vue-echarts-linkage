@@ -29,8 +29,8 @@ import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption, type ToolboxComponentOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";
-import { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
+import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
+import { XAXIS_ID, THEME, optionTemplate } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
@@ -40,7 +40,7 @@ import type {
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
-import MySheet from "../sheet/index.vue";
+import MySheet from "@/components/sheet/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
 
 const dialogVisible = ref(false);
@@ -61,6 +61,7 @@ const dialogVisible = ref(false);
  * @property {boolean} [useGraphicLocation=true] - 是否使用图形定位
  * @property {boolean} [isEchartsHeightChange=true] - 是否根据数量，改变echarts的高度，默认true改变
  * @property {number} [echartsHeightFixedCount=3] - echarts高度固定数量，默认为3
+ * @property {object} [extraOption] - 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并；合并默认option，该优先级更高, 相同属性值进行合并, 不同属性值直接赋值
  */
 export type PropsType = {
   cols?: number;
@@ -77,7 +78,7 @@ export type PropsType = {
   useGraphicLocation?: boolean, // 是否使用图形定位
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
-  isShowExcelView?: boolean, // 是否显示excel数据视图
+  extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
 }
 
 // 定义 props
@@ -92,7 +93,6 @@ const props = withDefaults(defineProps<PropsType>(), {
   useGraphicLocation: true, // 默认使用图形定位
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
-  isShowExcelView: false, // 默认不显示excel数据视图
 });
 
 // 自定义验证函数
@@ -105,6 +105,8 @@ const validateCols = (value: number) => {
 
 // 验证 props
 validateCols(props.cols);
+// 递归合并自定义option
+setMergedOptionTemplate(props.extraOption);
 
 const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart', 'listener-excel-view']);
 
@@ -569,23 +571,19 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
  * @param option echarts option
  */
 const extraHandleByOption = (option: EChartsOption) => {
-  // 根据option中toolbox的feature数量，给拖拽组件设置右偏移量
+  /* 根据option中toolbox的feature数量，给拖拽组件设置右偏移量 --- start */
   const toolbox = option.toolbox as ToolboxComponentOption;
   let size = 0;
-  if (toolbox.feature) {
-    for (const key in toolbox.feature) {
-      if (!Object.prototype.hasOwnProperty.call(toolbox.feature, key)) return;
-      const valObj = toolbox.feature[key];
-      if (!valObj?.show) return;
-      if (key === 'dataZoom') {
-        size += 2; // dataZoom是两个图标
-      } else {
-        size++;
-      }
-    }
+  const feature = toolbox.feature;
+  if (!feature) return;
+  for (const key in feature) {
+    if (!feature.hasOwnProperty(key)) continue;
+    if (!(feature[key]?.show)) continue;
+    size = key === 'dataZoom' ? size + 2 : size + 1;  // dataZoom是两个图标
   }
   const element = document.querySelector('.main-container') as HTMLElement;
   element.style.setProperty('--toolbox-size', size.toString());
+  /* 根据option中toolbox的feature数量，给拖拽组件设置右偏移量 --- end */
 
 }
 
@@ -640,7 +638,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
-    .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id), props.isShowExcelView)
+    .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
     .setCustomSeriesMarkLine()
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应

@@ -1,1 +1,1 @@
-export { EchartsLinkageModel, type EchartsLinkageModelType, type SeriesOptionType } from "./echarts-linkage-model/index";
+export { EchartsLinkageModel, mergeDeepOption, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "./echarts-linkage-model/index";

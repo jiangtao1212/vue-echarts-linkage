@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-06 14:00:32
+ * @LastEditTime: 2024-12-30 15:26:53
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -103,7 +103,6 @@ export type OneDataType = {
   markLineArray?: MarkLineDataType;
   visualMapSeries?: VisualMapSeriesType | undefined;
   customData?: any;
-  xAxisShow?: boolean;
   yAxisShow?: boolean;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
@@ -179,6 +178,9 @@ export type excelViewType = {
   postAdd?: Array<excelViewHeadType>,
 }
 
+// 主题类型
+export type ThemeType = 'dark' | 'light';
+
 /**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
@@ -187,7 +189,7 @@ export type excelViewType = {
  * @param {Array<VisualMapType>} visualMapArray 视觉映射数据
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
- * @param {string} theme 主题
+ * @param {ThemeType} theme 主题
  */
 export type SeriesIdDataType = {
   id: string;
@@ -196,7 +198,7 @@ export type SeriesIdDataType = {
   markLineArray?: MarkLineDataType;
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
-  theme: 'dark' | 'light',
+  theme: ThemeType,
 }
 
 /**
