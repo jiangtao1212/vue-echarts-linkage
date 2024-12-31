@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-30 16:37:00
+ * @LastEditTime: 2024-12-31 10:21:17
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -1015,13 +1015,29 @@ export class EchartsLinkageModel {
   }
 }
 
-// 颜色判断
-const colorJudge = (colorValue: Array<string> | string) => {
-  // 如果是颜色属性，则值必须是数组，且长度为2，否则抛出异常
-  if (Array.isArray(colorValue) && colorValue.length === 2) {
-    return colorValue;
+/**
+ * @description 根据主题进行颜色判断
+ * 1.有主题按钮时，则颜色值必须是数组，且长度为2，否则抛出异常
+ * 2.没有主题按钮时，则颜色值可以是字符串或者数组，如果是数组，取第一个元素作为颜色值
+ * @param colorValue 
+ * @param hasThemeButton 
+ * @returns 
+ */
+const colorJudge = (colorValue: Array<string> | string, hasThemeButton: boolean) => {
+  if (hasThemeButton) {
+    // 有主题按钮时，则颜色值必须是数组，且长度为2，否则抛出异常
+    if (Array.isArray(colorValue) && colorValue.length === 2) {
+      return colorValue;
+    } else {
+      throw new Error('color属性值必须是长度为2的数组');
+    }
   } else {
-    throw new Error('color属性值必须是长度为2的数组');
+    // 没有主题按钮时，则颜色值可以是字符串或者数组，如果是数组，取第一个元素作为颜色值
+    if (Array.isArray(colorValue)) {
+      return colorValue[0];
+    } else {
+      return colorValue;
+    }
   }
 }
 
@@ -1031,14 +1047,17 @@ const colorJudge = (colorValue: Array<string> | string) => {
  * 2.颜色属性判断是否符合要求, 单独处理
  * @param target 目标对象
  * @param extraOption 自定义的额外配置
+ * @param hasThemeButton 是否有主题按钮
  */
-export const mergeDeepOption = (target: any, extraOption: { [key: string]: any } | undefined) => {
+export const mergeDeepOption = (target: any, extraOption: { [key: string]: any } | undefined, hasThemeButton: boolean) => {
   if (!extraOption) return target;
   for (const key in extraOption) {
     if (!extraOption.hasOwnProperty(key)) continue;
     if (key === COLOR_KEY) {
-      // 1.颜色属性，判断是否符合要求，单独处理
-      target[COLOR_CACHE_KEY] = colorJudge(extraOption[key] as Array<string> | string);
+      // 1.颜色属性处理
+      const colorValue = extraOption[key] as Array<string> | string;
+      const colorJudgeResult = colorJudge(colorValue, hasThemeButton);
+      hasThemeButton ? (target[COLOR_CACHE_KEY] = colorJudgeResult) : (target[COLOR_KEY] = colorJudgeResult);
       continue;
     }
     if (!target.hasOwnProperty(key)) {
@@ -1058,10 +1077,10 @@ export const mergeDeepOption = (target: any, extraOption: { [key: string]: any }
       if (typeof target[key] === 'object') {
         if (Array.isArray(target[key])) {
           // 如果是数组，取第一个元素作为自定义属性值
-          target[key][0] = mergeDeepOption(target[key][0], customOptionValue);
+          target[key][0] = mergeDeepOption(target[key][0], customOptionValue, hasThemeButton);
         } else {
           // 自定义属性值是对象，目标对象也是对象，递归合并
-          target[key] = mergeDeepOption(target[key], customOptionValue);
+          target[key] = mergeDeepOption(target[key], customOptionValue, hasThemeButton);
         }
       }
     } else {
@@ -1074,7 +1093,15 @@ export const mergeDeepOption = (target: any, extraOption: { [key: string]: any }
 
 // 设置模版option
 export const setMergedOptionTemplate = (extraOption: { [key: string]: any } | undefined) => {
-  const res = mergeDeepOption(optionTemplate, extraOption);
+  // 判断是否有主题按钮
+  function judgeHasThemeButton(extraOption: any) {
+    const myThemeButton = extraOption?.toolbox?.feature?.myThemeButton;
+    if (myThemeButton && myThemeButton.hasOwnProperty('show') && myThemeButton.show === false) {
+      return false;
+    }
+    return true;
+  }
+  const res = mergeDeepOption(optionTemplate, extraOption, judgeHasThemeButton(extraOption));
   console.log('mergedOptionTemplate-----------', res);
   if (res && Object.keys(res).length !== 0) {
     mergedOptionTemplate = res;

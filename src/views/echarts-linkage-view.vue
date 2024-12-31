@@ -66,7 +66,10 @@ const extraOption = {
     {
       name: '[米]',
       axisLabel: {
-        color: ['#F00', '#fff']
+        // myThemeButton主题按钮显示时，显示颜色值必选是数组，且长度大于等于2，否则会报错
+        // myThemeButton主题按钮不显示时，显示颜色值可以是数组，也可以是字符串
+        // color: ['#F0F']
+        // color: '#0FF'
       }
     }
   ],
