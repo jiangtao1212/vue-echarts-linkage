@@ -1,31 +1,38 @@
 <template>
   <div class="btn-container">
-    <el-button type="primary" size="small" @click="addLinkageBtnClick">新增echarts实例</el-button>
-    <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
-    <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
-    <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
-    <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
-    <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
-    <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
-    <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
-    <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
-    <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
-    <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
-    <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
-    <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
-    <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
-    <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button>
-    <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽折线系列</span></div>
-    <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽柱状系列</span></div>
-    <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽开关量系列</span></div>
+    <div class="btn_click">
+      <el-button type="primary" size="small" @click="addLinkageBtnClick">新增echarts实例</el-button>
+      <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
+      <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
+      <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
+      <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
+      <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
+      <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
+      <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
+      <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
+      <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
+      <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
+      <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button>
+    </div>
+    <div class="btn_realtime">
+      <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
+      <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
+      <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
+    </div>
+    <div class="btn_drag">
+      <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
+      <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
+      <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
+    </div>
   </div>
+
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    is-show-excel-view :extra-option="extraOption" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
+    :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
     @delete-echart="deleteEchart" @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
@@ -60,14 +67,18 @@ const extraOption = {
       mySaveAsImage: {
         show: false
       },
+      // myDeleteButton: {
+      //   show: false
+      // }
     }
   },
   xAxis: [
     {
       name: '[米]',
       axisLabel: {
-        // myThemeButton主题按钮显示时，显示颜色值必选是数组，且长度大于等于2，否则会报错
+        // myThemeButton主题按钮显示时，显示颜色值必选是数组，且长度大于等于2，否则会报错抛出异常
         // myThemeButton主题按钮不显示时，显示颜色值可以是数组，也可以是字符串
+        // color: ['#F0F', '#0FF']
         // color: ['#F0F']
         // color: '#0FF'
       }
@@ -133,7 +144,7 @@ const testBaseLineBtnClick = () => {
 
 // 批量新增空白echarts，携带legend数据
 const addLotEmptyLinkageBtnClick = () => {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 7; i++) {
     const oneDataTypeArray: OneDataType[] = [];
     for (let j = 0; j < 6; j++) {
       const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
@@ -519,26 +530,42 @@ onMounted(() => {
 
 <style scoped lang="less">
 .btn-container {
-  height: 5vh;
-  padding: 10px;
   display: flex;
-  align-items: center;
-  column-gap: 5px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
 
-  .drag-rect {
-    border-radius: 4px;
-    padding: 5px 5px;
-    background-image: linear-gradient(to right, #4286f4, #00b4d8);
-    border: 1px solid #00b4d8;
+  .btn_click {
+    // height: fit-content;
+    overflow-x: auto;
+    overflow-y: hidden;
     display: flex;
-    justify-content: center;
     align-items: center;
+    column-gap: 5px;
+  }
 
-    span {
-      color: #fff;
-      font-size: 12px;
-      line-height: 12px;
+  .btn_realtime {
+    display: flex;
+    gap: 5px;
+  }
+
+  .btn_drag {
+    display: flex;
+    gap: 5px;
+
+    .drag-rect {
+      border-radius: 4px;
+      padding: 1px 5px;
+      background-image: linear-gradient(to right, #4286f4, #00b4d8);
+      border: 1px solid #00b4d8;
+
+      span {
+        color: #fff;
+        font-size: 12px;
+        line-height: 12px;
+      }
     }
+
   }
 }
 

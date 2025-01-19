@@ -129,27 +129,31 @@ onMounted(() => {
     padding-bottom: 5px;
     overflow: auto;
 
-    /** 
+    thead {
+      z-index: 10;
+
+      /** 
      * 使用sticky固定表头
      */
-    th {
-      background-color: #f2f2f2;
-      position: sticky;
-      top: 0;
+      th {
+        background-color: #f2f2f2;
+        position: sticky;
+        top: 0;
 
-      /**
+        /**
        * 问题：使用 border-collapse: collapse; 和 position: sticky; 时,表头在滚动时顶部边框会消失
        * 解决方法：使用 ::before 伪元素添加边框
        */
-      &::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: 0;
-        right: 0;
-        border-top: 1px solid #808080;
-        /* 确保伪元素在内容下方 */
-        z-index: -1;
+        &::before {
+          content: '';
+          position: absolute;
+          top: -1px;
+          left: 0;
+          right: 0;
+          border-top: 1px solid #808080;
+          /* 确保伪元素在内容下方 */
+          z-index: -1;
+        }
       }
     }
   }

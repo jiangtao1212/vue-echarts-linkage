@@ -103,6 +103,7 @@ const dropEchart = (data: dropEchartType) => {
 | is-echarts-height-change | `boolean` | 每个echarts图表高度是否可变 | true，即可变 |
 | echarts-height-fixed-count | `boolean` | echarts高度固定数量，初始化时根据固定数量，计算每个echarts的固定高度，当is-echarts-height-change为false时生效 | 3 |
 | extra-option | `{ [key: string]: any }` | 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并；合并默认option，该优先级更高, 相同属性值进行合并, 不同属性值直接赋值 | — |
+| groups | `Array<Array<number>>` | 分组属性，二维数组：第一维表示分组，第二维表示该分组下的chart序号（序号为正整数，并且不能重复） | — |
 
 ## 5. 组件事件
 | 事件名 | 说明 | 参数 |

@@ -79,6 +79,7 @@ export type PropsType = {
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
   extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
+  groups?: Array<Array<number>>, // 分组属性，二维数组：第一维表示分组，第二维表示该分组下的chart序号（序号从1开始）
 }
 
 // 定义 props
@@ -96,23 +97,24 @@ const props = withDefaults(defineProps<PropsType>(), {
 });
 
 // 自定义验证函数
-const validateCols = (value: number) => {
+const validateCols = (value: number, errorMsg: string) => {
   if (value <= 0 || !Number.isInteger(value)) {
-    throw new Error('cols 必须是一个正整数');
+    throw new Error(errorMsg);
   }
   return true;
 };
 
 // 验证 props
-validateCols(props.cols);
+validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
 setMergedOptionTemplate(props.extraOption);
 
 const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart', 'listener-excel-view']);
-
+const GROUP_DEFAULT = 'group-default';
 // 定义数据
 const dataAbout = reactive({
-  groupName: 'group1', // 组名
+  groupsName: [], // 组名数组
+  groupDefault: GROUP_DEFAULT, // 默认组名
   maxEchartsIdSeq: 0, // 最大序号
   data: [] as Array<SeriesIdDataType>, // 所有echarts数据
   currentHandleChartIds: [''], // 当前操作的echart图表id集合
@@ -602,10 +604,9 @@ const containerResizeFn = useDebounceFn(() => {
 /**
  * @description 初始化单个echarts
  * @param dataArray 数据数组
- * @param groupName 组名
  * @returns EChartsType
  */
-const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
+const initOneEcharts = (dataArray: SeriesIdDataType) => {
   console.groupCollapsed('initOneEcharts', dataArray.id);
   const { myChart, needHandle } = judgeEchartInstance(dataArray);
   if (!needHandle) { // 不需要操作
@@ -651,8 +652,6 @@ const initOneEcharts = (dataArray: SeriesIdDataType, groupName: string) => {
   dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
   myChart.on('datazoom', (params: any) => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), params));
   console.log('option', option);
-  // 联动
-  myChart.group = groupName;
   myChart.resize();
   // 图形设置，必须在myChart.resize()之后，否则会导致图形位置不正确
   props.useGraphicLocation
@@ -703,15 +702,72 @@ const initEmptyEcharts = (count: number) => {
 // 初始化echarts
 const initEcharts = async () => {
   // 基于准备好的dom，初始化echarts图表
-  const groupName: string = dataAbout.groupName;
-  echarts.dispose(groupName);
+  disposeEcharts(); // 清除之前的分组实例
+  const usedGroupNames: string[] = []; // 已使用的组名
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
-    initOneEcharts(item, groupName);
+    const myChart = initOneEcharts(item);
+    // 给echarts实例分组，并且记录已使用的组名
+    const groupName = getGroupNameByChartSeq(index);
+    myChart.group = groupName;
+    !usedGroupNames.includes(groupName) && usedGroupNames.push(groupName);
   });
   props.useGraphicLocation && emitGraphicLocation(); // 初始化时发送图形位置信息
   dataAbout.restoreClickBool = false;
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
-  props.isLinkage && echarts.connect(groupName); // 联动
+  props.isLinkage && echartsConnect(usedGroupNames); // 联动
+}
+
+// 初始化组名数据
+const initGroupData = () => {
+  const groups = props.groups;
+  if (!groups) {
+    dataAbout.groupsName = [GROUP_DEFAULT];
+  } else {
+    const flatGroups = props.groups.flat();
+    const seen = new Set(flatGroups);
+    flatGroups.forEach((item: number) => {
+      validateCols(item, '分组序号必须是正整数');
+    });
+    if (seen.size !== flatGroups.length) {
+      throw new Error('分组下序号不能重复');
+    }
+    dataAbout.groupsName = groups.map((item, index) => 'group' + (index + 1));
+  }
+}
+
+// 获取组名，通过chart图表的序号
+const getGroupNameByChartSeq = (chartSeq: number) => {
+  let groupName = '';
+  if (!props.groups) {
+    // 外部未传入组名，则使用默认的组名
+    groupName = dataAbout.groupDefault;
+  } else {
+    // 外部传入组名，则使用传入的组名
+    const seq = chartSeq + 1;
+    props.groups.forEach((item, index) => {
+      if (item.includes(seq)) {
+        groupName = dataAbout.groupsName[index];
+      }
+    });
+    // 如果没有匹配到组名，则使用默认的组名
+    groupName = groupName || dataAbout.groupDefault;
+  }
+  return groupName;
+}
+
+// echarts分组连接
+const echartsConnect = (usedGroupNames: string[]) => {
+  usedGroupNames.forEach((groupName: string) => {
+    echarts.connect(groupName);
+  });
+}
+
+// 清除echarts分组实例
+const disposeEcharts = () => {
+  dataAbout.groupsName.forEach((groupName: string) => {
+    echarts.dispose(groupName);
+  });
+  echarts.dispose(dataAbout.groupDefault);
 }
 
 /**
@@ -1381,7 +1437,7 @@ const setExcelView = (e: any, id: string) => {
           }
         });
       }
-      // todo: 4.处理传入的后置数据...
+      // 4.处理传入的后置数据
       head = res.head;
       body = res.body;
     } else {
@@ -1464,7 +1520,7 @@ const exposedMethods: ExposedMethods = {
   handleMultipleLinkData,
 };
 defineExpose(exposedMethods);
-
+initGroupData();
 // 监听dataAbout.data的变化，重新计算maxEchartsIdSeq
 watch(() => dataAbout.data.length, () => {
   getMaxId();
@@ -1478,7 +1534,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   removeLisener();
-  echarts.dispose(dataAbout.groupName);
+  disposeEcharts();
 });
 
 
@@ -1500,6 +1556,7 @@ onBeforeUnmount(() => {
     --height: 100%;
     height: var(--height);
     width: 100%;
+    overflow-x: hidden;
     overflow-y: auto;
     padding-bottom: var(--padding);
     .flex-row(center);
