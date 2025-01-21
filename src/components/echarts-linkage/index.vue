@@ -466,7 +466,11 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
     // 实例存在且是删除子项item操作，需要先clear实例, 然后判断根据当前数据是否需要渲染
     if (currentData.isDeleteItem) {
       myChart.clear();
-      currentData.data.length > 0 && (needHandle = true); // 非空数据，需要渲染
+      if (currentData.data.length === 0) {
+        // 如果数据全被删除，则新增一个空数据进行占位
+        currentData.data = [ setOneData('', 'line', [], '', []) as OneDataType ];
+      }
+      needHandle = true;
     } else { // 实例存在且不是删除子项item操作，判断是否需要更新
       dataAbout.currentHandleChartIds.includes(id) && (needHandle = true); // 判断当前实例是否在操作
       // 当前还未渲染
@@ -492,22 +496,16 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
         myChart = echarts.init(element, currentTheme); // 切换主题时，需要重新初始化实例
       }
     }
-    myChart.off('restore'); // 移除监听 restore 事件
+    // 移除监听 restore 事件
+    myChart.off('restore'); 
+    // 监听 restore 事件
     myChart.on('restore', () => {
-      console.log('实例存在，触发restore-----------------');
-      debouncedFn();
+      myChart.clear();
+      Promise.resolve().then(() => debouncedFn());
     });
   } else { // 实例不存在
     needHandle = true;
     myChart = echarts.init(element, dataEcharts.theme);
-    // 监听 restore 事件
-    // myChart.on('restore', () => {
-    //   Promise.resolve().then(() => debouncedFn());
-    // });
-    myChart.on('restore', () => {
-      console.log('实例不存在，触发restore-----------------');
-      debouncedFn();
-    });
   }
 
   // 监听 restore 按钮是否触发点击 ---> 原因：解决点击restore按钮后，只有最后一个图表显示，其他图表不显示的问题
