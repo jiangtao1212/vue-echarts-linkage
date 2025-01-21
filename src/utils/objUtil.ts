@@ -33,4 +33,12 @@ const deepCopy = (obj: any, hash = new WeakMap()) => {
   return result;
 }
 
-export default { deepCopy };
+// 自定义验证函数 -- 判断是否为正整数
+const validateCols = (value: number, errorMsg: string) => {
+  if (value <= 0 || !Number.isInteger(value)) {
+    throw new Error(errorMsg);
+  }
+  return true;
+};
+
+export default { deepCopy, validateCols };

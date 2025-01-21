@@ -23,9 +23,9 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount, onBeforeMount } from 'vue';
 import 'element-plus/es/components/message/style/css';
-import { ElMessage } from 'element-plus';
+import { ElMessage, formatter } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption, type ToolboxComponentOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";
@@ -42,8 +42,8 @@ import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
-
-const dialogVisible = ref(false);
+import { ObjUtil } from "@/utils/index";
+import Extension from './extension';
 
 /**
  * @description 组件props类型
@@ -96,25 +96,16 @@ const props = withDefaults(defineProps<PropsType>(), {
   echartsHeightFixedCount: 3, // echarts高度固定数量
 });
 
-// 自定义验证函数
-const validateCols = (value: number, errorMsg: string) => {
-  if (value <= 0 || !Number.isInteger(value)) {
-    throw new Error(errorMsg);
-  }
-  return true;
-};
-
+const dialogVisible = ref(false);
 // 验证 props
-validateCols(props.cols, 'cols 必须是一个正整数');
+ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
 setMergedOptionTemplate(props.extraOption);
-
 const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart', 'listener-excel-view']);
-const GROUP_DEFAULT = 'group-default';
-// 定义数据
+// 定义相关数据
 const dataAbout = reactive({
   groupsName: [], // 组名数组
-  groupDefault: GROUP_DEFAULT, // 默认组名
+  groupDefault: '', // 默认组名
   maxEchartsIdSeq: 0, // 最大序号
   data: [] as Array<SeriesIdDataType>, // 所有echarts数据
   currentHandleChartIds: [''], // 当前操作的echart图表id集合
@@ -134,10 +125,6 @@ const sheetAbout = reactive({
   head: [] as Array<SheetHeadType>, // 表头数据
   body: [] as Array<any>, // 表格数据
 });
-
-const styleAbout = {
-  gap: 10, // 图表间距
-}
 
 // 计算每个echarts的父级容器颜色
 const computedBackgroundColor = (data: SeriesIdDataType) => {
@@ -303,46 +290,6 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
   return echartsLinkageModel;
 }
 
-/**
- * @description 设置样式属性, 样式变量
- * 样式变量 --count: echarts图表数量
- * 样式变量 --rows: echarts图表行数
- * 样式变量 --item-width: echarts图表宽度
- */
-const setStyleProperty = () => {
-  const cols = props.cols; // 列数, 控制每行的图表数量,默认为1列
-  const element = document.querySelector('.main-container') as HTMLElement;
-  const count = dataAbout.data.length;
-  const rows = Math.ceil(count / cols);
-  const fixedRows = computedFixedRows(); // 固定行数
-  const gap = styleAbout.gap;
-  element.style.setProperty('--count', count.toString());
-  element.style.setProperty('--rows', fixedRows ? fixedRows.toString() : rows.toString());
-  element.style.setProperty('--gap', gap + 'px');
-  element.style.setProperty('--main-container-height', element.clientHeight - gap + 'px');
-  if (cols === 1) { // 单列，宽度为100%
-    element.style.setProperty('--item-width', '100%');
-  } else { // 多列---大于1列
-    if (count === 1) { // 只有1个图表，宽度为100%
-      element.style.setProperty('--item-width', '100%');
-    } else { // 多于1个图表
-      const currentCount = count < cols ? count : cols;
-      element.style.setProperty('--item-width', `calc((100% - ${gap} * ${currentCount - 1} * 1px) / ${currentCount})`);
-    }
-  }
-}
-
-// 计算固定行数
-const computedFixedRows = (): number | undefined => {
-  if (props.isEchartsHeightChange) return; // 如果echarts的高度是可改变的，则直接返回
-  let count = props.echartsHeightFixedCount;
-  if (count <= 0) {
-    // 如果没有echarts实例，则默认为3个，用来后续计算echarts容器的固定高度
-    count = 3;
-  }
-  return count;
-}
-
 // 判断和组装首尾连接数据
 const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[]) => {
   if (!oneDataType) return oneDataType;
@@ -360,12 +307,10 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   oneDataType = judgeAndPackageLinkData(oneDataType);
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
-  let markLineArray: MarkLineDataType = []; // 标线数组
   let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
     // 1.空数据，默认新增一个line
     oneDataType = setOneData('', 'line', [], '', []) as OneDataType;
-    markLineArray = [];
     dataAll = [{ ...oneDataType }];
   } else if (Array.isArray(oneDataType)) {
     // 2.新增多个echarts，数组
@@ -373,21 +318,19 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     oneDataType.forEach((item: OneDataType) => {
       data.push({ ...item });
     });
-    markLineArray = oneDataType[0].markLineArray || []; //todo: 标线数组暂时只取第一个，待优化
     dataAll = data;
   } else {
     // 3.新增单个echarts，如果没有seriesData，则默认新增一个line
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
       oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
     }
-    markLineArray = oneDataType.markLineArray || [],
-      dataAll = [{ ...oneDataType }];
+    dataAll = [{ ...oneDataType }];
   }
   const { theme, graphics } = addEchartJudgeLinkage();
-  const obj = { id, markLineArray, data: dataAll, theme, graphics };
+  const obj = { id, data: dataAll, theme, graphics };
   dataAbout.data.push(obj);
   judgeOverEchartsMaxCountHandle();
-  setStyleProperty();
+  Extension.setStyleProperty(props, dataAbout.data.length);
   allUpdateHandleCommon();
 };
 // 组装数据
@@ -426,7 +369,7 @@ const judgeOverEchartsMaxCountHandle = () => {
 const deleteEchart = async (id: string) => {
   const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   dataAbout.data.splice(index, 1);
-  setStyleProperty();
+  Extension.setStyleProperty(props, dataAbout.data.length);
   allUpdateHandleCommon();
   await nextTick();
   emit('delete-echart', { id, remainCount: dataAbout.data.length } as DeleteEchartType);
@@ -466,7 +409,6 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     // 情况2，新增数据; 其他为正常新增
     dataAbout.data[index].data.push(oneDataType);
   }
-  oneDataType.markLineArray && (dataAbout.data[index].markLineArray = oneDataType.markLineArray);
   await nextTick();
   initEcharts();
   await nextTick();
@@ -615,7 +557,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
   }
   const seriesAllData: SeriesOptionType[] = [];
   dataArray.data.forEach((item: OneDataType) => {
-    item.seriesData.forEach((item: Array<number | string>) => item[0] += ''); // 解决数据类型问题，将数字类型转为字符串类型
+    item.seriesData.forEach((point: Array<number | string>) => point[0] += ''); // 解决数据类型问题，将数字类型转为字符串类型
     seriesAllData.push({
       type: item.type,
       name: item.name,
@@ -632,15 +574,13 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
     });
   });
   const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme);
-  // 添加自定义标记线
-  dataArray.markLineArray && echartsLinkageModel.addCustomSeriesMarkLine(dataArray.markLineArray);
   console.log('数据', dataArray.data);
   // 各种处理
   echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
-    .setCustomSeriesMarkLine()
+    .setCustomSeriesMarkLine(dataArray.data)
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
@@ -666,12 +606,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
  * @returns number
  */
 const computerEchartsHeight = () => {
-  const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
-  if (!element) return 0;
-  const gap = styleAbout.gap;
-  const fixedRows = computedFixedRows();
-  const count = fixedRows || dataAbout.data.length;
-  const height = Math.floor((element.offsetHeight - (count - 1) * gap) / count);
+  const height = Extension.computerEchartsHeight(props, dataAbout.data.length);
   // console.log('height', height);
   setDragPosition(height);
   return height;
@@ -682,13 +617,9 @@ const computerEchartsHeight = () => {
  * @param height echarts高度
  */
 const setDragPosition = (height: number) => {
-  if (height <= 200) {
-    dataAbout.drag.top = -2;
-    dataAbout.drag.fontSize = 11;
-  } else {
-    dataAbout.drag.top = 5;
-    dataAbout.drag.fontSize = 12;
-  }
+  const { top, fontSize } = Extension.setDragPosition(height);
+  dataAbout.drag.top = top;
+  dataAbout.drag.fontSize = fontSize;
 }
 
 // 初始化空白echarts
@@ -707,7 +638,7 @@ const initEcharts = async () => {
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     const myChart = initOneEcharts(item);
     // 给echarts实例分组，并且记录已使用的组名
-    const groupName = getGroupNameByChartSeq(index);
+    const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName);
     myChart.group = groupName;
     !usedGroupNames.includes(groupName) && usedGroupNames.push(groupName);
   });
@@ -719,40 +650,8 @@ const initEcharts = async () => {
 
 // 初始化组名数据
 const initGroupData = () => {
-  const groups = props.groups;
-  if (!groups) {
-    dataAbout.groupsName = [GROUP_DEFAULT];
-  } else {
-    const flatGroups = props.groups.flat();
-    const seen = new Set(flatGroups);
-    flatGroups.forEach((item: number) => {
-      validateCols(item, '分组序号必须是正整数');
-    });
-    if (seen.size !== flatGroups.length) {
-      throw new Error('分组下序号不能重复');
-    }
-    dataAbout.groupsName = groups.map((item, index) => 'group' + (index + 1));
-  }
-}
-
-// 获取组名，通过chart图表的序号
-const getGroupNameByChartSeq = (chartSeq: number) => {
-  let groupName = '';
-  if (!props.groups) {
-    // 外部未传入组名，则使用默认的组名
-    groupName = dataAbout.groupDefault;
-  } else {
-    // 外部传入组名，则使用传入的组名
-    const seq = chartSeq + 1;
-    props.groups.forEach((item, index) => {
-      if (item.includes(seq)) {
-        groupName = dataAbout.groupsName[index];
-      }
-    });
-    // 如果没有匹配到组名，则使用默认的组名
-    groupName = groupName || dataAbout.groupDefault;
-  }
-  return groupName;
+  dataAbout.groupsName = Extension.initGroupData(props.groups);
+  dataAbout.groupDefault = Extension.GROUP_DEFAULT;
 }
 
 // echarts分组连接
@@ -770,24 +669,7 @@ const disposeEcharts = () => {
   echarts.dispose(dataAbout.groupDefault);
 }
 
-/**
- * @description 根据position实时计算graphic的坐标信息
- * @param myChart echarts实例
- * @param graphics 图形元素数组  
- * @returns 
- */
-const computerDatazoomGraphic = (myChart: any, graphics: Array<GraphicLocationInfoType>, xAxisData: string[]): Array<GraphicLocationInfoType> => {
-  const positionX1 = graphics[0].positionX;
-  const positionX2 = graphics[1].positionX;
-  const xAxisSeq1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX1);
-  const xAxisSeq2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX2);
-  const xAxisX1 = xAxisData[xAxisSeq1];
-  const xAxisX2 = xAxisData[xAxisSeq2];
-  return [
-    { graphicId: graphics[0].graphicId, positionX: positionX1, xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
-    { graphicId: graphics[1].graphicId, positionX: positionX2, xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
-  ]
-}
+
 
 /**
  * @description 监听datazoom事件，计算当前实例的图形位置信息，赋值给其他实例，并且触发更新
@@ -807,7 +689,7 @@ const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, c
     // 联动模式下，datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
     const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
     let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
-    const datazoomGraphic = computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
+    const datazoomGraphic = Extension.computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
       if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
@@ -1009,7 +891,7 @@ const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
   const count = dataAbout.data.length;
   dataAbout.data = [];
   dataAbout.maxEchartsIdSeq = 0;
-  setStyleProperty();
+  Extension.setStyleProperty(props, dataAbout.data.length);
   await nextTick();
   initEcharts();
   await nextTick();
@@ -1105,7 +987,7 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       series.seriesData = packageData;
       series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
       seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
-      index === 0 && (echart.markLineArray = series.markLineArray); // 将第一个系列的markLineArray赋值给echarts的markLineArray
+      // index === 0 && (echart.markLineArray = series.markLineArray); // 将第一个系列的markLineArray赋值给echarts的markLineArray //todo: 这里可能有问题
     });
   } else {
     // 非首尾相连模式
@@ -1350,19 +1232,6 @@ const switchEchartsTheme = async (e: any, id: string) => {
 
 // echarts上的excel 视窗事件
 const setExcelView = (e: any, id: string) => {
-
-  // 判定数组数据中某个属性的类型是否一致，如果不一致，则抛出异常
-  function isAutoPropertyTypeConsistent(arr: Array<any>, prop: string) {
-    if (arr.length === 0) return true; // 空数组视为一致
-    // 获取第一个对象的prop属性类型
-    const firstType = typeof arr[0][prop];
-    // 检查每个对象的prop属性类型是否与第一个一致
-    const isConsistent = arr.every(item => typeof item[prop] === firstType);
-    if (!isConsistent) {
-      throw new Error(`数据视图的${prop}属性类型不一致，请保持一致!`);
-    }
-  }
-
   // excel数据视图点击事件发送给外部，外部处理之后的回调函数
   function excelViewCallback(excelView: excelViewType) {
     console.groupCollapsed('excelViewCallback');
@@ -1371,8 +1240,8 @@ const setExcelView = (e: any, id: string) => {
     const headXname = excelView.headXname;
     const preAdd = excelView.preAdd;
     const postAdd = excelView.postAdd;
-    preAdd && isAutoPropertyTypeConsistent(preAdd, 'value'); // 检查前置数据value属性类型是否一致
-    postAdd && isAutoPropertyTypeConsistent(postAdd, 'value'); // 检查后置数据value属性类型是否一致
+    preAdd && Extension.isAutoPropertyTypeConsistent(preAdd, 'value'); // 检查前置数据value属性类型是否一致
+    postAdd && Extension.isAutoPropertyTypeConsistent(postAdd, 'value'); // 检查后置数据value属性类型是否一致
     let head: SheetHeadType[] = []; // 表头
     let body: Array<any> = []; // 表体
     const itemNameArray = data.data.map((item: OneDataType, index: number): SheetHeadType => ({ 'label': item.name, 'prop': 'prop' + index }));
@@ -1520,10 +1389,14 @@ const exposedMethods: ExposedMethods = {
   handleMultipleLinkData,
 };
 defineExpose(exposedMethods);
-initGroupData();
+
 // 监听dataAbout.data的变化，重新计算maxEchartsIdSeq
 watch(() => dataAbout.data.length, () => {
   getMaxId();
+});
+
+onBeforeMount(() => {
+  initGroupData();
 });
 
 onMounted(() => {
@@ -1536,9 +1409,8 @@ onBeforeUnmount(() => {
   removeLisener();
   disposeEcharts();
 });
-
-
 </script>
+
 <style scoped lang='less'>
 @import '@/assets/styles/mixin.less';
 @import '@/assets/styles/common.less';

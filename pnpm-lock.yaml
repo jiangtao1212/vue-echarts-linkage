@@ -30,7 +30,7 @@ specifiers:
   vite-plugin-static-copy: ^1.0.6
   vue: ^3.4.29
   vue-draggable-plus: ^0.5.0
-  vue-echarts-linkage: 1.6.9
+  vue-echarts-linkage: 1.7.2
   vue-router: ^4.3.3
   vue-tsc: ^2.0.21
   vue3-infinite-scroll-better: ^2.2.0
@@ -70,7 +70,7 @@ devDependencies:
   vite-plugin-dts: 3.9.1_xf26ys2erwn4bqcwc3gr3pb4my
   vite-plugin-static-copy: 1.0.6_vite@5.4.4
   vue: 3.5.4_typescript@5.4.5
-  vue-echarts-linkage: 1.6.9_typescript@5.4.5
+  vue-echarts-linkage: 1.7.2_vue@3.5.4
   vue-router: 4.4.4_vue@3.5.4
   vue-tsc: 2.1.6_typescript@5.4.5
 
@@ -3402,10 +3402,6 @@ packages:
     hasBin: true
     dev: true
 
-  /print-js/1.6.0:
-    resolution: {integrity: sha512-BfnOIzSKbqGRtO4o0rnj/K3681BSd2QUrsIZy/+WdCIugjIswjmx3lDEZpXB2ruGf9d4b3YNINri81+J0FsBWg==}
-    dev: true
-
   /proxy-from-env/1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
     dev: true
@@ -4029,159 +4025,22 @@ packages:
     dependencies:
       '@types/sortablejs': 1.15.8
 
-  /vue-echarts-linkage/1.5.1_typescript@5.4.5:
-    resolution: {integrity: sha512-qHrMwH3YFZrAQASIFKoLthJYYYd4tem5Mk6sIY9FdVqZsDx2di3ph7uSMKOPrUGRW1ycJ551vW7e2/VyC27ucw==}
+  /vue-echarts-linkage/1.7.2_vue@3.5.4:
+    resolution: {integrity: sha512-/KG1c/VSpY+rydnjJOzDliC2DPnZD9uXy8sQmfRqk1UGgdo2VjWFISo7yYaRQK7EVf5EddS10oDrMG3XTFBncQ==}
+    peerDependencies:
+      vue: ^3.4.29
     dependencies:
       '@element-plus/icons-vue': 2.3.1_vue@3.5.4
       '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
       echarts: 5.5.1
       element-plus: 2.8.2_vue@3.5.4
       html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
       vue: 3.5.4_typescript@5.4.5
       vue-draggable-plus: 0.5.3
-      vue-router: 4.4.4_vue@3.5.4
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.5.3_typescript@5.4.5:
-    resolution: {integrity: sha512-sokPHFnVYaXmGHi7Zzr0Sirr0L2O1vNFOtzp84hhF6Q11i01xUiuInhhO8znV0TVTe9WR9CfKrulD8K1VTCBxg==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.5.1_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.6.0_typescript@5.4.5:
-    resolution: {integrity: sha512-4/Mb4u0nva14JtjyP69A+gOftN42oa3R/klR9jxLlg5bh225eecNij2fZM/2quZqH+W6znFvjKVXL+RP//Pr7A==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.5.3_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.6.2_typescript@5.4.5:
-    resolution: {integrity: sha512-f987Cez2HGHna7kYb6ZD4/Ftl5D/w2iQuj7zDPGIeDjXy5X86hAmRiPhH5hCXLdajPVPT77NX0gnHZzWtiv2tg==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.6.0_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
       vue3-infinite-scroll-better: 2.2.0
       xlsx: 0.18.5
     transitivePeerDependencies:
       - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.6.3_typescript@5.4.5:
-    resolution: {integrity: sha512-Ja5Uq6aun3zkagnKQILokQRbAn0TYRk6kx9HdLhD/VXnSN0N22RXwJ9XgHYaBl7CmmpvWu6nT1cWpK3uYxyzDw==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.6.2_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
-      vue3-infinite-scroll-better: 2.2.0
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.6.4_typescript@5.4.5:
-    resolution: {integrity: sha512-sAQ/y08dcuqvhMtnMdBCAdsQwHo7weXxyKl4VbfDhD07rpZroteBcKKqVUW8+42TLApRCF8GcZalUKs4R5tfXA==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.6.3_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
-      vue3-infinite-scroll-better: 2.2.0
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
-    dev: true
-
-  /vue-echarts-linkage/1.6.9_typescript@5.4.5:
-    resolution: {integrity: sha512-YZfyK8erfzg9oztLzJXSPa2/hWBbesmrVtfKjH3Xp5GUVjNw2ZNONNgqxzhaFYvyUQvtugCSQl25pHSx13xsPQ==}
-    dependencies:
-      '@element-plus/icons-vue': 2.3.1_vue@3.5.4
-      '@vueuse/core': 10.11.1_vue@3.5.4
-      axios: 1.7.7
-      echarts: 5.5.1
-      element-plus: 2.8.2_vue@3.5.4
-      html2canvas: 1.4.1
-      pinia: 2.2.2_typescript@5.4.5+vue@3.5.4
-      print-js: 1.6.0
-      vue: 3.5.4_typescript@5.4.5
-      vue-draggable-plus: 0.5.3
-      vue-echarts-linkage: 1.6.4_typescript@5.4.5
-      vue-router: 4.4.4_vue@3.5.4
-      vue3-infinite-scroll-better: 2.2.0
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - debug
-      - typescript
     dev: true
 
   /vue-eslint-parser/9.4.3_eslint@8.57.0:

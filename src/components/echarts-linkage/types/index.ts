@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-01-19 17:43:54
+ * @LastEditTime: 2025-01-20 10:41:07
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -76,6 +76,12 @@ export type SeriesLinkType = {
 }
 
 /**
+ * @description: series数据类型
+ * @param {'switch' | 'pulse' | 'markLine'} SeriesType series数据类型：switch 开关量， pulse 脉冲量， markLine 标记线
+ */
+export type SeriesType = 'switch' | 'pulse' | 'markLine';
+
+/**
  * @description: echarts图表中单个系列数据类型
  * @param {string} name 系列名称
  * @param {'line' | 'bar'} type 图表类型
@@ -90,7 +96,7 @@ export type SeriesLinkType = {
  * @param {boolean} yAxisShow 是否显示y轴
  * @param {boolean} seriesShow 是否显示系列
  * @param {number} seriesYAxisIndex 系列y轴索引
- * @param {'switch' | 'pulse'} dataType 数据类型：switch 开关量， pulse 脉冲量
+ * @param {SeriesType} dataType 数据类型
  */
 export type OneDataType = {
   name: string;
@@ -106,7 +112,7 @@ export type OneDataType = {
   yAxisShow?: boolean;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
-  dataType?: 'switch' | 'pulse';
+  dataType?: SeriesType;
 }
 
 /**
@@ -195,7 +201,7 @@ export type SeriesIdDataType = {
   id: string;
   data: Array<OneDataType>;
   xAxisdata?: Array<string>;
-  markLineArray?: MarkLineDataType;
+  // markLineArray?: MarkLineDataType;
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: ThemeType,

@@ -32,8 +32,9 @@
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation"
-    @delete-echart="deleteEchart" @listener-excel-view="listenerExcelView" />
+    :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart"
+    @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
+    @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
 
@@ -96,7 +97,7 @@ const addLinkageBtnClick = () => {
     xAxisName: '[m]',
     type: 'line',
     seriesData: seriesData,
-    // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)]
+    // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)],
     visualMapSeries: {
       pieces: [{ min: 5000, max: 8000 }],
       piecesOnTooltip: { show: true, value: '自定义pieces' }
@@ -107,7 +108,7 @@ const addLinkageBtnClick = () => {
     //   head: [{ lebel: '宽度', prop: 'width' }, { lebel: '高度', prop: 'height' }],
     //   linkName: '卷号',
     //   linkData: [
-    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000), custum: { width: 1000, height: 100000 },
+    //     { label: 'P202410210001', data: RandomUtil.getSeriesData(1000), custum: { width: 1000, height: 100000 } },
     //     { label: 'P202410210002', data: RandomUtil.getSeriesData(1000) },
     //     { label: 'P202410210003', data: RandomUtil.getSeriesData(1000) },
     //     { label: 'P202410210004', data: RandomUtil.getSeriesData(1000) },
@@ -417,10 +418,17 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
+  const aaa = RandomUtil.getRandomDataFromInterval(100, 500) + '';
+  const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
+    // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 10000), RandomUtil.getRandomDataFromInterval(0, 10000)],
+    markLineArray: [
+      { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
+      { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
+    ],
     seriesData: seriesData,
     // visualMapSeries: {
     //   pieces: [{ min: 5000, max: 8000 }],

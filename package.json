@@ -1,6 +1,6 @@
 {
   "name": "vue-echarts-linkage",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -77,7 +77,7 @@
     "vue-tsc": "^2.0.21",
     "vue": "^3.4.29",
     "axios": "^1.7.3",
-    "vue-echarts-linkage": "1.6.9",
+    "vue-echarts-linkage": "1.7.2",
     "vue-router": "^4.3.3",
     "pinia": "^2.1.7"
   },

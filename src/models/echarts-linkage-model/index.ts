@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-12-31 10:21:17
+ * @LastEditTime: 2025-01-21 09:36:50
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -19,7 +19,7 @@ import {
 } from "echarts";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType, ThemeType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType, ThemeType, SeriesType, OneDataType } from "@/components/echarts-linkage/types/index";
 
 let mergedOptionTemplate: EChartsOption = optionTemplate; // 合并后的option模板
 const COLOR_KEY = 'color';
@@ -39,7 +39,8 @@ const THEME_LIGHT = 'light';
  * @param seriesShow series是否显示
  * @param seriesYAxisIndex series的y轴索引
  * @param visualMapSeries 视觉映射系列
- * @param dataType 数据类型：switch 开关量， pulse 脉冲量
+ * @param dataType series数据类型
+ * @param seriesLinkMode 是否为连接模式
  */
 export type SeriesOptionType = {
   type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
@@ -53,7 +54,7 @@ export type SeriesOptionType = {
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
   visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
-  dataType: 'switch' | 'pulse' // 数据类型：switch 开关量， pulse 脉冲量
+  dataType: SeriesType // series数据类型
   seriesLinkMode?: boolean // 是否为连接模式
 }
 
@@ -242,7 +243,7 @@ export class EchartsLinkageModel {
     let switchYCount = 0; // 开关量Y轴数量
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       // 开关量不计入Y轴显示数量
-      const show = item.seriesData.length > 0 && item.yAxisShow !== false && item.dataType !== 'switch' ? true : false;
+      const show = item.seriesData.length > 0 && item.yAxisShow !== false && item.dataType !== 'switch' && item.dataType !== 'markLine' ? true : false;
       yAxisShowArray.push(show);
       const yAxisObj: any = {
         name: item.yAxisName || '',
@@ -265,6 +266,12 @@ export class EchartsLinkageModel {
         yAxisObj.axisLine.show = false;  // 透明颜色
         yAxisObj.axisLabel.show = false;  // 透明颜色
         switchYCount++;
+      }
+      if (item.dataType === 'markLine') { // series竖行标记线类型
+        yAxisObj.show = true;
+        yAxisObj.name = 'markLine';
+        yAxisObj.axisLine.show = true;  // 透明颜色
+        yAxisObj.axisLabel.show = true;  // 透明颜色
       }
       current.push(yAxisObj);
     });
@@ -465,6 +472,7 @@ export class EchartsLinkageModel {
       series.push(obj);
       return option;
     }
+
     let resOption: EChartsOption = ObjUtil.deepCopy(this.resultOption) as EChartsOption;
     if (Array.isArray(this.seriesOptionArray)) { // 多个series
       this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
@@ -510,8 +518,43 @@ export class EchartsLinkageModel {
    * @description 设置自定义标记线
    * @returns this 链式调用
    */
-  setCustomSeriesMarkLine = () => {
-    (this.resultOption.series as LineSeriesOption[]).length > 0 && ((this.resultOption.series as LineSeriesOption[])[0].markLine = this.lineSeriesMarkLineTemplate);
+  setCustomSeriesMarkLine = (data: Array<OneDataType>) => {
+    /**
+     * @description 筛选出符合条件的最前面显示的markLine
+     * 第一个显示的markLine，需满足条件：1.Y轴显示 2.markLineArray不为空
+     * @param seriesAllData 单个echarts的所有系列数据
+     * @returns 符合条件的最前面显示的markLine
+     */
+    function filterShowMarkLine(seriesAllData: OneDataType[], yAxis: Array<echarts.YAXisComponentOption>) {
+      let markLineArray: MarkLineDataType = [];
+      let firstMarkLineSeq = 0;
+      outer: for (let index = 0; index < seriesAllData.length; index++) {
+        const item = seriesAllData[index];
+        const yAxisShow = yAxis[index].show;
+        if (yAxisShow && item.markLineArray && item.markLineArray.length > 0) {
+          // 找到第一个显示的markLine，需满足条件：1.Y轴显示 2.markLineArray不为空
+          markLineArray = item.markLineArray;
+          firstMarkLineSeq = index;
+          break outer;
+        }
+      }
+      return { markLineArray, firstMarkLineSeq };
+    }
+
+    const { markLineArray, firstMarkLineSeq } = filterShowMarkLine(data, this.resultOption.yAxis as Array<echarts.YAXisComponentOption>);
+    this.addCustomSeriesMarkLine(markLineArray);
+    // console.log("firstMarkLineSeq", firstMarkLineSeq);
+    const series = this.resultOption.series as LineSeriesOption[];
+    if (series.length === 0) return this;
+    series.forEach((item: LineSeriesOption, index: number) => {
+      if (index === firstMarkLineSeq) {
+        // 第一个显示的markLine，需设置markLine
+        item.markLine = this.lineSeriesMarkLineTemplate;
+      } else {
+        // 其他系列，需清除markLine
+        item.markLine = { data: [] };
+      }
+    });
     return this;
   }
 
