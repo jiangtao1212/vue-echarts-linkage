@@ -492,6 +492,11 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
         myChart = echarts.init(element, currentTheme); // 切换主题时，需要重新初始化实例
       }
     }
+    myChart.off('restore'); // 移除监听 restore 事件
+    myChart.on('restore', () => {
+      console.log('实例存在，触发restore-----------------');
+      debouncedFn();
+    });
   } else { // 实例不存在
     needHandle = true;
     myChart = echarts.init(element, dataEcharts.theme);
@@ -500,7 +505,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
     //   Promise.resolve().then(() => debouncedFn());
     // });
     myChart.on('restore', () => {
-      console.log('restore-----------------');
+      console.log('实例不存在，触发restore-----------------');
       debouncedFn();
     });
   }
