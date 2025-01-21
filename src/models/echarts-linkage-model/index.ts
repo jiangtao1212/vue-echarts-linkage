@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-01-21 09:36:50
+ * @LastEditTime: 2025-01-21 13:32:06
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -856,7 +856,6 @@ export class EchartsLinkageModel {
     ]
   }
 
-
   /**
    * 设置背景色
    * @param color 背景色
@@ -1044,10 +1043,6 @@ export class EchartsLinkageModel {
     this.usedStandards = usedStandards;
     return this;
   }
-
-  // getOptionTemplate = () => {
-  //   return this.optionTemplate;
-  // }
 
   getXAxisData = () => {
     return this.xAxisData;

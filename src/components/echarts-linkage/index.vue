@@ -496,8 +496,12 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
     needHandle = true;
     myChart = echarts.init(element, dataEcharts.theme);
     // 监听 restore 事件
+    // myChart.on('restore', () => {
+    //   Promise.resolve().then(() => debouncedFn());
+    // });
     myChart.on('restore', () => {
-      Promise.resolve().then(() => debouncedFn());
+      console.log('restore-----------------');
+      debouncedFn();
     });
   }
 

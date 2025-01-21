@@ -424,11 +424,11 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
-    // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 10000), RandomUtil.getRandomDataFromInterval(0, 10000)],
-    markLineArray: [
-      { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
-      { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
-    ],
+    // todo: 需要优化，默认应该显示全部的series的markLine，对于重复的完全相等的markLine，应该只显示一个(使用json字符串来判断)
+    // markLineArray: [
+    //   { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
+    //   { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
+    // ],
     seriesData: seriesData,
     // visualMapSeries: {
     //   pieces: [{ min: 5000, max: 8000 }],
@@ -438,6 +438,21 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     //     isShowOnToolTip: true,
     //   }
     // },
+    visualMapSeries: {
+      pieces: [{
+        min: 100, //name.includes('温度')?myData.temp[1]:myData.vibration[1],
+        max: 3000, //name.includes('温度')?200:10
+        color: '#efab2e'
+      }, {
+        min: 5000,
+        max: 8000,
+        color: '#ff002e'
+      }],
+      piecesOnTooltip: {
+        show: true,
+        value: 500 + ',' + 1000
+      }
+    },
     // 多卷首尾连接设置
     // seriesLink: {
     //   isLinkMode: true,
