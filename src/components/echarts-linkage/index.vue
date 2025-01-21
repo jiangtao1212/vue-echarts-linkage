@@ -468,7 +468,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       myChart.clear();
       if (currentData.data.length === 0) {
         // 如果数据全被删除，则新增一个空数据进行占位
-        currentData.data = [ setOneData('', 'line', [], '', []) as OneDataType ];
+        currentData.data = [setOneData('', 'line', [], '', []) as OneDataType];
       }
       needHandle = true;
     } else { // 实例存在且不是删除子项item操作，判断是否需要更新
@@ -497,11 +497,15 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       }
     }
     // 移除监听 restore 事件
-    myChart.off('restore'); 
+    myChart.off('restore');
     // 监听 restore 事件
     myChart.on('restore', () => {
-      myChart.clear();
-      Promise.resolve().then(() => debouncedFn());
+      // myChart.resize(); // 直接使用resize，会有问题：只能显示第一个series，其他series不能出现
+      // 这里必须要使用异步，否则会出现死循环
+      Promise.resolve().then(() => {
+        dataAbout.restoreClickBool = true;
+        initEcharts();
+      });
     });
   } else { // 实例不存在
     needHandle = true;
@@ -535,15 +539,7 @@ const extraHandleByOption = (option: EChartsOption) => {
   const element = document.querySelector('.main-container') as HTMLElement;
   element.style.setProperty('--toolbox-size', size.toString());
   /* 根据option中toolbox的feature数量，给拖拽组件设置右偏移量 --- end */
-
 }
-
-// 监听 restore 事件，使用防抖函数
-const debouncedFn = useDebounceFn(() => {
-  console.log('restore');
-  dataAbout.restoreClickBool = true;
-  initEcharts();
-}, 500);
 
 // 容器大小变化全部更新操作，使用防抖函数，只处理最后一次操作
 const containerResizeFn = useDebounceFn(() => {
