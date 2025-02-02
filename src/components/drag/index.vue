@@ -519,6 +519,7 @@ const handleItemClick = (text: string, id: string) => {
   console.log('click点击了子级元素:', id, text);
   const handleData = handleItemShowHide(dataAbout.list, id);
   emit('update', handleData);
+  dataAbout.isDeleteItemHandle = false; // 点击后，需要关闭el-popover
 }
 
 // 初始化事件监听

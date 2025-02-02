@@ -54,37 +54,37 @@ let switchFlag = false;
 
 // 额外的配置项
 const extraOption = {
-  grid: {
-    right: '1.8%', // 只有right属性会影响图表的布局，其他都是内部动态计算出来的
-  },
-  toolbox: {
-    feature: {
-      myThemeButton: {
-        show: false
-      },
-      myExcelView: {
-        show: false
-      },
-      mySaveAsImage: {
-        show: false
-      },
-      // myDeleteButton: {
-      //   show: false
-      // }
-    }
-  },
-  xAxis: [
-    {
-      name: '[米]',
-      axisLabel: {
-        // myThemeButton主题按钮显示时，显示颜色值必选是数组，且长度大于等于2，否则会报错抛出异常
-        // myThemeButton主题按钮不显示时，显示颜色值可以是数组，也可以是字符串
-        // color: ['#F0F', '#0FF']
-        // color: ['#F0F']
-        // color: '#0FF'
-      }
-    }
-  ],
+  // grid: {
+  //   right: '1.8%', // 只有right属性会影响图表的布局，其他都是内部动态计算出来的
+  // },
+  // toolbox: {
+  //   feature: {
+  //     myThemeButton: {
+  //       show: false
+  //     },
+  //     myExcelView: {
+  //       show: false
+  //     },
+  //     mySaveAsImage: {
+  //       show: false
+  //     },
+  //     // myDeleteButton: {
+  //     //   show: false
+  //     // }
+  //   }
+  // },
+  // xAxis: [
+  //   {
+  //     name: '[米]',
+  //     axisLabel: {
+  //       // myThemeButton主题按钮显示时，显示颜色值必选是数组，且长度大于等于2，否则会报错抛出异常
+  //       // myThemeButton主题按钮不显示时，显示颜色值可以是数组，也可以是字符串
+  //       // color: ['#F0F', '#0FF']
+  //       // color: ['#F0F']
+  //       // color: '#0FF'
+  //     }
+  //   }
+  // ],
 }
 
 // 新增按钮
@@ -422,6 +422,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
+    // xAxisName: '[m]',
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
     // todo: 需要优化，默认应该显示全部的series的markLine，对于重复的完全相等的markLine，应该只显示一个(使用json字符串来判断)
@@ -577,8 +578,12 @@ onMounted(() => {
     gap: 5px;
 
     .drag-rect {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 24px;
       border-radius: 4px;
-      padding: 1px 5px;
+      padding: 5px 11px;
       background-image: linear-gradient(to right, #4286f4, #00b4d8);
       border: 1px solid #00b4d8;
 
