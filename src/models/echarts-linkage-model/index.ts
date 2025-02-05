@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-01-21 13:32:06
+ * @LastEditTime: 2025-02-05 15:09:01
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -516,45 +516,80 @@ export class EchartsLinkageModel {
 
   /**
    * @description 设置自定义标记线
+   * 根据yAxis的show值，如果show是true，则显示该系列的markLine，否则不显示；
+   * 同时也考虑到重复的markLine，如果有重复的，则只显示第一个重复的
    * @returns this 链式调用
    */
   setCustomSeriesMarkLine = (data: Array<OneDataType>) => {
-    /**
-     * @description 筛选出符合条件的最前面显示的markLine
-     * 第一个显示的markLine，需满足条件：1.Y轴显示 2.markLineArray不为空
-     * @param seriesAllData 单个echarts的所有系列数据
-     * @returns 符合条件的最前面显示的markLine
-     */
-    function filterShowMarkLine(seriesAllData: OneDataType[], yAxis: Array<echarts.YAXisComponentOption>) {
-      let markLineArray: MarkLineDataType = [];
-      let firstMarkLineSeq = 0;
-      outer: for (let index = 0; index < seriesAllData.length; index++) {
-        const item = seriesAllData[index];
+    // 筛选出重复的markLine，根据对应yAxis的show值，如果show是true，将第一个重复的显示，后续的不显示
+    function filterRepeatMarkLine(markLineArrays: Array<MarkLineDataType | undefined>, yAxis: Array<echarts.YAXisComponentOption>) {
+      // 1. 首先筛选出二维数组的重复项
+      const repeatSet = new Set(markLineArrays.filter((item: MarkLineDataType | undefined) => item !== undefined).flat().map(item => JSON.stringify(item)));
+      // 记录重复项是否被使用过，Set数组转对象，对象值false表示未被使用过
+      const repeatUsed = Array.from(repeatSet).reduce((obj, key) => {
+        obj[key] = false;
+        return obj;
+      }, {} as { [key: string]: boolean });
+      // 2. 然后将每个重复项与原二维数组进行比较，根据对应yAxis的show值，如果show是true，将第一个重复的显示，后续的置空
+      const res: Array<MarkLineDataType | undefined> = [];
+      markLineArrays.forEach((markLineArray: MarkLineDataType | undefined, index: number) => {
         const yAxisShow = yAxis[index].show;
-        if (yAxisShow && item.markLineArray && item.markLineArray.length > 0) {
-          // 找到第一个显示的markLine，需满足条件：1.Y轴显示 2.markLineArray不为空
-          markLineArray = item.markLineArray;
-          firstMarkLineSeq = index;
-          break outer;
+        if (!markLineArray || markLineArray.length === 0) {
+          // 2.1 空数组，直接添加
+          res.push(undefined);
+          return;
         }
-      }
-      return { markLineArray, firstMarkLineSeq };
+        if (!yAxisShow) {
+          // 2.2 Y轴不显示，则不显示该系列的markLine
+          res.push(undefined);
+        }
+        // 2.3 先判断之前重复的是否已显示，如果已显示，则不操作；如果没有显示，则显示第一个重复的
+        const data: MarkLineDataType = [];
+        markLineArray.forEach((item: number | object) => {
+          const key = JSON.stringify(item);
+          const isRepeat = repeatSet.has(key);
+          if (!isRepeat) {
+            // 非重复项，直接添加
+            data.push(item);
+            return;
+          }
+          // 判断是否已被使用过
+          if (!repeatUsed[key]) {
+            // 未被使用过，则显示，并将该项设置为已被使用过
+            data.push(item);
+            repeatUsed[key] = true;
+          }
+        });
+        res.push(data);
+      });
+      return res;
     }
 
-    const { markLineArray, firstMarkLineSeq } = filterShowMarkLine(data, this.resultOption.yAxis as Array<echarts.YAXisComponentOption>);
-    this.addCustomSeriesMarkLine(markLineArray);
-    // console.log("firstMarkLineSeq", firstMarkLineSeq);
-    const series = this.resultOption.series as LineSeriesOption[];
-    if (series.length === 0) return this;
-    series.forEach((item: LineSeriesOption, index: number) => {
-      if (index === firstMarkLineSeq) {
-        // 第一个显示的markLine，需设置markLine
-        item.markLine = this.lineSeriesMarkLineTemplate;
+    // 遍历data，遍历yAxis，如果yAxisShow是false，则将markLine的data置空
+    const seriesArray = this.resultOption.series as LineSeriesOption[];
+    const yAxis = this.resultOption.yAxis as Array<echarts.YAXisComponentOption>;
+    if (seriesArray.length === 0) return this;
+    const markLineArrays = data.map((item: OneDataType) => item.markLineArray);
+    const markLineArraysFilter = filterRepeatMarkLine(markLineArrays, yAxis);
+    console.log("markLineArraysFilter", markLineArraysFilter);
+    for (let index = 0; index < markLineArraysFilter.length; index++) {
+      const series = seriesArray[index];
+      const yAxisShow = yAxis[index].show;
+      const markLineArray = markLineArraysFilter[index];
+      const markLineTemplate = JSON.parse(JSON.stringify(this.lineSeriesMarkLineTemplate));
+      markLineArray?.forEach((markLine: number | object) => {
+        if (typeof markLine === 'number') {
+          (markLineTemplate.data as Array<any>).push({ yAxis: markLine });
+        } else {
+          (markLineTemplate.data as Array<any>).push(markLine);
+        }
+      });
+      if (yAxisShow) {
+        series.markLine = markLineTemplate;
       } else {
-        // 其他系列，需清除markLine
-        item.markLine = { data: [] };
+        series.markLine = { data: [] };
       }
-    });
+    }
     return this;
   }
 
@@ -1140,7 +1175,7 @@ export const setMergedOptionTemplate = (extraOption: { [key: string]: any } | un
     return true;
   }
   const res = mergeDeepOption(optionTemplate, extraOption, judgeHasThemeButton(extraOption));
-  console.log('mergedOptionTemplate-----------', res);
+  // console.log('mergedOptionTemplate-----------', res);
   if (res && Object.keys(res).length !== 0) {
     mergedOptionTemplate = res;
   }

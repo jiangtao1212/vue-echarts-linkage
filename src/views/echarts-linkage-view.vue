@@ -418,7 +418,10 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
-  const aaa = RandomUtil.getRandomDataFromInterval(100, 500) + '';
+  // const aaa = RandomUtil.getRandomDataFromInterval(100, 500) + '';
+  // const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
+  const aaa = 600 + '';
+  // const bbb = 800 + '';
   const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
@@ -426,10 +429,10 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     type: type,
     // todo: 需要优化，默认应该显示全部的series的markLine，对于重复的完全相等的markLine，应该只显示一个(使用json字符串来判断)
-    // markLineArray: [
-    //   { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
-    //   { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
-    // ],
+    markLineArray: [
+      { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
+      { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
+    ],
     seriesData: seriesData,
     // visualMapSeries: {
     //   pieces: [{ min: 5000, max: 8000 }],
