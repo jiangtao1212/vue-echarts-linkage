@@ -1086,6 +1086,9 @@ const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
       if (!isUpdate) return; // 无需更新，直接返回
       // 赋值给实例，并且触发更新
       echartsInstance.setOption({
+        xAxis: [{
+          data: echart.data[0].seriesData.map(item => item[0]),
+        }],
         series: echart.data.map((series: OneDataType) => {
           return {
             data: series.seriesData,
