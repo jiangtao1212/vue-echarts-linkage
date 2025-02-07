@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-01-20 10:41:07
+ * @LastEditTime: 2025-02-06 15:19:03
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -18,7 +18,7 @@
  * @param {Function} getAllSeriesTagInfo 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息
  * @param {Function} updateOneOrMoreEcharts 更新单个或者多个echarts图表
  * @param {Function} updateAllEcharts 更新所有echarts图表
- * @param {Function} clearAllEchartsData 清空所有echarts图表数据
+ * @param {Function} clearAllEchartsData 清空所有echarts图表数据：当mode为'clear'（默认值）时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例
  * @param {Function} replaceAllEchartsData 替换所有echarts图表数据
  * @param {Function} downloadAllEchartsImg 下载所有echarts图表图片
  * @param {Function} realTimeUpdate 实时更新echarts图表数据
@@ -35,7 +35,7 @@ export interface ExposedMethods {
   getAllSeriesTagInfo: (echartsId?: string) => Array<{ id: string, series: Array<SeriesTagType> }>;
   updateOneOrMoreEcharts: (updateData: AppointEchartsTagType | Array<AppointEchartsTagType>) => Promise<boolean>;
   updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
-  clearAllEchartsData: () => void;
+  clearAllEchartsData: (mode?: 'clear' | 'delete') => Promise<void>;
   replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
   downloadAllEchartsImg: () => void;
   realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;

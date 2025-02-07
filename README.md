@@ -99,7 +99,7 @@ const dropEchart = (data: dropEchartType) => {
 | background | `string` | 背景色，一般配合主题使用 | — |
 | is-linkage | `boolean` | 是否联动 | true，即联动 |
 | use-merged-legend | `boolean` | 是否使用合并图例 | true，即使用合并图例 |
-| use-graphic-location | `boolean` | 是否使用图形定位 | true，即使用图形定位 |
+| use-graphic-location | `boolean` | 是否使用图形定位 | false，即不使用图形定位 |
 | is-echarts-height-change | `boolean` | 每个echarts图表高度是否可变 | true，即可变 |
 | echarts-height-fixed-count | `boolean` | echarts高度固定数量，初始化时根据固定数量，计算每个echarts的固定高度，当is-echarts-height-change为false时生效 | 3 |
 | extra-option | `{ [key: string]: any }` | 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并；合并默认option，该优先级更高, 相同属性值进行合并, 不同属性值直接赋值 | — |
@@ -122,7 +122,7 @@ const dropEchart = (data: dropEchartType) => {
 | getMaxEchartsIdSeq | 获取最大的id序号 | `() => number` |
 | getAllDistinctSeriesTagInfo | 获取所有不重复系列的标签信息 | `() => Array<SeriesTagType>` |
 | getAllSeriesTagInfo, | 获取所有系列的标签信息 | `(echartsId?: string) => Array<{ id: string; series: Array<SeriesTagType>; }>` |
-| updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配置 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
+| updateAllEcharts | 传入所有显示子项数据，更新所有echarts，一般配合 `getAllDistinctSeriesTagInfo()` 使用 | `(newAllSeriesdata: Array<SeriesTagType>) => Promise<void>` |
 | clearAllEchartsData | 清空所有echarts数据：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例 | `(mode?: "clear" / "delete") => Promise<void>` |
 | replaceAllEchartsData | 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 | `(newDataArray: Array<OneDataType[]>) => Promise<void>` |
 | downloadAllEchartsImg | 下载包含所有echarts实例的图片 | `() => void` |

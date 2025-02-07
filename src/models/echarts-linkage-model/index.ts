@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-05 15:09:01
+ * @LastEditTime: 2025-02-07 09:05:47
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -366,7 +366,7 @@ export class EchartsLinkageModel {
           }
           // 获取对应series的opacity值
           if (seriesShow) { // 检查series中lineStyle的opacity值
-            tooltipHtml += `${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<p style="float: right;">${value}</p><br/>`;
+            tooltipHtml += `<div>${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<span style="float: right;">${value}</span></div>`;
           }
         });
       }

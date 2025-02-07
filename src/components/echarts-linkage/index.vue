@@ -91,7 +91,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   theme: 'light',
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
-  useGraphicLocation: true, // 默认使用图形定位
+  useGraphicLocation: false, // 默认不使用图形定位
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
 });
