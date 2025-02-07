@@ -197,14 +197,16 @@ const updateAllLinkageBtnClick = () => {
 }
 
 // 批量更新按钮--简单更新
-const updateSimpleBtnClick = () => {
+const updateSimpleBtnClick = (interval = 0) => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   // console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+  // const defaultValue = RandomUtil.getRandomDataFromInterval(0, 1000);
+  const defaultValue = interval;
   allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
-      const seriesData = RandomUtil.getSeriesData(1000);
+      const seriesData = RandomUtil.getSeriesData(1000, undefined, undefined, defaultValue);
       item.seriesData = seriesData;
     }
   });
@@ -407,8 +409,10 @@ const realTimeUpdateCancelBtnClick = () => {
 
 // 实时更新-间隔按钮
 const realTimeUpdateIntervalBtnClick = () => {
+  let interval = 0;
   mySetInterval = setInterval(() => {
-    updateSimpleBtnClick();
+    interval += 1000;
+    updateSimpleBtnClick(interval);
   }, 1000);
 }
 

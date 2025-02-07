@@ -1084,16 +1084,15 @@ const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
       const echartsInstance = echarts.getInstanceByDom(element) as EChartsType;
       const isUpdate = judgeUpdateSeries(echart, echartsInstance);
       if (!isUpdate) return; // 无需更新，直接返回
-      // 赋值给实例，并且触发更新
+      // 赋值给实例，并且触发更新 -- 注意：这里的X轴数据需要转换为字符串，否则会导致echarts渲染异常
+      const xAxisData = echart.data[0].seriesData.map(item => item[0] + '');
+      const seriesData = echart.data.map((series: OneDataType) => ({data: series.seriesData.map(item => [item[0] + '', item[1]])}));
+      // console.log('updateSimpleEcharts', echart.id, xAxisData, seriesData);
       echartsInstance.setOption({
         xAxis: [{
-          data: echart.data[0].seriesData.map(item => item[0]),
+          data: xAxisData,
         }],
-        series: echart.data.map((series: OneDataType) => {
-          return {
-            data: series.seriesData,
-          }
-        }),
+        series: seriesData,
       });
       updateCount++;
     });
