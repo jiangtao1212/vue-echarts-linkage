@@ -204,7 +204,7 @@ const updateSimpleBtnClick = () => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
-      const seriesData = RandomUtil.getSeriesData(1000, undefined, undefined, RandomUtil.getRandomDataFromInterval(0, 1000));
+      const seriesData = RandomUtil.getSeriesData(1000);
       item.seriesData = seriesData;
     }
   });
