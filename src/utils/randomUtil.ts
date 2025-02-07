@@ -13,10 +13,10 @@
  * @param count 数据条数
  * @returns 组装的随机数据
  */
-const getSeriesData = (count = 1000, min = 1, max = 10000) => {
+const getSeriesData = (count = 1000, min = 1, max = 10000, defaultValue = 0) => {
   const seriesData: Array<Array<string | number>> = [];
   packageSeriesData(count, min, max, (index, value) => {
-    seriesData.push([index + 1, value]);
+    seriesData.push([defaultValue + index + 1, value]);
   });
   return seriesData;
 }

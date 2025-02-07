@@ -102,7 +102,7 @@ export const optionTemplate: EChartsOption = {
     start: 0,
     end: 100
   }],
-  xAxis: [{
+  xAxis: {
     type: 'category',
     id: XAXIS_ID,
     name: '',
@@ -118,7 +118,7 @@ export const optionTemplate: EChartsOption = {
       align: 'center',
     },
     data: [],
-  }],
+  },
   yAxis: [
     {
       type: 'value',  //y轴为值类型

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-07 09:05:47
+ * @LastEditTime: 2025-02-07 16:41:09
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -185,14 +185,14 @@ export class EchartsLinkageModel {
 
   // 折线图表模板
   initOptionTemplate = () => {
-    const xAxis = this.resultOption.xAxis as Array<any>;
-    xAxis[0].data = this.setXAxisData();
-    // xAxis[0].name = (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName) || '';
-    (xAxis[0].data?.length > 0 && this.seriesOptionArray[0].xAxisName && (xAxis[0].name = this.seriesOptionArray[0].xAxisName));
-    xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
+    const xAxis = this.resultOption.xAxis as any;
+    xAxis.data = this.setXAxisData();
+    // xAxis.name = (xAxis.data?.length > 0 && this.seriesOptionArray.xAxisName) || '';
+    (xAxis.data?.length > 0 && this.seriesOptionArray[0].xAxisName && (xAxis.name = this.seriesOptionArray[0].xAxisName));
+    xAxis.show = this.xAxisData?.length > 0 ? true : false;
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
-    this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
-    xAxis[0].axisLabel.formatter = (value: string | number, index: number) => {
+    this.setXAxisInterval() && (xAxis.axisLabel.interval = this.xAxisInterval);
+    xAxis.axisLabel.formatter = (value: string | number, index: number) => {
       const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode);
       if (seriesLinkMode) {
         value = value.toString().split('--')[1]
@@ -204,7 +204,7 @@ export class EchartsLinkageModel {
       return value;
     }
     // segment的mode为percent时，不显示x轴刻度标签
-    typeof this.segment === 'object' && this.segment.mode === 'percent' && (xAxis[0].axisTick.show = false);
+    typeof this.segment === 'object' && this.segment.mode === 'percent' && (xAxis.axisTick.show = false);
   }
 
   /**
@@ -393,7 +393,7 @@ export class EchartsLinkageModel {
           icon = lightSvg;
         }
         toolbox.feature.myThemeButton.icon = 'image://' + icon;
-        // xAxis[0].axisLabel!.color = axisLabelColor;
+        // xAxis.axisLabel!.color = axisLabelColor;
         this.setOptionColorsByTheme(this.resultOption, this.swichThemeIcon);
       } else {
         console.error("myThemeButton is not defined in toolbox feature");
@@ -1066,7 +1066,7 @@ export class EchartsLinkageModel {
     toolbox.itemSize = usedStandards.toolbox.itemSize;
     toolbox.itemGap = usedStandards.toolbox.itemGap;
     // xAxis
-    const xAxis = (this.resultOption.xAxis as Array<any>)[0];
+    const xAxis = (this.resultOption.xAxis as any);
     xAxis.axisLabel.fontSize = usedStandards.fontSize;
     xAxis.nameTextStyle.fontSize = usedStandards.fontSize;
     // yAxis
