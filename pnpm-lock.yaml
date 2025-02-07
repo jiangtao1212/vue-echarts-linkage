@@ -12,7 +12,7 @@ specifiers:
   '@vue/tsconfig': ^0.5.1
   '@vueuse/core': ^10.11.0
   axios: ^1.7.3
-  echarts: ^5.5.1
+  echarts: ^5.6.0
   element-plus: ^2.7.8
   eslint: ^8.57.0
   eslint-plugin-vue: ^9.23.0
@@ -39,7 +39,7 @@ specifiers:
 dependencies:
   '@element-plus/icons-vue': 2.3.1_vue@3.5.4
   '@vueuse/core': 10.11.1_vue@3.5.4
-  echarts: 5.5.1
+  echarts: 5.6.0
   element-plus: 2.8.2_vue@3.5.4
   html2canvas: 1.4.1
   vue-draggable-plus: 0.5.3
@@ -2268,11 +2268,11 @@ packages:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
     dev: true
 
-  /echarts/5.5.1:
-    resolution: {integrity: sha512-Fce8upazaAXUVUVsjgV6mBnGuqgO+JNDlcgF79Dksy4+wgGpQB2lmYoO4TSweFg/mZITdpGHomw/cNBJZj1icA==}
+  /echarts/5.6.0:
+    resolution: {integrity: sha512-oTbVTsXfKuEhxftHqL5xprgLoc0k7uScAwtryCgWF6hPYFLRwOUHiFmHGCBKP5NPFNkDVopOieyUqYGH8Fa3kA==}
     dependencies:
       tslib: 2.3.0
-      zrender: 5.6.0
+      zrender: 5.6.1
 
   /electron-to-chromium/1.5.20:
     resolution: {integrity: sha512-74mdl6Fs1HHzK9SUX4CKFxAtAe3nUns48y79TskHNAG6fGOlLfyKA4j855x+0b5u8rWJIrlaG9tcTPstMlwjIw==}
@@ -4032,7 +4032,7 @@ packages:
     dependencies:
       '@element-plus/icons-vue': 2.3.1_vue@3.5.4
       '@vueuse/core': 10.11.1_vue@3.5.4
-      echarts: 5.5.1
+      echarts: 5.6.0
       element-plus: 2.8.2_vue@3.5.4
       html2canvas: 1.4.1
       vue: 3.5.4_typescript@5.4.5
@@ -4191,7 +4191,7 @@ packages:
       commander: 9.5.0
     dev: true
 
-  /zrender/5.6.0:
-    resolution: {integrity: sha512-uzgraf4njmmHAbEUxMJ8Oxg+P3fT04O+9p7gY+wJRVxo8Ge+KmYv0WJev945EH4wFuc4OY2NLXz46FZrWS9xJg==}
+  /zrender/5.6.1:
+    resolution: {integrity: sha512-OFXkDJKcrlx5su2XbzJvj/34Q3m6PvyCZkVPHGYpcCJ52ek4U/ymZyfuV1nKE23AyBJ51E/6Yr0mhZ7xGTO4ag==}
     dependencies:
       tslib: 2.3.0

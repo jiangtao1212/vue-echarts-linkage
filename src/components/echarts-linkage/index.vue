@@ -664,15 +664,24 @@ const echartsConnect = (usedGroupNames: string[]) => {
   });
 }
 
-// 清除echarts分组实例
-const disposeEcharts = () => {
-  dataAbout.groupsName.forEach((groupName: string) => {
-    echarts.dispose(groupName);
+// echarts解除分组连接
+const echartsDisConnect = (usedGroupNames: string[]) => {
+  usedGroupNames.forEach((groupName: string) => {
+    echarts.disconnect(groupName);
   });
-  echarts.dispose(dataAbout.groupDefault);
 }
 
-
+// 清除echarts分组实例
+const disposeEcharts = () => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
+    const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
+    const echartsInstance = echarts.getInstanceByDom(element) as EChartsType;
+    if (echartsInstance) {
+      // 实例存在，则释放实例
+      echartsInstance.dispose();
+    }
+  });
+}
 
 /**
  * @description 监听datazoom事件，计算当前实例的图形位置信息，赋值给其他实例，并且触发更新
@@ -952,7 +961,7 @@ const updateOneEchartsVisualMapSeries = async (id: string, visualMapData: Visual
 }
 
 // 判断标签是否一致，需要考虑customData
-const judgeTagIsSame = (tag1: SeriesTagType, tag2: SeriesTagType) => {
+const judgeTagIsSame = (tag1: SeriesTagType, tag2: OneDataType) => {
   return tag1.name === tag2.name && JSON.stringify(tag1.customData) === JSON.stringify(tag2.customData);
 }
 
@@ -990,7 +999,6 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       series.seriesData = packageData;
       series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
       seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
-      // index === 0 && (echart.markLineArray = series.markLineArray); // 将第一个系列的markLineArray赋值给echarts的markLineArray //todo: 这里可能有问题
     });
   } else {
     // 非首尾相连模式
@@ -1041,6 +1049,52 @@ const updateAllEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
   });
   try {
     await allUpdateHandleCommon();
+    return true;
+  } catch (e: any) {
+    console.log(e);
+    return false;
+  }
+}
+
+// 简单更新echarts数据，只更新seriesData --- 导出
+const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
+  // 判断是否更新当前echarts实例的series
+  function judgeUpdateSeries(echart: SeriesIdDataType, echartsInstance: echarts.ECharts) {
+    // 1.判断实例是否存在
+    if (!echartsInstance) return false; // 实例不存在，直接返回false
+    // 2.遍历所有系列，判断是否有交集
+    const haveIntersection = echart.data.some((series: OneDataType) => {
+      const seriesTag: SeriesTagType = newAllSeriesdata.filter(item => judgeTagIsSame(item, series))[0];
+      if (!seriesTag) return false; // 未找到匹配的标签，跳过
+      return true;
+    });
+    if (!haveIntersection) return false; // 无交集，直接返回false
+    return true;
+  }
+
+  const isLink = newAllSeriesdata.some((item: SeriesTagType) => item.seriesLink?.isLinkMode); // 是否是首尾相连模式
+  dataAbout.data.forEach((echart: SeriesIdDataType) => {
+    updateOneEchartCommon(echart, newAllSeriesdata, isLink);
+  });
+  try {
+    await nextTick();
+    let updateCount = 0;
+    dataAbout.data.forEach((echart: SeriesIdDataType) => {
+      const element: HTMLElement = document.getElementById(echart.id) as HTMLElement;
+      const echartsInstance = echarts.getInstanceByDom(element) as EChartsType;
+      const isUpdate = judgeUpdateSeries(echart, echartsInstance);
+      if (!isUpdate) return; // 无需更新，直接返回
+      // 赋值给实例，并且触发更新
+      echartsInstance.setOption({
+        series: echart.data.map((series: OneDataType) => {
+          return {
+            data: series.seriesData,
+          }
+        }),
+      });
+      updateCount++;
+    });
+    console.log('updateSimpleEcharts数量：', updateCount);
     return true;
   } catch (e: any) {
     console.log(e);
@@ -1384,6 +1438,7 @@ const exposedMethods: ExposedMethods = {
   getAllSeriesTagInfo,
   updateOneOrMoreEcharts,
   updateAllEcharts,
+  updateSimpleEcharts,
   clearAllEchartsData,
   replaceAllEchartsData,
   downloadAllEchartsImg,

@@ -18,6 +18,7 @@
       <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
+      <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
     </div>
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
@@ -179,10 +180,10 @@ const updateAllLinkageBtnClick = () => {
       //   baseLineData[i][1] = 100000;
       // }
       item.seriesData = seriesData;
-      item.seriesLink = {
-        isLinkMode: true,
-        linkData: getRandomCountLinkData(linkCount)
-      };
+      // item.seriesLink = {
+      //   isLinkMode: true,
+      //   linkData: getRandomCountLinkData(linkCount)
+      // };
       // item.visualMapSeries = {
       //   pieces: [{ min: 5000, max: 8000 }],
       //   baseLine: {
@@ -193,6 +194,21 @@ const updateAllLinkageBtnClick = () => {
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
+// 批量更新按钮--简单更新
+const updateSimpleBtnClick = () => {
+  const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
+  // console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+    if (item.dataType === 'switch') {
+      item.seriesData = RandomUtil.getSwitchData(1000);
+    } else {
+      const seriesData = RandomUtil.getSeriesData(1000);
+      item.seriesData = seriesData;
+    }
+  });
+  echartsLinkageRef.value?.updateSimpleEcharts(allDistinctSeriesTagInfo);
 }
 
 // 随机获取首尾连接数据
@@ -387,6 +403,13 @@ const realTimeUpdateTimeBtnClick = () => {
 const realTimeUpdateCancelBtnClick = () => {
   clearInterval(mySetInterval);
   clearInterval(mySetIntervalTime);
+}
+
+// 实时更新-间隔按钮
+const realTimeUpdateIntervalBtnClick = () => {
+  mySetInterval = setInterval(() => {
+    updateSimpleBtnClick();
+  }, 1000);
 }
 
 // 下载图片
