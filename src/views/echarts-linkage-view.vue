@@ -19,17 +19,19 @@
       <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
+    </div>
+    <div class="btn_drag">
+      <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
+      <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
+      <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
+    </div>
+    <div class="btn_theme">
       <el-button-group>
         <el-button type="primary" size="small" @click="changeAllEchartsTheme('light')">
           <el-icon><img :src="LightSvg" class="w-100% h-100%"></img></el-icon>白天模式</el-button>
         <el-button type="primary" size="small" @click="changeAllEchartsTheme('dark')">
           <el-icon><img :src="DarkSvg" class="w-100% h-100%"></img></el-icon>夜晚模式</el-button>
       </el-button-group>
-    </div>
-    <div class="btn_drag">
-      <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
-      <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
-      <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
     </div>
   </div>
 
@@ -610,7 +612,7 @@ onMounted(() => {
     column-gap: 5px;
   }
 
-  .btn_realtime {
+  .btn_realtime, .btn_theme {
     display: flex;
     gap: 5px;
   }

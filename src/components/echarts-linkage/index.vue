@@ -1268,6 +1268,8 @@ const saveAsImage = (e: any, id: string) => {
 
 // 切换所有echarts图表主题 --- 导出
 const changeAllEchartsTheme = (theme: ThemeType) => {
+  const isAllThemeConsistent = dataAbout.data.every((item: SeriesIdDataType) => item.theme === theme);
+  if (isAllThemeConsistent) return; // 所有图表主题与外部传入的主题一致，无需切换
   dataAbout.data.forEach((item: SeriesIdDataType) => item.theme = theme);
   allUpdateHandleCommon();
 }
