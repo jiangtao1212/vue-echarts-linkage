@@ -129,3 +129,4 @@ const dropEchart = (data: dropEchartType) => {
 | realTimeUpdate | 新增实时数据更新 | `(allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void` |
 | updateOneEchartsVisualMapSeries | 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色 | `(id: string, data: VisualMapSeriesType[] / VisualMapSeriesType) => void` |
 | handleMultipleLinkData | 处理前后关联数据，多条关联数据进行首尾相连操作 | `(primaryData: OneDataType) => OneDataType` |
+| changeAllEchartsTheme | 切换所有echarts图表主题 | `(theme: ThemeType) => void` |

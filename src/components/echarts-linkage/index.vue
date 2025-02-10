@@ -36,7 +36,7 @@ import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
   VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
-  AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType
+  AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemDataProps } from "@/components/drag/type/index";
@@ -1266,6 +1266,12 @@ const saveAsImage = (e: any, id: string) => {
   }
 }
 
+// 切换所有echarts图表主题 --- 导出
+const changeAllEchartsTheme = (theme: ThemeType) => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => item.theme = theme);
+  allUpdateHandleCommon();
+}
+
 // echarts上的主题切换事件
 const switchEchartsTheme = async (e: any, id: string) => {
   console.log('switchEchartsTheme', id);
@@ -1447,6 +1453,7 @@ const exposedMethods: ExposedMethods = {
   realTimeUpdate,
   updateOneEchartsVisualMapSeries,
   handleMultipleLinkData,
+  changeAllEchartsTheme,
 };
 defineExpose(exposedMethods);
 

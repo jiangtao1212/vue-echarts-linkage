@@ -5,7 +5,7 @@ import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
 export type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   SeriesDataType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, MarkLineDataType,
-  VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType
+  VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from '@/components/echarts-linkage/types/index';
 
 /** 

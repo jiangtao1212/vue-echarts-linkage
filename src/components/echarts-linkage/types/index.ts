@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-07 15:29:26
+ * @LastEditTime: 2025-02-10 14:15:36
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -25,6 +25,7 @@
  * @param {Function} realTimeUpdate 实时更新echarts图表数据
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
  * @param {Function} handleMultipleLinkData 处理前后关联数据，多条关联数据进行首尾相连操作，primaryData中必须设置seriesLink，否则不进行处理，直接返回
+ * @param {Function} changeAllEchartsTheme 切换所有echarts图表主题
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -43,6 +44,7 @@ export interface ExposedMethods {
   realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;
   updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
   handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
+  changeAllEchartsTheme: (theme: ThemeType) => void;
 }
 
 /**

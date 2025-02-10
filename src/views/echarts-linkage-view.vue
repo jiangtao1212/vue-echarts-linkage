@@ -19,6 +19,12 @@
       <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="changeAllEchartsTheme('light')">
+          <el-icon><img :src="LightSvg" class="w-100% h-100%"></img></el-icon>白天模式</el-button>
+        <el-button type="primary" size="small" @click="changeAllEchartsTheme('dark')">
+          <el-icon><img :src="DarkSvg" class="w-100% h-100%"></img></el-icon>夜晚模式</el-button>
+      </el-button-group>
     </div>
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
@@ -45,9 +51,10 @@ import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
 import type {
   OneDataType, SeriesTagType, DropEchartType, DeleteEchartType,
-  ListenerGrapicLocationType, SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType
+  ListenerGrapicLocationType, SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
 } from '@/components/echarts-linkage/types/index';
-
+import DarkSvg from "@/assets/svg/dark.svg";
+import LightSvg from "@/assets/svg/light.svg";
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
@@ -414,6 +421,11 @@ const realTimeUpdateIntervalBtnClick = () => {
     interval += 1000;
     updateSimpleBtnClick(interval);
   }, 1000);
+}
+
+// 切换主题按钮
+const changeAllEchartsTheme = (theme: ThemeType) => {
+  echartsLinkageRef.value?.changeAllEchartsTheme(theme);
 }
 
 // 下载图片
