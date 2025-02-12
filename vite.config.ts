@@ -55,10 +55,11 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'VueEchartsLinkage',
-      // formats: ['es'],
+      formats: ['es', 'umd'], // 指定输出的格式，这里同时生成 ES 和 UMD 格式
       // the proper extensions will be added
       fileName: 'vue-echarts-linkage',
     },
+    sourcemap: true, // 启用 source map 支持
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
       external: [
@@ -73,21 +74,49 @@ export default defineConfig({
         "vue3-infinite-scroll-better",
         "xlsx"
       ],
-      output: {
-        // 解决在混合模式下（全局引入+按需引入）的警告
-        exports: 'named',
-        // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
-        globals: {
-          vue: 'Vue',
-          'element-plus': 'elementPlus',
-          'echarts': 'echarts',
-          'html2canvas': 'html2canvas',
-          'print-js': 'printJS',
-          'vue-draggable-plus': 'VueDraggablePlus',
-          'vue3-infinite-scroll-better': 'infiniteScroll',
-          'xlsx': 'xlsx'
-        }
-      }
+      // output: {
+      //   // 解决在混合模式下（全局引入+按需引入）的警告
+      //   exports: 'named',
+      //   // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
+      //   globals: {
+      //     vue: 'Vue',
+      //     'element-plus': 'elementPlus',
+      //     'echarts': 'echarts',
+      //     'html2canvas': 'html2canvas',
+      //     'print-js': 'printJS',
+      //     'vue-draggable-plus': 'VueDraggablePlus',
+      //     'vue3-infinite-scroll-better': 'infiniteScroll',
+      //     'xlsx': 'xlsx'
+      //   }
+      // },
+      output: [
+        {
+          // ES 模块格式的输出配置
+          format: 'es',
+          entryFileNames: 'vue-echarts-linkage.es.js',
+          dir: 'dist', // 输出目录
+          exports: 'named',
+        },
+        {
+          // UMD 模块格式的输出配置
+          format: 'umd',
+          entryFileNames: 'vue-echarts-linkage.umd.js',
+          name: 'vue-echarts-linkage',
+          dir: 'dist',
+          exports: 'named',
+          // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
+          globals: {
+            vue: 'Vue',
+            'element-plus': 'elementPlus',
+            'echarts': 'echarts',
+            'html2canvas': 'html2canvas',
+            'print-js': 'printJS',
+            'vue-draggable-plus': 'VueDraggablePlus',
+            'vue3-infinite-scroll-better': 'infiniteScroll',
+            'xlsx': 'xlsx'
+          }
+        },
+      ]
     }
   }
 })

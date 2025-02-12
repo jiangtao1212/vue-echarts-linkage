@@ -25,7 +25,7 @@
 <script setup lang='ts'>
 import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount, onBeforeMount } from 'vue';
 import 'element-plus/es/components/message/style/css';
-import { ElMessage, formatter } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import * as echarts from "echarts";
 import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption, type ToolboxComponentOption } from "echarts";
 import { useDebounceFn, useThrottleFn } from "@vueuse/core";

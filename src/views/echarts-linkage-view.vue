@@ -459,10 +459,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
   id = id || 'echart' + maxEchartsIdSeq;
   const random = Math.floor(Math.random() * 100);
-  // const aaa = RandomUtil.getRandomDataFromInterval(100, 500) + '';
-  // const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
-  const aaa = 600 + '';
-  // const bbb = 800 + '';
+  const aaa = RandomUtil.getRandomDataFromInterval(100, 500) + '';
   const bbb = RandomUtil.getRandomDataFromInterval(600, 800) + '';
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
