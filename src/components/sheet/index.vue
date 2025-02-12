@@ -25,11 +25,9 @@
 
 <script setup lang='ts'>
 import { ref, reactive, onMounted, computed } from 'vue';
-import * as xlsx from 'xlsx';
+import { utils, writeFileXLSX } from 'xlsx';
 import { type SheetHeadType } from './type/index';
 import infiniteScroll from 'vue3-infinite-scroll-better';
-
-const { utils, writeFileXLSX } = xlsx; // 解决在其他项目中引入联动组件，打包后无法直接import { utils, writeFileXLSX } from 'xlsx'的问题，显示CommonJS或AMD模块错误
 
 // 注册指令
 defineOptions({

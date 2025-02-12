@@ -1,6 +1,6 @@
 {
   "name": "vue-echarts-linkage",
-  "version": "1.7.9-bate.3",
+  "version": "1.7.9-bate.4",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -16,13 +16,13 @@
     "linkage",
     "vue-echarts-linkage"
   ],
-  "main": "./dist/vue-echarts-linkage.umd.js",
-  "module": "./dist/vue-echarts-linkage.es.js",
+  "main": "./dist/vue-echarts-linkage.umd.cjs",
+  "module": "./dist/vue-echarts-linkage.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/vue-echarts-linkage.es.js",
-      "require": "./dist/vue-echarts-linkage.umd.js",
+      "import": "./dist/vue-echarts-linkage.js",
+      "require": "./dist/vue-echarts-linkage.umd.cjs",
       "types": "./dist/index.d.ts"
     },
     "./dist/style.css": "./dist/style.css"
