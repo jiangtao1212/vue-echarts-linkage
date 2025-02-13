@@ -586,9 +586,12 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
     .setCustomSeriesMarkLine(dataArray.data)
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
+    .setGridRightByXAxisName(myChart.getWidth())
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
   const option: EChartsOption = echartsLinkageModel.getResultOption();
+  // console.log('option', option);
+  // console.log('myChart', myChart);
   myChart.setOption(option);
   extraHandleByOption(option); // 获取option数据，用于其他一些额外操作
   // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
@@ -636,7 +639,7 @@ const initEmptyEcharts = (count: number) => {
 // 初始化echarts
 const initEcharts = async () => {
   // 基于准备好的dom，初始化echarts图表
-  disposeEcharts(); // 清除之前的分组实例
+  // disposeEcharts(); // 清除之前的分组实例
   const usedGroupNames: string[] = []; // 已使用的组名
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     const myChart = initOneEcharts(item);
@@ -1500,7 +1503,7 @@ onBeforeUnmount(() => {
     overflow-x: hidden;
     overflow-y: auto;
     padding-bottom: var(--padding);
-    .flex-row(center);
+    .flex-row(flex-start);
     flex-wrap: wrap;
     align-content: flex-start;
     gap: var(--gap);

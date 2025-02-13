@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-07 09:05:47
+ * @LastEditTime: 2025-02-13 12:30:19
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -995,7 +995,7 @@ export class EchartsLinkageModel {
    * @returns this 链式调用
    */
   setFontSizeAndMoreAuto = (height: number, useGraphicLocation: boolean = true) => {
-    console.log('setFontSizeAndMoreAuto', height);
+    // console.log('setFontSizeAndMoreAuto', height);
     let usedStandards: any = {}; // 使用的标准
     const standardsMap = { // 标准映射
       '200': {
@@ -1076,6 +1076,74 @@ export class EchartsLinkageModel {
     });
     usedStandards.echartsHeight = height;
     this.usedStandards = usedStandards;
+    return this;
+  }
+
+  /**
+   * @description 根据xAxisName的文本宽度设置grid的right属性
+   * @param width 容器宽度
+   * @returns 
+   */
+  setGridRightByXAxisName = (width: number) => {
+    // 计算文本宽度
+    function calculateTextWidth(text: string, fontSize: number) {
+      // 创建一个canvas元素
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (context === null) return 0;
+
+      // 设置字体样式
+      context.font = `${fontSize}px Arial`;
+
+      // 测量文本宽度
+      const metrics = context.measureText(text);
+      return metrics.width;
+    }
+
+    function setGridrightAndxAxis (grid: echarts.GridComponentOption, xAxis: any, right: number) {
+      grid.right = right;
+      xAxis.nameTextStyle.align = 'left';
+      xAxis.nameTextStyle.padding = 0;
+      xAxis.nameGap = 5;
+    }
+    console.log("容器宽度：" + width);
+    const xAxis = (this.resultOption.xAxis as Array<any>)[0];
+    const grid = this.resultOption.grid as echarts.GridComponentOption;
+    const name = xAxis.name;
+    // 如果没有设置xAxis.name，则不重新设置grid.right
+    if (name === '') return this;
+    // 根据文字的fontsize，计算所有文字的宽度
+    const fontSize = xAxis.nameTextStyle.fontSize;
+    const textWidth = calculateTextWidth(name, fontSize);
+    // 获取grid的原始right值
+    let rightValue = grid.right as number | string;
+    if (typeof rightValue === 'string') {
+      if (rightValue.endsWith('%')) {
+        rightValue = width * parseFloat(rightValue.slice(0, -1)) / 100 as number;
+      } else {
+        rightValue = 10;
+      }
+    }
+    console.log("原始right值：" + rightValue);
+    console.log("计算后的文本宽度：" + textWidth);
+    if (textWidth === 0) return this;
+    if (rightValue <= textWidth) {
+      // 计算后的文本有宽度，并且原始right值小于文本宽度，则将grid.right设置为文字的宽度加上一定的偏移量
+      if (textWidth - rightValue < 10) {
+        setGridrightAndxAxis(grid, xAxis, textWidth + 10);
+      } else {
+        setGridrightAndxAxis(grid, xAxis, textWidth + 15);
+      }
+    } else {
+      if (rightValue - textWidth < 5) {
+        // 原始right值大于文本宽度，并且差值小于5，则偏移量设置为10
+        setGridrightAndxAxis(grid, xAxis, textWidth + 15);
+      } else if (rightValue - textWidth < 10) {
+        setGridrightAndxAxis(grid, xAxis, textWidth + 10);
+      } else {
+        // ...
+      }
+    }
     return this;
   }
 

@@ -104,7 +104,8 @@ const addLinkageBtnClick = () => {
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
-    xAxisName: '[m]',
+    // xAxisName: '[mm]',
+    xAxisName: '[时间]',
     type: 'line',
     seriesData: seriesData,
     // markLineArray: [RandomUtil.getRandomDataFromInterval(0, 1000), RandomUtil.getRandomDataFromInterval(0, 1000)],
