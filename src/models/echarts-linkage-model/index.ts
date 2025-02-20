@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-13 12:30:19
+ * @LastEditTime: 2025-02-20 10:22:33
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -36,6 +36,8 @@ const THEME_LIGHT = 'light';
  * @param xAxisName x轴名称
  * @param yAxisName y轴名称
  * @param yAxisShow y轴是否显示
+ * @param yAxisMin y轴下限
+ * @param yAxisMax y轴上限
  * @param seriesShow series是否显示
  * @param seriesYAxisIndex series的y轴索引
  * @param visualMapSeries 视觉映射系列
@@ -51,6 +53,8 @@ export type SeriesOptionType = {
   xAxisName?: string, // x轴名称
   yAxisName?: string, // y轴名称
   yAxisShow?: boolean; // y轴是否显示
+  yAxisMin?: number; // y轴下限
+  yAxisMax?: number; // y轴上限
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
   visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
@@ -257,6 +261,8 @@ export class EchartsLinkageModel {
         nameTextStyle: { align: 'center', padding: [0, 0, -7, 0] },
         axisLabel: { margin: 2 },
       }
+      if (item.yAxisMin || item.yAxisMin === 0) yAxisObj.min = item.yAxisMin;
+      if (item.yAxisMax || item.yAxisMax === 0) yAxisObj.max = item.yAxisMax;
       if (item.dataType === 'switch') { // 开关量
         yAxisObj.show = true;
         yAxisObj.name = '';

@@ -569,6 +569,8 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
       xAxisName: item.xAxisName,
       yAxisName: item.yAxisName,
       yAxisShow: item.yAxisShow,
+      yAxisMin: item.yAxisMin,
+      yAxisMax: item.yAxisMax,
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
       dataType: item.dataType || 'pulse',

@@ -98,6 +98,8 @@ export type SeriesType = 'switch' | 'pulse' | 'markLine';
  * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  * @param {any} customData 自定义数据，可用于其他业务逻辑，如模版渲染
  * @param {boolean} yAxisShow 是否显示y轴
+ * @param {number} yAxisMin y轴最小值
+ * @param {number} yAxisMax y轴最大值
  * @param {boolean} seriesShow 是否显示系列
  * @param {number} seriesYAxisIndex 系列y轴索引
  * @param {SeriesType} dataType 数据类型
@@ -114,6 +116,8 @@ export type OneDataType = {
   visualMapSeries?: VisualMapSeriesType | undefined;
   customData?: any;
   yAxisShow?: boolean;
+  yAxisMin?: number;
+  yAxisMax?: number;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
   dataType?: SeriesType;
