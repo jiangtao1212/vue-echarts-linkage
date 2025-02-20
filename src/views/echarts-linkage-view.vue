@@ -201,6 +201,8 @@ const updateAllLinkageBtnClick = () => {
       //     value: baseLineData,
       //   }
       // };
+      // item.yAxisMin = 600;
+      // item.yAxisMax = 800;
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
@@ -466,6 +468,8 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     name: `新增图表${maxEchartsIdSeq}-${random}`,
     // xAxisName: '[m]',
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+    // yAxisMin: 100,
+    // yAxisMax: 1000,
     type: type,
     // todo: 需要优化，默认应该显示全部的series的markLine，对于重复的完全相等的markLine，应该只显示一个(使用json字符串来判断)
     markLineArray: [

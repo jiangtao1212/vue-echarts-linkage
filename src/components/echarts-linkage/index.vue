@@ -1004,6 +1004,8 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       series.seriesData = packageData;
       series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
       seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
+      (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
+      (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
   } else {
     // 非首尾相连模式
@@ -1013,6 +1015,8 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       const newSeriesData = seriesTag.seriesData;
       newSeriesData && (series.seriesData = newSeriesData);
       seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
+      (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
+      (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
   }
 }
