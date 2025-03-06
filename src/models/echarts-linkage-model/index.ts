@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-20 10:22:33
+ * @LastEditTime: 2025-03-06 16:45:07
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -766,7 +766,7 @@ export class EchartsLinkageModel {
     const feature = (this.resultOption?.toolbox as any).feature;
     feature.dataZoom.title = { zoom: lang === 'zh-cn' ? '区域缩放' : 'Zoom', back: lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset' };
     feature.restore.title = lang === 'zh-cn' ? '还原' : 'Restore';
-    feature.myThemeButton.title = lang === 'zh-cn' ? (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : (this.swichThemeIcon === THEME_DARK ? 'Night' : 'Day');
+    feature.myThemeButton.title = lang === 'zh-cn' ? '切换到' + (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : 'switch to ' + (this.swichThemeIcon === THEME_DARK ? 'dark' : 'light');
     feature.myDeleteButton.title = lang === 'zh-cn' ? '删除' : 'Delete';
     return this;
   }
@@ -1248,10 +1248,12 @@ export const setMergedOptionTemplate = (extraOption: { [key: string]: any } | un
     }
     return true;
   }
-  const res = mergeDeepOption(optionTemplate, extraOption, judgeHasThemeButton(extraOption));
+  // 这里必须对optionTemplate进行深拷贝，否则一个页面修改了optionTemplate后会影响其他其他页面使用
+  const res = mergeDeepOption(ObjUtil.deepCopy(optionTemplate), extraOption, judgeHasThemeButton(extraOption));
   // console.log('mergedOptionTemplate-----------', res);
   if (res && Object.keys(res).length !== 0) {
     mergedOptionTemplate = res;
+    return;
   }
   mergedOptionTemplate = optionTemplate;
 }
