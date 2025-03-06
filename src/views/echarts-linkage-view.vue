@@ -39,7 +39,7 @@
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
-    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align theme="light"
+    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align :theme="theme"
     :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
     :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
@@ -61,6 +61,7 @@ import LightSvg from "@/assets/svg/light.svg";
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
 let switchFlag = false;
+const theme = ref<ThemeType>('light');
 
 // 额外的配置项
 const extraOption = {
@@ -429,8 +430,9 @@ const realTimeUpdateIntervalBtnClick = () => {
 }
 
 // 切换主题按钮
-const changeAllEchartsTheme = (theme: ThemeType) => {
-  echartsLinkageRef.value?.changeAllEchartsTheme(theme);
+const changeAllEchartsTheme = (themeValue: ThemeType) => {
+  theme.value = themeValue;
+  // echartsLinkageRef.value?.changeAllEchartsTheme(themeValue);
 }
 
 // 下载图片
