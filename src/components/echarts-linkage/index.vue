@@ -62,6 +62,7 @@ import Extension from './extension';
  * @property {boolean} [isEchartsHeightChange=true] - 是否根据数量，改变echarts的高度，默认true改变
  * @property {number} [echartsHeightFixedCount=3] - echarts高度固定数量，默认为3
  * @property {object} [extraOption] - 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并；合并默认option，该优先级更高, 相同属性值进行合并, 不同属性值直接赋值
+ * @property {Array<Array<number>>} [groups] - 分组属性，二维数组：第一维表示分组，第二维表示该分组下的chart序号（序号从1开始）
  */
 export type PropsType = {
   cols?: number;
@@ -1471,6 +1472,11 @@ defineExpose(exposedMethods);
 // 监听dataAbout.data的变化，重新计算maxEchartsIdSeq
 watch(() => dataAbout.data.length, () => {
   getMaxId();
+});
+
+// 监听theme的变化，重新设置所有Echarts实例的主题
+watch(() => props.theme, (newThemeValue) => {
+  changeAllEchartsTheme(newThemeValue);
 });
 
 onBeforeMount(() => {

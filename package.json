@@ -1,6 +1,6 @@
 {
   "name": "vue-echarts-linkage",
-  "version": "1.7.11",
+  "version": "1.7.12",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -12,7 +12,7 @@
   ],
   "keywords": [
     "vue3.x",
-    "echarts",
+    "echarts5",
     "linkage",
     "vue-echarts-linkage"
   ],
