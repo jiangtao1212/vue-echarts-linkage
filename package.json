@@ -1,6 +1,6 @@
 {
   "name": "vue-echarts-linkage",
-  "version": "1.7.14-beta.1",
+  "version": "1.7.14",
   "author": "jiangtao",
   "license": "MIT",
   "private": false,
@@ -34,6 +34,7 @@
     "type": "git",
     "url": "https://github.com/jiangtao1212/vue-echarts-linkage.git"
   },
+  "homepage": "http://yunduoer.fun/vue-echarts-linkage-docs",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",

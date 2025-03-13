@@ -28,9 +28,9 @@
     <div class="btn_theme">
       <el-button-group>
         <el-button type="primary" size="small" @click="changeAllEchartsTheme('light')">
-          <el-icon><img :src="LightSvg" class="w-100% h-100%"></img></el-icon>白天模式</el-button>
+          <el-icon><img :src="LightSvg" class="w-100% h-100%" /></el-icon>白天模式</el-button>
         <el-button type="primary" size="small" @click="changeAllEchartsTheme('dark')">
-          <el-icon><img :src="DarkSvg" class="w-100% h-100%"></img></el-icon>夜晚模式</el-button>
+          <el-icon><img :src="DarkSvg" class="w-100% h-100%" /></el-icon>黑夜模式</el-button>
       </el-button-group>
     </div>
   </div>

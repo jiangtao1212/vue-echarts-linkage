@@ -533,7 +533,7 @@ const extraHandleByOption = (option: EChartsOption) => {
   const feature = toolbox.feature;
   if (!feature) return;
   for (const key in feature) {
-    if (!feature.hasOwnProperty(key)) continue;
+    if (!Reflect.has(feature, key)) continue;
     if (!(feature[key]?.show)) continue;
     size = key === 'dataZoom' ? size + 2 : size + 1;  // dataZoom是两个图标
   }

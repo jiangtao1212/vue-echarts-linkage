@@ -1,18 +1,18 @@
 <template>
   <div class='sheet-container'>
-    <div ref="tableRef" class="table-container" :data-body="bodyComputed" v-infinite-scroll="loadMore"
+    <div ref="tableRef" class="table-container" v-infinite-scroll="loadMore"
       :infinite-scroll-disabled="scrollDisabled">
       <table class="border-collapse table-auto w-full" border="1">
         <thead>
           <tr>
-            <th v-for="col in headComputed">
+            <th v-for="col in dataAbout.head" :key="col.prop">
               <el-input v-model="col.label"></el-input>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, idx) in dataAbout.showBody" :key="idx">
-            <td v-for="(col, idx) in headComputed" :key="idx">{{ row[col.prop] }}</td>
+            <td v-for="(col, idx) in dataAbout.head" :key="idx">{{ row[col.prop] }}</td>
           </tr>
         </tbody>
       </table>
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watchEffect } from 'vue';
 import { utils, writeFileXLSX } from 'xlsx';
 import { type SheetHeadType } from './type/index';
 import infiniteScroll from 'vue3-infinite-scroll-better';
@@ -79,7 +79,7 @@ const exportFile = () => {
     // 假设我们想要替换第一行的所有值
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellAddress = utils.encode_cell({ r: firstRow, c: col });
-      ws[cellAddress] = { v: `${headComputed.value[col].label}`, t: 's' }; // 使用 `替换值` + 列索引作为示例
+      ws[cellAddress] = { v: `${dataAbout.head[col].label}`, t: 's' }; // 使用 `替换值` + 列索引作为示例
     }
   }
   const wb = utils.book_new();
@@ -92,17 +92,11 @@ const scrollDisabled = computed(() => {
   return dataAbout.showBody.length >= dataAbout.body.length;
 });
 
-// 表头数据监听
-const headComputed = computed((): SheetHeadType[] => {
+// 表头和表格数据监听
+watchEffect(() => {
   dataAbout.head = props.head;
-  return props.head;
-});
-
-// 表格数据监听
-const bodyComputed = computed((): any => {
   dataAbout.body = props.body;
   dataAbout.showBody = props.body.slice(0, 50); // 限制显示的行数
-  return props.body.length;
 });
 
 // 初始化页面

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-06 16:45:07
+ * @LastEditTime: 2025-03-13 13:40:49
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -418,7 +418,7 @@ export class EchartsLinkageModel {
   setOptionColorsByTheme = (option: any, swichThemeIcon: string) => {
     if (option !== null && typeof option === 'object') {
       for (const key in option) {
-        if (option.hasOwnProperty(key)) {
+        if (Reflect.has(option, key)) {
           // 如果键是 'color'，就替换值
           if (key === COLOR_CACHE_KEY) {
             const colorCache = option[COLOR_CACHE_KEY];
@@ -633,7 +633,7 @@ export class EchartsLinkageModel {
         });
         console.log("intervals---------------", intervals);
         intervals.forEach((item: Array<number>) => {
-          let obj: any = {
+          const obj: any = {
             gte: item[0],
             color: 'red'
           };
@@ -645,6 +645,7 @@ export class EchartsLinkageModel {
           res.push(obj);
         });
       } else {
+        // todo: 如果不是基准线模式，则应该使用原生的pieces
         const pieces = visualMapSeries.pieces;
         pieces.forEach((item: any) => {
           const obj = {
@@ -832,9 +833,9 @@ export class EchartsLinkageModel {
       console.log('myChart.getOption().graphic', myChart.getOption().graphic);
       const x = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
       //获取当前拖拽线条的X值
-      let markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
+      const markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
       // //获取另一条markLine的X值
-      let markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[1].position[0]);
+      const markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[1].position[0]);
       // 重新绘制两条markLine
       myChart.setOption({
         graphic: [
@@ -870,8 +871,8 @@ export class EchartsLinkageModel {
       console.log('e', myChart.getOption())
       console.log('myChart.getOption().graphic', myChart.getOption().graphic);
       const x = e.target.x; //获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
-      let markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
-      let markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[0].position[0]);
+      const markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
+      const markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[0].position[0]);
       myChart.setOption({
         graphic: [
           {
@@ -1199,7 +1200,7 @@ const colorJudge = (colorValue: Array<string> | string, hasThemeButton: boolean)
 export const mergeDeepOption = (target: any, extraOption: { [key: string]: any } | undefined, hasThemeButton: boolean) => {
   if (!extraOption) return target;
   for (const key in extraOption) {
-    if (!extraOption.hasOwnProperty(key)) continue;
+    if (!Reflect.has(extraOption, key)) continue;
     if (key === COLOR_KEY) {
       // 1.颜色属性处理
       const colorValue = extraOption[key] as Array<string> | string;
@@ -1207,7 +1208,7 @@ export const mergeDeepOption = (target: any, extraOption: { [key: string]: any }
       hasThemeButton ? (target[COLOR_CACHE_KEY] = colorJudgeResult) : (target[COLOR_KEY] = colorJudgeResult);
       continue;
     }
-    if (!target.hasOwnProperty(key)) {
+    if (!Reflect.has(target, key)) {
       // 2.新属性，目标对象中不存在该属性，直接赋值
       target[key] = extraOption[key];
       continue;
@@ -1243,7 +1244,7 @@ export const setMergedOptionTemplate = (extraOption: { [key: string]: any } | un
   // 判断是否有主题按钮
   function judgeHasThemeButton(extraOption: any) {
     const myThemeButton = extraOption?.toolbox?.feature?.myThemeButton;
-    if (myThemeButton && myThemeButton.hasOwnProperty('show') && myThemeButton.show === false) {
+    if (myThemeButton && Reflect.has(myThemeButton, 'show') && myThemeButton.show === false) {
       return false;
     }
     return true;

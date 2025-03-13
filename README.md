@@ -4,6 +4,8 @@
 
 vue-echarts-linkage 是基于 Vue3 + TypeScript + Element Plus 实现的联动组件，可以实现多个图表之间的联动。
 
+[说明文档](http://yunduoer.fun/vue-echarts-linkage-docs/)
+
 ## 2. demo演示
 ### 2.1 基础联动
 > 多图表联动放缩，Y轴同步对齐
