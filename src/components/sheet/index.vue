@@ -1,7 +1,6 @@
 <template>
   <div class='sheet-container'>
-    <div ref="tableRef" class="table-container" v-infinite-scroll="loadMore"
-      :infinite-scroll-disabled="scrollDisabled">
+    <div ref="tableRef" class="table-container" v-infinite-scroll="loadMore" :infinite-scroll-disabled="scrollDisabled">
       <table class="border-collapse table-auto w-full" border="1">
         <thead>
           <tr>
@@ -17,7 +16,8 @@
         </tbody>
       </table>
     </div>
-    <div class="flex justify-end items-center">
+    <div class="flex justify-between items-center">
+      <span>总数：{{ dataAbout.body.length }}</span>
       <button @click="exportFile">导出</button>
     </div>
   </div>
@@ -147,6 +147,14 @@ onMounted(() => {
           border-top: 1px solid #808080;
           /* 确保伪元素在内容下方 */
           z-index: -1;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        td {
+          padding: 0 5px;
         }
       }
     }
