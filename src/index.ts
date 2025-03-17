@@ -8,6 +8,8 @@ export type {
   VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from '@/components/echarts-linkage/types/index';
 
+export type { DragItemType } from '@/components/drag/type/index';
+
 /** 
  * 1.按需引入组件
  * ...

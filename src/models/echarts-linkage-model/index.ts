@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-13 13:40:49
+ * @LastEditTime: 2025-03-14 15:24:55
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -548,6 +548,7 @@ export class EchartsLinkageModel {
         if (!yAxisShow) {
           // 2.2 Y轴不显示，则不显示该系列的markLine
           res.push(undefined);
+          return;
         }
         // 2.3 先判断之前重复的是否已显示，如果已显示，则不操作；如果没有显示，则显示第一个重复的
         const data: MarkLineDataType = [];
@@ -645,7 +646,6 @@ export class EchartsLinkageModel {
           res.push(obj);
         });
       } else {
-        // todo: 如果不是基准线模式，则应该使用原生的pieces
         const pieces = visualMapSeries.pieces;
         pieces.forEach((item: any) => {
           const obj = {

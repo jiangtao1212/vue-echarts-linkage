@@ -2,10 +2,12 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-20 10:44:33
+ * @LastEditTime: 2025-03-17 10:39:46
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
+
+import { type DragItemType } from '@/components/drag/type';
 
 /**
  * @description: 组件暴露的接口类型
@@ -16,6 +18,7 @@
  * @param {Function} getMaxEchartsIdSeq 获取最大的echarts图表id序号
  * @param {Function} getAllDistinctSeriesTagInfo 获取所有系列的标签信息
  * @param {Function} getAllSeriesTagInfo 获取所有echarts实例或者某个echarts实例各个系列的标签信息，默认返回所有echarts实例的标签信息
+ * @param {Function} getTemplateTagsOption 获取所有echarts图表的拖拽子项配置(用于模版渲染)
  * @param {Function} updateOneOrMoreEcharts 更新单个或者多个echarts图表
  * @param {Function} updateAllEcharts 更新所有echarts图表
  * @param {Function} updateSimpleEcharts 简单更新echarts图表的系列数据
@@ -35,6 +38,7 @@ export interface ExposedMethods {
   getMaxEchartsIdSeq: () => number;
   getAllDistinctSeriesTagInfo: () => Array<SeriesTagType>;
   getAllSeriesTagInfo: (echartsId?: string) => Array<{ id: string, series: Array<SeriesTagType> }>;
+  getTemplateTagsOption: () => Array<Array<DragItemType>>;
   updateOneOrMoreEcharts: (updateData: AppointEchartsTagType | Array<AppointEchartsTagType>) => Promise<boolean>;
   updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
   updateSimpleEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
@@ -103,6 +107,7 @@ export type SeriesType = 'switch' | 'pulse' | 'markLine';
  * @param {boolean} seriesShow 是否显示系列
  * @param {number} seriesYAxisIndex 系列y轴索引
  * @param {SeriesType} dataType 数据类型
+ * @param {DragItemType} dragItemOption 拖拽子项配置
  */
 export type OneDataType = {
   name: string;
@@ -121,6 +126,7 @@ export type OneDataType = {
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
   dataType?: SeriesType;
+  dragItemOption?: DragItemType;
 }
 
 /**
@@ -226,6 +232,7 @@ export type SeriesIdDataType = {
  * @param {boolean} isAllUpdate 是否全部更新
  * @param {boolean} isSwitchingTheme 是否正在切换主题
  * @param {number} currentMaxShowYCount 当前最大显示y轴数量
+ * @param {string} currentHandleMode 当前操作模式，normal：正常模式，all-replace：全部替换模式
  */
 export type DataAboutType = {
   groupsName: Array<string>;
@@ -237,7 +244,8 @@ export type DataAboutType = {
   isAllUpdate: boolean;
   isSwitchingTheme: boolean;
   currentMaxShowYCount: number;
-  drag: { top: number, fontSize: number | string, isDragging: boolean }
+  drag: { top: number, fontSize: number | string, isDragging: boolean },
+  currentHandleMode: 'normal' | 'all-replace',
 }
 
 /**

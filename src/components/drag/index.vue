@@ -64,7 +64,7 @@
 import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick, computed } from 'vue';
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
-import { type DragExposedMethods, type DragItemType, type DragListDataType, type DragItemDataProps } from "./type/index";
+import { type DragExposedMethods, type DragItemType, type DragListDataType } from "./type/index";
 
 const emit = defineEmits(['isDragging', 'update', 'deleteItem', 'deleteItemColumn', 'deleteItemsAll']);
 
@@ -78,7 +78,7 @@ const emit = defineEmits(['isDragging', 'update', 'deleteItem', 'deleteItemColum
  * @param {string | number} itemFontSize - 子项字体大小
  */
 export type PropsType = {
-  data: Array<DragItemDataProps>,
+  data: Array<DragItemType>,
   id: string,
   colors?: Array<string>,
   group: string,
@@ -358,7 +358,7 @@ const onEnd = async (e: any) => {
   }
   sortEnd(e);
   adjustOrder();
-  console.log('dataAbout.list', dataAbout.list);
+  // console.log('dataAbout.list', dataAbout.list);
   // console.groupEnd();
   emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
 }
@@ -408,8 +408,7 @@ const adjustOrder = () => {
   const copyData1: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
   const copyData2: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
   // console.log(dataAbout.list);
-  // console.log(copyData1);
-
+  // console.log('JSON.stringify(copyData1)', JSON.stringify(copyData1));
   copyData1.forEach(item => item.value.length = 0); // 模拟清空
   copyData2.forEach((itemArray: any, index: number) => {
     if (itemArray.value.length === 0) return;
@@ -538,7 +537,7 @@ const removeEventListener = () => {
 
 // 组装子项数据
 const packageItem = (name: string, id: string, isShow: boolean = true, isDrag: boolean = true): DragItemType => {
-  return { name, id, isShow, isDrag }
+  return { name, id, followId: id, isShow, isDrag }
 }
 
 // 获取所有数据 --- 导出方法
@@ -552,19 +551,46 @@ const exposedMethods: DragExposedMethods = {
 };
 defineExpose(exposedMethods);
 
+// 初始化数据列表，所见即所得，特别是子项跟随的场景，应用：模板导入生成的内容排序和导出时要保持一致
+const initDataList = (data: DragItemType[]) => {
+  const res = [];
+  for (let i = 0; i < data.length; i++) {
+    const queue = { key: data[i].id, value: [] as DragItemType[] };
+    for (let j = 0; j < data.length; j++) {
+      if (data[j].followId === data[i].id) {
+        queue.value.push(data[j]);
+      }
+    }
+    if (queue.value.length > 1) {
+      // 将key值与id相同的子项，在value数组中移动到最前面
+      const index = queue.value.findIndex(item => item.id === queue.key);
+      if (index !== 0) {
+        const item = queue.value.splice(index, 1)[0];
+        queue.value.unshift(item);
+      }
+    }
+    res.push(queue);
+  }
+  return res;
+}
+
 watch(() => props.data, (newVal, oldVal) => { // TAG: 这里需要注意，第二次触发，打印的newVal和oldVal都是同一个数组，原因是父级对数组进行了push操作，并没有改变数组的地址，所以这里虽然会触发watch，但newVal和oldVal都是同一个数组。
   // 解决方法：在父级使用JSON.stringify()对数组进行赋值，这里数组地址就改变了，newVal和oldVal就不会是同一个数组了。
   // console.log('watch', newVal, oldVal);
   if ((!oldVal || oldVal?.length === 0) && newVal.length > 0) { // 初始化数据
-    dataAbout.list = newVal.map((item, index) => {
-      return { key: (index + 1).toString(), value: [packageItem(item.name, (index + 1).toString(), true, item.isDrag)] };
+    dataAbout.list = initDataList(newVal);
+    nextTick(() => {
+      if (dataAbout.list.some(item => item.value.length > 1)) {
+        // 如果存在某个列表中存在多个元素，才会发送更新数据事件
+        emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
+      }
     });
   }
   if (dataAbout.list.length > 0 && newVal.length === dataAbout.list.length + 1) { // 新增数据，默认加在最后
     const index = newVal.length;
     dataAbout.list.push({ key: index.toString(), value: [packageItem(newVal[index - 1].name, index.toString(), true, newVal[index - 1].isDrag)] });
   }
-  // console.log('dataAbout.list', dataAbout.list);
+  // console.log('dataAbout.list----------------------------', dataAbout.list);
 }, { deep: true, immediate: true });
 
 onMounted(() => {

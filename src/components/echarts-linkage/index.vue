@@ -39,7 +39,7 @@ import type {
   AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
-import { type DragItemDataProps } from "@/components/drag/type/index";
+import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
 import { ObjUtil } from "@/utils/index";
@@ -118,7 +118,8 @@ const dataAbout = reactive({
     top: 5, // 拖拽legend图例距离顶部距离
     fontSize: 12, // 拖拽legend图例字体大小
     isDragging: false, // 是否拖拽中
-  }
+  },
+  currentHandleMode: 'normal', // 当前操作模式，normal：正常模式，all-replace：全部替换模式
 }) as DataAboutType;
 
 // 定义子画面中表格数据
@@ -156,16 +157,45 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
 
 // 拖拽传入的数据
 const dragDataComputed = (number: number) => {
-  const res: Array<DragItemDataProps> = [];
-  const originData = JSON.parse(JSON.stringify(dataAbout.data[number].data));
+  const res: Array<DragItemType> = [];
+  const originData = dataAbout.data[number].data;
   // 初始化空白echarts时，有占位数据，但name为空，legend不显示
   if (originData.length > 0 && originData[0].name === '') return res;
-  originData.forEach((item: OneDataType) => {
+  originData.forEach((item: OneDataType, index: number) => {
     // switch开关类型不可以拖拽
-    res.push({ name: item.name, isDrag: item.dataType === 'switch' ? false : true });
+    if (item.dragItemOption) {
+      item.dragItemOption.isDrag = item.dataType === 'switch' ? false : true;
+      res.push(JSON.parse(JSON.stringify(item.dragItemOption)));
+    } else {
+      res.push({
+        name: item.name,
+        id: (index + 1).toString(),
+        followId: (index + 1).toString(),
+        isDrag: item.dataType === 'switch' ? false : true,
+        isShow: true,
+      });
+    }
   });
   return res;
 };
+
+// 拖拽组件暴露的操作方法中，都需要调用这个方法，目的是将dataAbout.data[echartsIndex].data.dragItemOption值保持最新
+const setDragItemOption = (dragListData: DragListDataType[], echartsIndex: number) => {
+  dragListData.forEach((dragData) => {
+    const key = dragData.key;
+    dragData.value.forEach((item: DragItemType) => {
+      item.followId = key;
+    });
+  });
+  dataAbout.data[echartsIndex].data.forEach((item: OneDataType, index: number) => {
+    dragListData.forEach((dragData) => {
+      const dragItem = dragData.value.filter((item: DragItemType) => item.id === (index + 1).toString());
+      if (dragItem?.length > 0) {
+        item.dragItemOption = dragItem[0];
+      }
+    });
+  });
+}
 
 /**
  * @description 拖拽更新操作
@@ -177,8 +207,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   // 组装yAxisShowData --- 各个Y轴的显示状态
   function packageYAxisShowData(data: Array<any>): boolean[] {
     const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
-    // dataAbout.yAxisShowData = yAxisShowData;
-    // console.log('legendShowData', dataAbout.yAxisShowData);
+    console.log('legendShowData', yAxisShowData);
     console.log('yAxisShowData', yAxisShowData);
     return yAxisShowData;
   }
@@ -210,10 +239,12 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
     console.log('seriesyAxisIndexData', seriesyAxisIndexData);
     return seriesyAxisIndexData;
   }
-
+  
+  
   console.groupCollapsed('update');
   console.log('data', data);
-  const max = Math.max(...data.map(item => item.value.length));
+  setDragItemOption(data, echartsIndex);
+  // const max = Math.max(...data.map(item => item.value.length));
   const yAxisShowData = packageYAxisShowData(data);
   const seriesOpacityData = packageSeriesOpacityData(data);
   const seriesyAxisIndexData = packageSeriesyAxisIndexData(data);
@@ -225,8 +256,19 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   });
   console.log('dataAbout.data', dataAbout.data);
   console.groupEnd();
+  await nextTick();
+  if (dataAbout.currentHandleMode === 'all-replace') {
+    debounceDragUpdateHandle();
+    return;
+  }
   initEcharts();
 }
+
+// 加一个防抖，目的是防止多个拖拽组件初始化时，数据变化频繁，导致echarts图表频繁更新
+const debounceDragUpdateHandle = useDebounceFn(() => {
+    dataAbout.currentHandleMode = 'normal';
+    initEcharts();
+}, 100);
 
 /**
  * @description 删除数据项
@@ -236,6 +278,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
  */
 const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsIndex: number) => {
   console.groupCollapsed('deleteItem', data, deleteItemsIndex, echartsIndex);
+  setDragItemOption(data, echartsIndex);
   dataAbout.data[echartsIndex].data.splice(deleteItemsIndex, 1);
   dataAbout.data[echartsIndex].isDeleteItem = true;
   dragUpdateHandle(data, echartsIndex);
@@ -252,6 +295,7 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
  */
 const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[], echartsIndex: number) => {
   console.groupCollapsed('deleteItemColumn', data, deleteItemsIndexArray, echartsIndex);
+  setDragItemOption(data, echartsIndex);
   dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
   console.log('dataAbout.data', dataAbout.data[echartsIndex]);
   dataAbout.data[echartsIndex].isDeleteItem = true;
@@ -292,12 +336,36 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
 }
 
 // 判断和组装首尾连接数据
-const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[]) => {
+const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[], echartsData?: SeriesIdDataType) => {
+
+  function initDragItemOption(oneDataType: OneDataType, id: string): DragItemType {
+    return {
+      name: oneDataType.name,
+      id: id,
+      followId: id,
+      isShow: true,
+      isDrag: true,
+    };
+  }
   if (!oneDataType) return oneDataType;
   if (Array.isArray(oneDataType)) {
-    return oneDataType.map((item: OneDataType) => handleMultipleLinkData(item));
+    return oneDataType.map((item: OneDataType, index: number) => {
+      let res = handleMultipleLinkData(item);
+      if (res.dragItemOption) return res;
+      res.dragItemOption = initDragItemOption(item, (index + 1).toString());
+      return res;
+    });
   } else {
-    return handleMultipleLinkData(oneDataType);
+    let res = handleMultipleLinkData(oneDataType);
+    console.log('echartsData----------', res);
+    if (res.dragItemOption) return res;
+    if (echartsData && echartsData.data.length > 0 && echartsData.data[0].name === '') {
+      res.dragItemOption = initDragItemOption(oneDataType, '1');
+    } else {
+      const id = echartsData ? (echartsData.data.length + 1).toString() : '1';
+      res.dragItemOption = initDragItemOption(oneDataType, id);
+    }
+    return res;
   }
 }
 
@@ -332,6 +400,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   dataAbout.data.push(obj);
   judgeOverEchartsMaxCountHandle();
   Extension.setStyleProperty(props, dataAbout.data.length);
+  if (dataAbout.currentHandleMode === 'all-replace') return;
   allUpdateHandleCommon();
 };
 // 组装数据
@@ -389,13 +458,13 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     isExist = echart.data.some((item: OneDataType) => item.name === oneData.name && JSON.stringify(item.customData) === JSON.stringify(oneData.customData));
     return isExist;
   }
-  oneDataType = judgeAndPackageLinkData(oneDataType) as OneDataType;
+  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  oneDataType = judgeAndPackageLinkData(oneDataType, dataAbout.data[index]) as OneDataType;
   if (dataAbout.data.length < 1) {
     ElMessage.warning('请先添加1个echart图表！');
     return;
   }
   dataAbout.currentHandleChartIds = [id];
-  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
@@ -901,6 +970,30 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTag
   return res;
 }
 
+const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
+  const res: Array<Array<DragItemType>> = [];
+  dataAbout.data.forEach((echart: SeriesIdDataType, index: number) => {
+    const oneEchartInfo: Array<DragItemType> = [];
+    echart.data.forEach((series: OneDataType) => {
+      if (series.dragItemOption) {
+        oneEchartInfo.push(series.dragItemOption);
+      } else {
+        if (series.name) {
+          oneEchartInfo.push({
+            name: series.name,
+            id: (index + 1).toString(),
+            followId: (index + 1).toString(),
+            isShow: true,
+            isDrag: true,
+          });
+        }
+      }
+    });
+    oneEchartInfo.length > 0 && res.push(oneEchartInfo);
+  });
+  return JSON.parse(JSON.stringify(res));
+}
+
 /**
  * @description 清空所有echarts数据 --- 导出 
  * @param mode 'clear' | 'delete'， 清空 | 删除，说明：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例
@@ -920,6 +1013,7 @@ const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
 const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   const date1 = new Date().getTime();
   console.log("replaceAllEchartsData start", date1);
+  dataAbout.currentHandleMode = 'all-replace';
   await clearAllEchartsData('delete');
   newDataArray.forEach((item: OneDataType[]) => {
     addEchart(item);
@@ -1456,6 +1550,7 @@ const exposedMethods: ExposedMethods = {
   getMaxEchartsIdSeq,
   getAllDistinctSeriesTagInfo,
   getAllSeriesTagInfo,
+  getTemplateTagsOption,
   updateOneOrMoreEcharts,
   updateAllEcharts,
   updateSimpleEcharts,

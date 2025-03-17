@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-14 10:16:52
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2024-09-19 14:58:40
+ * @LastEditTime: 2025-03-14 10:16:07
  * @FilePath: \vue-echarts-linkage\src\components\drag\type\index.ts
  * @Description: 拖拽组件的类型定义
  */
@@ -21,13 +21,15 @@ export interface DragExposedMethods {
  * @description 拖拽组件中单个子项的类型定义
  * @type DragItemType
  * @property {string} name - 子项名称
- * @property {string} id - 子项id
+ * @property {string} id - 子项自身id
+ * @property {string} followId - 子项跟随的id
  * @property {boolean} isShow - 子项是否显示
  * @property {boolean} isDrag - 子项是否可拖拽
  */
 export type DragItemType = {
   name: string,
   id: string,
+  followId: string,
   isShow: boolean,
   isDrag: boolean,
 }
@@ -44,10 +46,12 @@ export type DragListDataType = {
   value: Array<DragItemType>,
 }
 
-/**
- * @description 拖拽组件中单个子项的props类型定义
- * @type DragItemDataProps
- * @property {string} name - 子项名称
- * @property {boolean} isDrag - 子项是否可拖拽
- */
-export type DragItemDataProps = Pick<DragItemType, 'name' | 'isDrag'>;
+// /**
+//  * @description 拖拽组件中单个子项的props类型定义
+//  * @type DragItemDataProps
+//  * @property {string} name - 子项名称
+//  * @property {boolean} isDrag - 子项是否可拖拽
+//  * @property {string} id - 子项自身id
+//  * @property {string} followId - 子项跟随的id
+//  */
+// export type DragItemDataProps = Pick<DragItemType, 'name' | 'isDrag' | 'id' | 'followId'>;

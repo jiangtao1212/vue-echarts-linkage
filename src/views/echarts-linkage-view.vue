@@ -19,6 +19,8 @@
       <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
+      <el-button type="primary" size="small" @click="updateTemplateBtnClick">模拟模板更新</el-button>
+      <el-button type="primary" size="small" @click="getTemplateTagsOptionBtnClick">获取模板信息</el-button>
     </div>
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
@@ -39,9 +41,9 @@
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
-    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align :theme="theme"
-    :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart"
+    :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
+    :theme="theme" :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false"
+    :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
@@ -55,6 +57,7 @@ import type {
   OneDataType, SeriesTagType, DropEchartType, DeleteEchartType,
   ListenerGrapicLocationType, SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
 } from '@/components/echarts-linkage/types/index';
+import type { DragItemType } from '@/components/drag/type/index';
 import DarkSvg from "@/assets/svg/dark.svg";
 import LightSvg from "@/assets/svg/light.svg";
 
@@ -449,6 +452,111 @@ const updateVisualMapBtnClick = () => {
   echartsLinkageRef.value?.updateOneEchartsVisualMapSeries(id, [{ seriesName: seriesName, pieces: [{ min: 1000, max: 3000 }] }]);
 }
 
+/**
+ * @description 组装模板tag数据
+ * @param mode 'template' | 'normal' 合并模式 | 普通模式
+ * @returns 
+ */
+const packageTemplateTagsArray = (mode: 'template' | 'normal') => {
+  let templateTagsArray: Array<DragItemType[]> = [];
+  if (mode === 'template') {
+    const templateTags1 = [
+      { name: 'STD1-波形1', id: '1', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-牌坊1', id: '2', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-电机1', id: '3', followId: '3', isDrag: true, isShow: true },
+      { name: 'STD1-齿轮1', id: '4', followId: '3', isDrag: true, isShow: false },
+    ] as DragItemType[];
+    const templateTags2 = [
+      { name: 'STD1-波形3', id: '1', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-牌坊3', id: '2', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-电机3', id: '3', followId: '3', isDrag: true, isShow: true },
+      { name: 'STD1-齿轮3', id: '4', followId: '2', isDrag: true, isShow: false },
+    ] as DragItemType[];
+    const templateTags3 = [
+      { name: 'STD1-波形4', id: '1', followId: '1', isDrag: true, isShow: true },
+      { name: 'STD1-牌坊4', id: '2', followId: '3', isDrag: true, isShow: false },
+      { name: 'STD1-电机4', id: '3', followId: '3', isDrag: true, isShow: true },
+      { name: 'STD1-齿轮4', id: '4', followId: '4', isDrag: true, isShow: true },
+    ] as DragItemType[];
+    templateTagsArray = [templateTags1, templateTags2, templateTags3];
+  } else {
+    const templateTags1 = [
+      { name: 'STD1-波形1', id: '1', followId: '1', isDrag: true, isShow: true },
+      { name: 'STD1-牌坊1', id: '2', followId: '2', isDrag: true, isShow: true },
+      { name: 'STD1-电机1', id: '3', followId: '3', isDrag: true, isShow: false },
+      { name: 'STD1-齿轮1', id: '4', followId: '4', isDrag: true, isShow: true },
+    ] as DragItemType[];
+    const templateTags2 = [
+      { name: 'STD1-波形3', id: '1', followId: '1', isDrag: true, isShow: true },
+      { name: 'STD1-牌坊3', id: '2', followId: '2', isDrag: true, isShow: true },
+      { name: 'STD1-电机3', id: '3', followId: '3', isDrag: true, isShow: false },
+      { name: 'STD1-齿轮3', id: '4', followId: '4', isDrag: true, isShow: true },
+    ] as DragItemType[];
+    const templateTags3 = [
+      { name: 'STD1-波形4', id: '1', followId: '1', isDrag: true, isShow: true },
+      { name: 'STD1-牌坊4', id: '2', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-电机4', id: '3', followId: '3', isDrag: true, isShow: true },
+      { name: 'STD1-齿轮4', id: '4', followId: '4', isDrag: true, isShow: true },
+    ] as DragItemType[];
+    templateTagsArray = [templateTags1, templateTags2, templateTags3];
+  }
+  return templateTagsArray;
+}
+
+// 模拟模板更新
+const updateTemplateBtnClick = () => {
+  const templateTagsArray = packageTemplateTagsArray('template');
+  // const templateTagsArray = packageTemplateTagsArray('normal');
+
+  const res: Array<OneDataType[]> = [];
+  for (let i = 0; i < templateTagsArray.length; i++) {
+    const templateTags = templateTagsArray[i];
+    const oneDataTypeArray: OneDataType[] = [];
+    for (let j = 0; j < templateTags.length; j++) {
+      const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+      const oneDataType: OneDataType = {
+        name: templateTags[j].name,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+        dragItemOption: templateTags[j],
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    res.push(oneDataTypeArray);
+  }
+  echartsLinkageRef.value?.replaceAllEchartsData(res);
+}
+
+// 获取模板信息
+const getTemplateTagsOptionBtnClick = () => {
+  const templateTagsOption = echartsLinkageRef.value?.getTemplateTagsOption() as Array<Array<DragItemType>>;
+  console.log("templateTagsOption", templateTagsOption);
+
+  const res: Array<OneDataType[]> = [];
+  for (let i = 0; i < templateTagsOption.length; i++) {
+    const templateTags = templateTagsOption[i];
+    const oneDataTypeArray: OneDataType[] = [];
+    for (let j = 0; j < templateTags.length; j++) {
+      const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+      const oneDataType: OneDataType = {
+        name: templateTags[j].name,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+        dragItemOption: templateTags[j],
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    res.push(oneDataTypeArray);
+  }
+  echartsLinkageRef.value?.replaceAllEchartsData(res);
+}
+
 // 新增series按钮
 const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   let seriesData = RandomUtil.getSeriesData(1000);
@@ -473,7 +581,6 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     // yAxisMin: 100,
     // yAxisMax: 1000,
     type: type,
-    // todo: 需要优化，默认应该显示全部的series的markLine，对于重复的完全相等的markLine，应该只显示一个(使用json字符串来判断)
     markLineArray: [
       { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },
       { label: { show: true, position: 'insideMiddleTop', formatter: bbb }, xAxis: bbb }
@@ -616,7 +723,8 @@ onMounted(() => {
     column-gap: 5px;
   }
 
-  .btn_realtime, .btn_theme {
+  .btn_realtime,
+  .btn_theme {
     display: flex;
     gap: 5px;
   }
