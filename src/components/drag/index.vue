@@ -580,10 +580,8 @@ watch(() => props.data, (newVal, oldVal) => { // TAG: 这里需要注意，第�
   if ((!oldVal || oldVal?.length === 0) && newVal.length > 0) { // 初始化数据
     dataAbout.list = initDataList(newVal);
     nextTick(() => {
-      if (dataAbout.list.some(item => item.value.length > 1)) {
-        // 如果存在某个列表中存在多个元素，才会发送更新数据事件
+        // 初始化完毕，才会发送更新数据事件
         emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
-      }
     });
   }
   if (dataAbout.list.length > 0 && newVal.length === dataAbout.list.length + 1) { // 新增数据，默认加在最后

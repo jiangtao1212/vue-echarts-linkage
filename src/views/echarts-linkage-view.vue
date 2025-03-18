@@ -19,7 +19,8 @@
       <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
       <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
-      <el-button type="primary" size="small" @click="updateTemplateBtnClick">模拟模板更新</el-button>
+      <el-button type="primary" size="small" @click="updateTemplateBtnClick()">模拟模板更新</el-button>
+      <el-button type="primary" size="small" @click="updateTemplateBtnClick('template')">模拟模板更新（叠加）</el-button>
       <el-button type="primary" size="small" @click="getTemplateTagsOptionBtnClick">获取模板信息</el-button>
     </div>
     <div class="btn_drag">
@@ -504,9 +505,8 @@ const packageTemplateTagsArray = (mode: 'template' | 'normal') => {
 }
 
 // 模拟模板更新
-const updateTemplateBtnClick = () => {
-  const templateTagsArray = packageTemplateTagsArray('template');
-  // const templateTagsArray = packageTemplateTagsArray('normal');
+const updateTemplateBtnClick = (mode: "template" | "normal" = 'normal') => {
+  const templateTagsArray = packageTemplateTagsArray(mode);
 
   const res: Array<OneDataType[]> = [];
   for (let i = 0; i < templateTagsArray.length; i++) {

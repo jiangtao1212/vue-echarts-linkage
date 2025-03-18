@@ -239,8 +239,8 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
     console.log('seriesyAxisIndexData', seriesyAxisIndexData);
     return seriesyAxisIndexData;
   }
-  
-  
+
+
   console.groupCollapsed('update');
   console.log('data', data);
   setDragItemOption(data, echartsIndex);
@@ -266,8 +266,8 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
 
 // 加一个防抖，目的是防止多个拖拽组件初始化时，数据变化频繁，导致echarts图表频繁更新
 const debounceDragUpdateHandle = useDebounceFn(() => {
-    dataAbout.currentHandleMode = 'normal';
-    initEcharts();
+  dataAbout.currentHandleMode = 'normal';
+  initEcharts();
 }, 100);
 
 /**
@@ -1011,8 +1011,9 @@ const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
 
 // 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 --- 导出
 const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
-  const date1 = new Date().getTime();
-  console.log("replaceAllEchartsData start", date1);
+  const date = new Date().getTime();
+  console.log("replaceAllEchartsData start", date);
+  // 切换为all-replace模式
   dataAbout.currentHandleMode = 'all-replace';
   await clearAllEchartsData('delete');
   newDataArray.forEach((item: OneDataType[]) => {
@@ -1190,7 +1191,7 @@ const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
       if (!isUpdate) return; // 无需更新，直接返回
       // 赋值给实例，并且触发更新 -- 注意：这里的X轴数据需要转换为字符串，否则会导致echarts渲染异常
       const xAxisData = echart.data[0].seriesData.map(item => item[0] + '');
-      const seriesData = echart.data.map((series: OneDataType) => ({data: series.seriesData.map(item => [item[0] + '', item[1]])}));
+      const seriesData = echart.data.map((series: OneDataType) => ({ data: series.seriesData.map(item => [item[0] + '', item[1]]) }));
       // console.log('updateSimpleEcharts', echart.id, xAxisData, seriesData);
       echartsInstance.setOption({
         xAxis: [{
