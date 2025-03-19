@@ -484,18 +484,18 @@ const packageTemplateTagsArray = (mode: 'template' | 'normal') => {
     const templateTags1 = [
       { name: 'STD1-波形1', id: '1', followId: '1', isDrag: true, isShow: true },
       { name: 'STD1-牌坊1', id: '2', followId: '2', isDrag: true, isShow: true },
-      { name: 'STD1-电机1', id: '3', followId: '3', isDrag: true, isShow: false },
+      { name: 'STD1-电机1', id: '3', followId: '3', isDrag: true, isShow: true },
       { name: 'STD1-齿轮1', id: '4', followId: '4', isDrag: true, isShow: true },
     ] as DragItemType[];
     const templateTags2 = [
       { name: 'STD1-波形3', id: '1', followId: '1', isDrag: true, isShow: true },
       { name: 'STD1-牌坊3', id: '2', followId: '2', isDrag: true, isShow: true },
-      { name: 'STD1-电机3', id: '3', followId: '3', isDrag: true, isShow: false },
+      { name: 'STD1-电机3', id: '3', followId: '3', isDrag: true, isShow: true },
       { name: 'STD1-齿轮3', id: '4', followId: '4', isDrag: true, isShow: true },
     ] as DragItemType[];
     const templateTags3 = [
       { name: 'STD1-波形4', id: '1', followId: '1', isDrag: true, isShow: true },
-      { name: 'STD1-牌坊4', id: '2', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-牌坊4', id: '2', followId: '2', isDrag: true, isShow: true },
       { name: 'STD1-电机4', id: '3', followId: '3', isDrag: true, isShow: true },
       { name: 'STD1-齿轮4', id: '4', followId: '4', isDrag: true, isShow: true },
     ] as DragItemType[];
