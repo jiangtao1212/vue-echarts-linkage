@@ -357,7 +357,7 @@ const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[], echa
     });
   } else {
     let res = handleMultipleLinkData(oneDataType);
-    console.log('echartsData----------', res);
+    // console.log('echartsData----------', res);
     if (res.dragItemOption) return res;
     if (echartsData && echartsData.data.length > 0 && echartsData.data[0].name === '') {
       res.dragItemOption = initDragItemOption(oneDataType, '1');
@@ -400,7 +400,6 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
   dataAbout.data.push(obj);
   judgeOverEchartsMaxCountHandle();
   Extension.setStyleProperty(props, dataAbout.data.length);
-  if (dataAbout.currentHandleMode === 'all-replace') return;
   allUpdateHandleCommon();
 };
 // 组装数据
@@ -480,6 +479,20 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     dataAbout.data[index].data.push(oneDataType);
   }
   await nextTick();
+  initEcharts();
+  await nextTick();
+  dataAbout.currentHandleChartIds = [''];
+}
+
+// 初始化某个echarts中所有series
+const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) => {
+  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  oneDataArray.forEach((item: OneDataType) => {
+    item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
+  });
+  dataAbout.data[index].data = oneDataArray;
+  await nextTick();
+  // console.log('-------------------------------id：', id);
   initEcharts();
   await nextTick();
   dataAbout.currentHandleChartIds = [''];
@@ -970,6 +983,7 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTag
   return res;
 }
 
+// 获取所有echarts图表的拖拽子项配置(用于模版渲染) --- 导出
 const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
   const res: Array<Array<DragItemType>> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType, index: number) => {
@@ -1006,19 +1020,45 @@ const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
   await nextTick();
   initEcharts();
   await nextTick();
-  mode === 'clear' && initEmptyEcharts(count);
+  mode === 'clear' && (await initEmptyEcharts(count));
 }
 
 // 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 --- 导出
 const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
-  const date = new Date().getTime();
-  console.log("replaceAllEchartsData start", date);
+  // 处理echarts实例数量变化
+  async function handle(oldCount: number, newCount: number) {
+    console.log('oldCount', oldCount, 'newCount', newCount);
+    if (oldCount > newCount) {
+      // 删除多余的echarts实例
+      const spliceData = dataAbout.data.slice(newCount);
+      spliceData.forEach(async (item: SeriesIdDataType) => {
+        await deleteEchart(item.id);
+      });
+    } else if (oldCount < newCount) {
+      // 添加新的echarts实例
+      for (let i = oldCount; i < newCount; i++) {
+        await addEchart();
+      }
+    }
+  }
+
+  console.time("replaceAllEchartsData time");
   // 切换为all-replace模式
   dataAbout.currentHandleMode = 'all-replace';
-  await clearAllEchartsData('delete');
-  newDataArray.forEach((item: OneDataType[]) => {
-    addEchart(item);
+  // 清空所有echarts实例为空白Echarts
+  await clearAllEchartsData('clear');
+  const oldCount = dataAbout.data.length;
+  const newCount = newDataArray.length;
+  // 处理echarts实例数量变化
+  await handle(oldCount, newCount);
+  // 添加新的series
+  console.log('开始添加新的series');
+  newDataArray.forEach(async (item: OneDataType[], index: number) => {
+    const id = dataAbout.data[index].id;
+    await initOneEchartAllSeries(id, item);
   });
+  await nextTick();
+  console.timeEnd("replaceAllEchartsData time");
 }
 
 /**

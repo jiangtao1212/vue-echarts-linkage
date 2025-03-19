@@ -463,7 +463,7 @@ const packageTemplateTagsArray = (mode: 'template' | 'normal') => {
   if (mode === 'template') {
     const templateTags1 = [
       { name: 'STD1-波形1', id: '1', followId: '2', isDrag: true, isShow: false },
-      { name: 'STD1-牌坊1', id: '2', followId: '2', isDrag: true, isShow: false },
+      { name: 'STD1-牌坊1', id: '2', followId: '2', isDrag: true, isShow: true },
       { name: 'STD1-电机1', id: '3', followId: '3', isDrag: true, isShow: true },
       { name: 'STD1-齿轮1', id: '4', followId: '3', isDrag: true, isShow: false },
     ] as DragItemType[];

@@ -574,8 +574,7 @@ const initDataList = (data: DragItemType[]) => {
   return res;
 }
 
-watch(() => props.data, (newVal, oldVal) => { // TAG: 这里需要注意，第二次触发，打印的newVal和oldVal都是同一个数组，原因是父级对数组进行了push操作，并没有改变数组的地址，所以这里虽然会触发watch，但newVal和oldVal都是同一个数组。
-  // 解决方法：在父级使用JSON.stringify()对数组进行赋值，这里数组地址就改变了，newVal和oldVal就不会是同一个数组了。
+watch(() => props.data, (newVal, oldVal) => {
   // console.log('watch', newVal, oldVal);
   if ((!oldVal || oldVal?.length === 0) && newVal.length > 0) { // 初始化数据
     dataAbout.list = initDataList(newVal);
