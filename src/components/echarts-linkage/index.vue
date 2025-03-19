@@ -267,7 +267,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
 // 加一个防抖，目的是防止多个拖拽组件初始化时，数据变化频繁，导致echarts图表频繁更新
 const debounceDragUpdateHandle = useDebounceFn(() => {
   dataAbout.currentHandleMode = 'normal';
-  initEcharts();
+  allUpdateHandleCommon();
 }, 100);
 
 /**
