@@ -23,7 +23,7 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} updateAllEcharts 更新所有echarts图表
  * @param {Function} updateSimpleEcharts 简单更新echarts图表的系列数据
  * @param {Function} clearAllEchartsData 清空所有echarts图表数据：当mode为'clear'（默认值）时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例
- * @param {Function} replaceAllEchartsData 替换所有echarts图表数据
+ * @param {Function} replaceAllEchartsData 替换所有echarts图表数据，模板更新
  * @param {Function} downloadAllEchartsImg 下载所有echarts图表图片
  * @param {Function} realTimeUpdate 实时更新echarts图表数据
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据

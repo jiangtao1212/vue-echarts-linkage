@@ -207,7 +207,6 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   // 组装yAxisShowData --- 各个Y轴的显示状态
   function packageYAxisShowData(data: Array<any>): boolean[] {
     const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
-    console.log('legendShowData', yAxisShowData);
     console.log('yAxisShowData', yAxisShowData);
     return yAxisShowData;
   }
@@ -220,8 +219,6 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
         seriesOpacityData[+subItem.id - 1] = subItem.isShow;
       });
     });
-    // dataAbout.seriesOpacityData = seriesOpacityData;
-    // console.log('seriesOpacityData', dataAbout.seriesOpacityData);
     console.log('seriesOpacityData', seriesOpacityData);
     return seriesOpacityData;
   }
@@ -234,12 +231,9 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
         seriesyAxisIndexData[+subItem.id - 1] = index;
       });
     });
-    // dataAbout.seriesyAxisIndexData = seriesyAxisIndexData;
-    // console.log('seriesyAxisIndexData', dataAbout.seriesyAxisIndexData);
     console.log('seriesyAxisIndexData', seriesyAxisIndexData);
     return seriesyAxisIndexData;
   }
-
 
   console.groupCollapsed('update');
   console.log('data', data);
@@ -254,7 +248,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
     item.seriesShow = seriesOpacityData[index];
     item.seriesYAxisIndex = seriesyAxisIndexData[index];
   });
-  console.log('dataAbout.data', dataAbout.data);
+  // console.log('dataAbout.data', dataAbout.data);
   console.groupEnd();
   await nextTick();
   if (dataAbout.currentHandleMode === 'all-replace') {
@@ -491,11 +485,7 @@ const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) =
     item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
   });
   dataAbout.data[index].data = oneDataArray;
-  await nextTick();
-  // console.log('-------------------------------id：', id);
-  initEcharts();
-  await nextTick();
-  dataAbout.currentHandleChartIds = [''];
+  // 注：这里不需要渲染，因为drag组件中已经监听了data中dragItemOption数据的变化，会自动渲染
 }
 
 // 监听，赋值最大的id序号
@@ -562,7 +552,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
     if ((dataAbout.isAllUpdate || (dataAbout.currentHandleChartIds.includes(id) && dataEcharts.data.length === 1))
-      && dataEcharts.data[0].visualMapSeries) {
+      && (dataEcharts.data.length > 0 && dataEcharts.data[0].visualMapSeries)) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       // 注：这里有两种情况，首先第一个数据中visualMapSeries必须存在
       // 情况1：整体更新时，传入了视觉映射数据，则需要重新渲染实例
@@ -1013,17 +1003,23 @@ const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
  * @param mode 'clear' | 'delete'， 清空 | 删除，说明：当mode为'clear'时，清除数据保留当前空白echarts实例，当mode为'delete'时，删除当前实例
  */
 const clearAllEchartsData = async (mode: 'clear' | 'delete' = 'clear') => {
-  const count = dataAbout.data.length;
-  dataAbout.data = [];
-  dataAbout.maxEchartsIdSeq = 0;
-  Extension.setStyleProperty(props, dataAbout.data.length);
-  await nextTick();
-  initEcharts();
-  await nextTick();
-  mode === 'clear' && (await initEmptyEcharts(count));
+  if (mode === 'clear') {
+    // 清空数据，保留当前空白echarts实例
+    dataAbout.data.forEach(async (item: SeriesIdDataType) => {
+      item.data = [];
+      item.isDeleteItem = true;
+    });
+    await allUpdateHandleCommon();
+  } else {
+    // 删除所有实例
+    dataAbout.data = [];
+    dataAbout.maxEchartsIdSeq = 0;
+    Extension.setStyleProperty(props, dataAbout.data.length);
+    await initEcharts();
+  }
 }
 
-// 替换所有echarts，内部为先清除再添加，保证新旧echarts图表数量和数据不存在关联性 --- 导出
+// 替换所有echarts，模版更新 --- 导出
 const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   // 处理echarts实例数量变化
   async function handle(oldCount: number, newCount: number) {
@@ -1043,15 +1039,15 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   }
 
   console.time("replaceAllEchartsData time");
-  // 切换为all-replace模式
+  // 1.切换为all-replace模式
   dataAbout.currentHandleMode = 'all-replace';
-  // 清空所有echarts实例为空白Echarts
-  await clearAllEchartsData('clear');
+  // 2.清空所有echarts实例为空白Echarts
+  await clearAllEchartsData();
   const oldCount = dataAbout.data.length;
   const newCount = newDataArray.length;
-  // 处理echarts实例数量变化
+  // 3.处理echarts实例数量变化
   await handle(oldCount, newCount);
-  // 添加新的series
+  // 4.各个Echarts实例添加新的series
   console.log('开始添加新的series');
   newDataArray.forEach(async (item: OneDataType[], index: number) => {
     const id = dataAbout.data[index].id;
