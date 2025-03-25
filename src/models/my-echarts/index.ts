@@ -1,7 +1,7 @@
 import * as echarts from "echarts/core";
 import { BarChart, LineChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
-import { TooltipComponent, LegendComponent, ToolboxComponent, DataZoomComponent, VisualMapComponent, GridComponent  } from 'echarts/components';
+import { TooltipComponent, LegendComponent, ToolboxComponent, DataZoomComponent, VisualMapComponent, GridComponent, GraphicComponent } from 'echarts/components';
 
 // 注册必须的组件
 echarts.use([
@@ -13,7 +13,8 @@ echarts.use([
   ToolboxComponent,
   DataZoomComponent,
   VisualMapComponent,
-  GridComponent
+  GridComponent,
+  GraphicComponent
 ]);
 
 export default echarts;

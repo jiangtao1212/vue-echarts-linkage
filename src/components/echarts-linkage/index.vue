@@ -30,13 +30,12 @@ import echarts from "@/models/my-echarts/index";
 import type { EChartsOption, ToolboxComponentOption } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
+import { THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
-  DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
-  VisualMapSeriesType, LinkDataType, SeriesDataType, SegementType,
-  AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
+  DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType, 
+  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
@@ -44,6 +43,7 @@ import MySheet from "@/components/sheet/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
 import { ObjUtil } from "@/utils/index";
 import Extension from './extension';
+import HandleGraph from './handleGraph';
 
 /**
  * @description 组件props类型
@@ -102,7 +102,9 @@ const dialogVisible = ref(false);
 ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
 setMergedOptionTemplate(props.extraOption);
-const emit = defineEmits(['drop-echart', 'listener-graphic-location', 'delete-echart', 'listener-excel-view']);
+const emit = defineEmits([HandleGraph.LISTENER_GRAPHIC_LOCATION, 'drop-echart', 'delete-echart', 'listener-excel-view']);
+HandleGraph.setEmit(emit);
+
 // 定义相关数据
 const dataAbout = reactive({
   groupsName: [], // 组名数组
@@ -306,6 +308,7 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
 const deleteItemsAll = async (echartsIndex: number) => {
   console.groupCollapsed('deleteItemsAll', echartsIndex);
   dataAbout.data[echartsIndex].data = [];
+  dataAbout.data[echartsIndex].graphics = [];
   dataAbout.data[echartsIndex].isDeleteItem = true;
   initEcharts();
   await nextTick();
@@ -413,7 +416,7 @@ const addEchartJudgeLinkage = () => {
   let graphics: GraphicLocationInfoType[] | undefined;
   if (props.isLinkage && dataAbout.data.length > 0) {
     theme = dataAbout.data[0].theme;
-    if (props.useGraphicLocation) {
+    if (props.useGraphicLocation && dataAbout.data[0].data?.[0]?.name !== '') {
       graphics = dataAbout.data[0].graphics as GraphicLocationInfoType[];
     }
   }
@@ -682,13 +685,13 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
   extraHandleByOption(option); // 获取option数据，用于其他一些额外操作
   // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
   dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
-  myChart.on('datazoom', (params: any) => datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), params));
+  myChart.on('datazoom', (_params: any) => HandleGraph.datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), props, dataAbout));
   console.log('option', option);
   myChart.resize();
   // 图形设置，必须在myChart.resize()之后，否则会导致图形位置不正确
   props.useGraphicLocation
     && dataArray.data[0].seriesData.length > 0
-    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => graphicDragLinkage(params, dataArray.id)));
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)));
   console.groupEnd();
   return myChart;
 }
@@ -734,7 +737,7 @@ const initEcharts = async () => {
     myChart.group = groupName;
     !usedGroupNames.includes(groupName) && usedGroupNames.push(groupName);
   });
-  props.useGraphicLocation && emitGraphicLocation(); // 初始化时发送图形位置信息
+  props.useGraphicLocation && HandleGraph.emitGraphicLocation(dataAbout); // 初始化时发送图形位置信息
   dataAbout.restoreClickBool = false;
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
   props.isLinkage && echartsConnect(usedGroupNames); // 联动
@@ -770,120 +773,6 @@ const disposeEcharts = () => {
       echartsInstance.dispose();
     }
   });
-}
-
-/**
- * @description 监听datazoom事件，计算当前实例的图形位置信息，赋值给其他实例，并且触发更新
- * 联动模式下：datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
- * 非联动模式下：只处理当前实例的图形
- * @param graphicLocation 图形位置信息
- * @param currentEchartsId 当前实例id
- * @param xAxisData x轴数组数据
- */
-const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[], params: any) => {
-  // console.log('datazoomEvent', graphicLocation, currentEchartsId, xAxisData);
-  // console.log('datazoomEvent', params.batch[0].startValue, params.batch[0].endValue); // 这里可以获取当前实例的datazoom范围
-  if (props.isLinkage && (dataAbout.data[0].id !== currentEchartsId)) return; // 联动模式下，只处理计算第一个实例的图形
-  if (animating || !graphicLocation) return; // 防止动画过程中重复触发
-  animating = true;
-  requestAnimationFrame(() => {
-    // 联动模式下，datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
-    const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
-    let myChart: echarts.ECharts | undefined = echarts.getInstanceByDom(element);
-    const datazoomGraphic = Extension.computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
-    // 赋值给所有实例，并且触发更新
-    dataAbout.data.forEach((item: SeriesIdDataType) => {
-      if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
-      item.graphics = datazoomGraphic;
-      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-      let myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
-      setOptionGraphic(myChart, datazoomGraphic);
-    });
-    emitGraphicLocation();
-    animating = false;
-  });
-}
-
-
-let animating = false;
-/**
- * @description 图形移动联动, 使用requestAnimationFrame优化性能
- * @param params 图形位置信息
- * @param currentEchartsId 当前实例id
- */
-const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEchartsId: string) => {
-  if (animating) return;
-  animating = true;
-  requestAnimationFrame(() => {
-    dataAbout.data.forEach((item: SeriesIdDataType) => {
-      // console.log('graphicDragLinkage', item.id, graphicLocation.graphicId);
-      if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
-      // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
-      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-      let myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
-      let notDragGraphic: GraphicLocationInfoType = {} as any;
-      item.graphics && item.graphics.forEach((graphic: GraphicLocationInfoType) => {
-        if (graphic.graphicId === graphicLocation.graphicId) {
-          graphic.positionX = graphicLocation.positionX;
-          graphic.xAxisSeq = graphicLocation.xAxisSeq;
-          graphic.xAxisX = graphicLocation.xAxisX;
-        } else {
-          notDragGraphic = graphic;
-          notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
-          const seq = notDragGraphic.xAxisSeq;
-          notDragGraphic.xAxisX = item.data[0].seriesData[seq][0].toString();
-        }
-      });
-      setOptionGraphic(myChart, [graphicLocation, notDragGraphic]);
-    });
-    emitGraphicLocation();
-    animating = false;
-  });
-};
-
-/**
- * @description 渲染图形
- * @param myChart echarts实例
- * @param graphics 图形元素数组
- */
-const setOptionGraphic = (myChart: echarts.ECharts, graphics: GraphicLocationInfoType[]) => {
-  myChart.setOption({
-    graphic: [
-      {
-        id: graphics[0].graphicId,
-        type: 'rect', // 这里必须要添加图形类型，否则打包后发布新版本再引入会报错
-        position: [graphics[0].positionX, 0],
-        info: graphics[0].xAxisX,
-        textContent: {
-          type: 'text',
-          style: {
-            text: graphics[0].xAxisX,
-          }
-        },
-      },
-      {
-        id: graphics[1].graphicId,
-        type: 'rect',
-        position: [graphics[1].positionX, 0],
-        info: graphics[1].xAxisX,
-        textContent: {
-          type: 'text',
-          style: {
-            text: graphics[1].xAxisX,
-          }
-        },
-      }
-    ],
-  });
-}
-
-// 组装所有图形数据，发送给父组件（1.初始化时调，2.移动图形时调用）
-const emitGraphicLocation = () => {
-  const graphicLocation: ListenerGrapicLocationType = [];
-  dataAbout.data.forEach((item: SeriesIdDataType) => {
-    graphicLocation.push({ id: item.id, graphics: item.graphics ? JSON.parse(JSON.stringify(item.graphics)) : [] });
-  });
-  emit('listener-graphic-location', graphicLocation);
 }
 
 // 拖拽移动事件
@@ -1164,7 +1053,7 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
   }
 }
 
-// 更新单个或者多个echarts图表 //todo: 需要测试
+// 更新单个或者多个echarts图表 // todo: 需要测试
 const updateOneOrMoreEcharts = async (updateData: AppointEchartsTagType | Array<AppointEchartsTagType>) => {
   if (Array.isArray(updateData)) {
     // 数组，更新多个echarts图表
@@ -1273,6 +1162,7 @@ const getMaxEchartsIdSeq = () => {
   return dataAbout.maxEchartsIdSeq;
 }
 
+let animating = false;
 // 新增实时数据更新 --- 导出
 const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) => {
   const LIMIT_COUNT = limitCount; // 限制最大数据量
@@ -1301,6 +1191,8 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
     return;
   }
   console.log('realTimeUpdate', dataAbout.data);
+  if (animating) return; // 防止动画过程中重复触发
+  animating = true;
   requestAnimationFrame(() => {
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
