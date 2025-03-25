@@ -17,6 +17,7 @@ echarts.use([
   GraphicComponent
 ]);
 
+// import * as echarts from 'echarts';
 export default echarts;
 export type {
   EChartsOption,
