@@ -23,19 +23,19 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, reactive, onMounted, nextTick, computed, watch, onBeforeUnmount, onBeforeMount } from 'vue';
+import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, onBeforeMount } from 'vue';
 import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
-import * as echarts from "echarts";
-import { type EChartsOption, type EChartsType, type LineSeriesOption, type BarSeriesOption, type ToolboxComponentOption } from "echarts";
-import { useDebounceFn, useThrottleFn } from "@vueuse/core";
+import echarts from "@/models/my-echarts/index";
+import type { EChartsOption, ToolboxComponentOption } from "@/models/my-echarts/index";
+import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { XAXIS_ID, THEME, optionTemplate } from "@/models/echarts-linkage-model/staticTemplates"
+import { XAXIS_ID, THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, ListenerGrapicLocationType,
-  VisualMapSeriesType, SeriesLinkType, LinkDataType, SeriesDataType, MarkLineDataType, SegementType,
+  VisualMapSeriesType, LinkDataType, SeriesDataType, SegementType,
   AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -130,7 +130,7 @@ const sheetAbout = reactive({
 
 // 计算每个echarts的父级容器颜色
 const computedBackgroundColor = (data: SeriesIdDataType) => {
-  const echartsId = data.id;
+  // const echartsId = data.id;
   const echartsTheme = data.theme;
   let res = '';
   // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
@@ -214,8 +214,8 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   // 组装seriesOpacityData --- 各个series的透明度
   function packageSeriesOpacityData(data: Array<any>): boolean[] {
     const seriesOpacityData = new Array(data.length).fill(0);
-    data.forEach((item, index) => {
-      item.value.forEach((subItem: any, subIndex: number) => {
+    data.forEach((item) => {
+      item.value.forEach((subItem: any) => {
         seriesOpacityData[+subItem.id - 1] = subItem.isShow;
       });
     });
@@ -227,7 +227,7 @@ const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
   function packageSeriesyAxisIndexData(data: Array<any>): number[] {
     const seriesyAxisIndexData = new Array(data.length).fill(0);
     data.forEach((item, index) => {
-      item.value.forEach((subItem: any, subIndex: number) => {
+      item.value.forEach((subItem: any) => {
         seriesyAxisIndexData[+subItem.id - 1] = index;
       });
     });
@@ -329,18 +329,24 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
   return echartsLinkageModel;
 }
 
+/**
+ * @description 初始化拖拽项
+ * @param oneDataType 系列数据
+ * @param id 拖拽项id
+ * @returns 拖拽项
+ */
+const initDragItemOption = (oneDataType: OneDataType, id: string): DragItemType => {
+  return {
+    name: oneDataType.name,
+    id: id,
+    followId: id,
+    isShow: true,
+    isDrag: true,
+  };
+}
+
 // 判断和组装首尾连接数据
 const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[], echartsData?: SeriesIdDataType) => {
-
-  function initDragItemOption(oneDataType: OneDataType, id: string): DragItemType {
-    return {
-      name: oneDataType.name,
-      id: id,
-      followId: id,
-      isShow: true,
-      isDrag: true,
-    };
-  }
   if (!oneDataType) return oneDataType;
   if (Array.isArray(oneDataType)) {
     return oneDataType.map((item: OneDataType, index: number) => {
@@ -354,6 +360,7 @@ const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[], echa
     // console.log('echartsData----------', res);
     if (res.dragItemOption) return res;
     if (echartsData && echartsData.data.length > 0 && echartsData.data[0].name === '') {
+      // 初始化时有一个占位数据，name为空，legend不显示
       res.dragItemOption = initDragItemOption(oneDataType, '1');
     } else {
       const id = echartsData ? (echartsData.data.length + 1).toString() : '1';
@@ -480,11 +487,15 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 
 // 初始化某个echarts中所有series
 const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) => {
-  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
-  oneDataArray.forEach((item: OneDataType) => {
+  const EchartsIndex = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  oneDataArray.forEach((item: OneDataType, index: number) => {
+    if (!item.dragItemOption) {
+      const id = (index + 1).toString();
+      item.dragItemOption = initDragItemOption(item, id);
+    }
     item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
   });
-  dataAbout.data[index].data = oneDataArray;
+  dataAbout.data[EchartsIndex].data = oneDataArray;
   // 注：这里不需要渲染，因为drag组件中已经监听了data中dragItemOption数据的变化，会自动渲染
 }
 
@@ -526,7 +537,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
   const id = dataEcharts.id;
   console.groupCollapsed('judgeEchartInstance', id);
   const element: HTMLElement = document.getElementById(id) as HTMLElement;
-  let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+  let myChart: echarts.ECharts | undefined = echarts.getInstanceByDom(element);
   let needHandle = false;
   if (myChart) { // 实例存在
     // 比较当前echarts是否小于所有echarts中y轴数量的最大值，如果小于则需要更新
@@ -654,7 +665,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
   const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme);
   console.log('数据', dataArray.data);
   // 各种处理
-  echartsLinkageModel.setMyDeleteButton((e: any) => deleteEchart(dataArray.id))
+  echartsLinkageModel.setMyDeleteButton((_e: any) => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
@@ -753,7 +764,7 @@ const echartsDisConnect = (usedGroupNames: string[]) => {
 const disposeEcharts = () => {
   dataAbout.data.forEach((item: SeriesIdDataType) => {
     const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-    const echartsInstance = echarts.getInstanceByDom(element) as EChartsType;
+    const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
     if (echartsInstance) {
       // 实例存在，则释放实例
       echartsInstance.dispose();
@@ -778,14 +789,14 @@ const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, c
   requestAnimationFrame(() => {
     // 联动模式下，datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
     const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
-    let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+    let myChart: echarts.ECharts | undefined = echarts.getInstanceByDom(element);
     const datazoomGraphic = Extension.computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
       if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
       item.graphics = datazoomGraphic;
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      let myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
       setOptionGraphic(myChart, datazoomGraphic);
     });
     emitGraphicLocation();
@@ -809,7 +820,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
       if (!props.isLinkage && (item.id !== currentEchartsId)) return; // 非联动状态，只处理当前实例的图形
       // 注意：这里必须根据id重新获取最新的echarts实例，否则会导致后续实例渲染出现问题
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      let myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
       let notDragGraphic: GraphicLocationInfoType = {} as any;
       item.graphics && item.graphics.forEach((graphic: GraphicLocationInfoType) => {
         if (graphic.graphicId === graphicLocation.graphicId) {
@@ -835,7 +846,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
  * @param myChart echarts实例
  * @param graphics 图形元素数组
  */
-const setOptionGraphic = (myChart: EChartsType, graphics: GraphicLocationInfoType[]) => {
+const setOptionGraphic = (myChart: echarts.ECharts, graphics: GraphicLocationInfoType[]) => {
   myChart.setOption({
     graphic: [
       {
@@ -900,7 +911,7 @@ const initLisener = () => {
 
   // 创建 ResizeObserver 实例
   resizeObserver = new ResizeObserver(entries => {
-    for (let entry of entries) {
+    for (let _entry of entries) {
       // console.log('main-container 高度变化:', entry.contentRect.height);
       if (initFlag) {
         // 初始化时，有一次触发，不进行操作，将初始状态标记为false 
@@ -1037,7 +1048,7 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
       }
     }
   }
-
+  await nextTick();
   console.time("replaceAllEchartsData time");
   // 1.切换为all-replace模式
   dataAbout.currentHandleMode = 'all-replace';
@@ -1111,7 +1122,7 @@ const judgeTagIsSame = (tag1: SeriesTagType, tag2: OneDataType) => {
 const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<SeriesTagType>, isLink: boolean) => {
   if (isLink) {
     // 首尾相连模式
-    echart.data.forEach((series: OneDataType, index: number) => {
+    echart.data.forEach((series: OneDataType) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
       let linkData: LinkDataType[] = JSON.parse(JSON.stringify(seriesTag.seriesLink?.linkData as LinkDataType[]));
@@ -1121,7 +1132,7 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
         series.markLineArray = [];
         return;
       } else {
-        const preLength = linkData.length;
+        // const preLength = linkData.length;
         // 处理关联数据linkData中data存在空数据的情况
         linkData = linkData.filter(item => item.data.length > 0); // 过滤掉空数据
         const nextLength = linkData.length;
@@ -1141,7 +1152,7 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
     });
   } else {
     // 非首尾相连模式
-    echart.data.forEach((series: OneDataType, index: number) => {
+    echart.data.forEach((series: OneDataType) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
       const newSeriesData = seriesTag.seriesData;
@@ -1222,7 +1233,7 @@ const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
     let updateCount = 0;
     dataAbout.data.forEach((echart: SeriesIdDataType) => {
       const element: HTMLElement = document.getElementById(echart.id) as HTMLElement;
-      const echartsInstance = echarts.getInstanceByDom(element) as EChartsType;
+      const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
       const isUpdate = judgeUpdateSeries(echart, echartsInstance);
       if (!isUpdate) return; // 无需更新，直接返回
       // 赋值给实例，并且触发更新 -- 注意：这里的X轴数据需要转换为字符串，否则会导致echarts渲染异常
@@ -1295,7 +1306,7 @@ const realTimeUpdate = (allRealTimeData: Array<SeriesTagType>, limitCount = 50) 
     dataAbout.data.forEach((item: SeriesIdDataType) => {
       if (!item.data || item.data.length === 0) return; // 防止空白echarts实例
       const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
-      let myChart: EChartsType = echarts.getInstanceByDom(element) as EChartsType;
+      let myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
       const series = item.data.map((series: OneDataType) => {
         return {
           data: series.seriesData,
@@ -1552,8 +1563,8 @@ const setExcelView = (e: any, id: string) => {
 
   // 组装body数据, primaryKey为数据主键
   function packageExcelViewBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
-    const body = data.xAxisdata?.map((item: string, index: number) => callBack(item)) || [];
-    const headProps = head.map(item => item.prop);
+    const body = data.xAxisdata?.map((item: string) => callBack(item)) || [];
+    // const headProps = head.map(item => item.prop);
     const series = data.data.map((item: OneDataType) => {
       const key = head.find(item1 => item1.label === item.name)?.prop;
       return { 'prop': key, 'value': item.seriesData };

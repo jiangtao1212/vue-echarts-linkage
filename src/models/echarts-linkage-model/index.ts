@@ -2,21 +2,22 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-14 15:24:55
+ * @LastEditTime: 2025-03-25 09:35:41
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
 
-import * as echarts from "echarts";
-import {
-  type EChartsOption,
-  type EChartsType,
-  type LineSeriesOption,
-  type BarSeriesOption,
-  type ToolboxComponentOption,
-  type MarkLineComponentOption,
-  type XAXisComponentOption,
-} from "echarts";
+import type {
+  EChartsOption,
+  LineSeriesOption,
+  BarSeriesOption,
+  SeriesOption,
+  ToolboxComponentOption,
+  LegendComponentOption, 
+  GridComponentOption,
+  TooltipComponentOption,
+  YAXisComponentOption
+} from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
 import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType, ThemeType, SeriesType, OneDataType } from "@/components/echarts-linkage/types/index";
@@ -128,15 +129,15 @@ export class EchartsLinkageModel {
 
   // 设置图例，在图例中设置selected来显示和隐藏series
   setLenged = () => {
-    (this.resultOption.legend as echarts.LegendComponentOption).show = this.legendShow;
+    (this.resultOption.legend as LegendComponentOption).show = this.legendShow;
     const selected: any = {}
-    this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+    this.seriesOptionArray.forEach((item: SeriesOptionType) => {
       const { name } = item;
       if (name) {
         selected[name] = item.seriesShow === false ? false : true;
       }
     });
-    (this.resultOption.legend as echarts.LegendComponentOption).selected = selected;
+    (this.resultOption.legend as LegendComponentOption).selected = selected;
 
   }
 
@@ -196,7 +197,7 @@ export class EchartsLinkageModel {
     xAxis[0].show = this.xAxisData?.length > 0 ? true : false;
     // 如果传入了间隔值，则设置x轴刻度标签显示间隔，否则不设置
     this.setXAxisInterval() && (xAxis[0].axisLabel.interval = this.xAxisInterval);
-    xAxis[0].axisLabel.formatter = (value: string | number, index: number) => {
+    xAxis[0].axisLabel.formatter = (value: string | number) => {
       const seriesLinkMode = this.seriesOptionArray.some((item: SeriesOptionType) => item.seriesLinkMode);
       if (seriesLinkMode) {
         value = value.toString().split('--')[1]
@@ -299,24 +300,24 @@ export class EchartsLinkageModel {
     // 计算grid的left值对齐
     const showYCount = yAxisShowArray.filter((item: boolean) => item === true).length;
     if (showYCount === 0 || showYCount === 1) {
-      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit;
+      (this.resultOption.grid as GridComponentOption).left = this.gridLeftInit;
     } else {
-      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
+      (this.resultOption.grid as GridComponentOption).left = this.gridLeftInit + this.offsetNum * (showYCount - 1);
     }
   }
 
   // 设置tooltip
   setToolTip = () => {
-    const tooltip = this.resultOption.tooltip as echarts.TooltipComponentOption;
+    const tooltip = this.resultOption.tooltip as TooltipComponentOption;
     this.setBaseLineOnToolTip(tooltip);
   }
 
   // 设置基准线值在tooltip中显示
-  setBaseLineOnToolTip = (tooltip: echarts.TooltipComponentOption) => {
+  setBaseLineOnToolTip = (tooltip: TooltipComponentOption) => {
     // // 显示在tooltip中的模式：pieces（非基线模式，自定义模式）| baseLine（基线模式）| false（不显示）
     const baseLines: Array<{ seriesShow: boolean, showOnToolTipMode: VisualMapShowOnToolTipModeType, baseLineValue: SeriesDataType | undefined, piecesOnTooltipValue: string }> = [];
     let someIsShowOnToolTip = false; // 是否有series的isShowOnToolTip为true
-    this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+    this.seriesOptionArray.forEach((item: SeriesOptionType) => {
       const seriesShow = item.seriesShow === false ? false : true;
       if (!item.visualMapSeries) {
         // 视觉映射不存在
@@ -384,7 +385,7 @@ export class EchartsLinkageModel {
   setThemeButtonIcon = () => {
     if (this.resultOption.toolbox) {
       const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
-      const xAxis = this.resultOption.xAxis as XAXisComponentOption[];
+      // const xAxis = this.resultOption.xAxis as XAXisComponentOption[];
       if (toolbox.feature && toolbox.feature.myThemeButton) {
         // console.log('this.theme:', this.theme);
         // console.log('this.swichThemeIcon:', this.swichThemeIcon);
@@ -445,7 +446,7 @@ export class EchartsLinkageModel {
         smooth: true,
         ...param,
       } as SeriesOptionType;
-      let series: echarts.SeriesOption | echarts.SeriesOption[] | undefined = [];
+      let series: SeriesOption | SeriesOption[] | undefined = [];
       switch (defaultParams.type) {
         case 'line':
           series = option.series as LineSeriesOption[];
@@ -528,7 +529,7 @@ export class EchartsLinkageModel {
    */
   setCustomSeriesMarkLine = (data: Array<OneDataType>) => {
     // 筛选出重复的markLine，根据对应yAxis的show值，如果show是true，将第一个重复的显示，后续的不显示
-    function filterRepeatMarkLine(markLineArrays: Array<MarkLineDataType | undefined>, yAxis: Array<echarts.YAXisComponentOption>) {
+    function filterRepeatMarkLine(markLineArrays: Array<MarkLineDataType | undefined>, yAxis: Array<YAXisComponentOption>) {
       // 1. 首先筛选出二维数组的重复项
       const repeatSet = new Set(markLineArrays.filter((item: MarkLineDataType | undefined) => item !== undefined).flat().map(item => JSON.stringify(item)));
       // 记录重复项是否被使用过，Set数组转对象，对象值false表示未被使用过
@@ -574,7 +575,7 @@ export class EchartsLinkageModel {
 
     // 遍历data，遍历yAxis，如果yAxisShow是false，则将markLine的data置空
     const seriesArray = this.resultOption.series as LineSeriesOption[];
-    const yAxis = this.resultOption.yAxis as Array<echarts.YAXisComponentOption>;
+    const yAxis = this.resultOption.yAxis as Array<YAXisComponentOption>;
     if (seriesArray.length === 0) return this;
     const markLineArrays = data.map((item: OneDataType) => item.markLineArray);
     const markLineArraysFilter = filterRepeatMarkLine(markLineArrays, yAxis);
@@ -782,13 +783,13 @@ export class EchartsLinkageModel {
    */
   setGridLeftAlign = (maxShowYCount: number) => {
     let showYCount = 0;
-    this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
+    this.seriesOptionArray.forEach((item: SeriesOptionType) => {
       item.seriesData.length > 0 && showYCount++;
     });
     if (showYCount === 0 || maxShowYCount === 0) {
-      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit;
+      (this.resultOption.grid as GridComponentOption).left = this.gridLeftInit;
     } else {
-      (this.resultOption.grid as echarts.GridComponentOption).left = this.gridLeftInit + this.offsetNum * (maxShowYCount - 1);
+      (this.resultOption.grid as GridComponentOption).left = this.gridLeftInit + this.offsetNum * (maxShowYCount - 1);
     }
     return this;
   }
@@ -825,73 +826,6 @@ export class EchartsLinkageModel {
         }
       ],
     });
-
-    function onPointDragendx1(e: any, id: string) {
-      console.group('onPointDragendx1');
-      console.log('e', e)
-      console.log('e', myChart.getOption())
-      console.log('myChart.getOption().graphic', myChart.getOption().graphic);
-      const x = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
-      //获取当前拖拽线条的X值
-      const markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
-      // //获取另一条markLine的X值
-      const markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[1].position[0]);
-      // 重新绘制两条markLine
-      myChart.setOption({
-        graphic: [
-          {
-            id,
-            position: [x, 0],
-            info: markLine1,
-            textContent: {
-              type: 'text',
-              style: {
-                text: markLine1,
-                // font: '20px "STHeiti", sans-serif'
-              }
-            },
-          },
-        ],
-        // series: [{
-        //   id: "series0",
-        //   markLine: {
-        //     data: [
-        //       { xAxis: markLine1 },
-        //       { xAxis: markLine2 },
-        //     ],
-        //   }
-        // }]
-      });
-      console.groupEnd();
-    }
-
-    function onPointDragendx2(e: any, id: string) {
-      console.group('onPointDragendx1');
-      console.log('e', e)
-      console.log('e', myChart.getOption())
-      console.log('myChart.getOption().graphic', myChart.getOption().graphic);
-      const x = e.target.x; //获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
-      const markLine2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, x);
-      const markLine1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, myChart.getOption().graphic[0].elements[0].position[0]);
-      myChart.setOption({
-        graphic: [
-          {
-            id,
-            position: [x, 0],
-          },
-        ],
-        series: [{
-          id: "series0",
-          markLine: {
-            data: [
-              { xAxis: markLine2 },
-              { xAxis: markLine1 },
-            ],
-          }
-        }]
-      });
-      console.groupEnd();
-    }
     return [
       { graphicId: GRAPHIC_RECT1_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq1), xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
       { graphicId: GRAPHIC_RECT2_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq2), xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
@@ -1064,11 +998,11 @@ export class EchartsLinkageModel {
       usedStandards = standardsMap['other'];
     }
     // grid
-    const grid = this.resultOption.grid as echarts.GridComponentOption;
+    const grid = this.resultOption.grid as GridComponentOption;
     grid.top = usedStandards.grid.top;
     grid.bottom = usedStandards.grid.bottom;
     // toolbox
-    const toolbox = this.resultOption.toolbox as echarts.ToolboxComponentOption;
+    const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
     toolbox.top = usedStandards.toolbox.top;
     toolbox.itemSize = usedStandards.toolbox.itemSize;
     toolbox.itemGap = usedStandards.toolbox.itemGap;
@@ -1077,7 +1011,7 @@ export class EchartsLinkageModel {
     xAxis.axisLabel.fontSize = usedStandards.fontSize;
     xAxis.nameTextStyle.fontSize = usedStandards.fontSize;
     // yAxis
-    (this.resultOption.yAxis as Array<echarts.YAXisComponentOption>).forEach((yAxis: any) => {
+    (this.resultOption.yAxis as Array<YAXisComponentOption>).forEach((yAxis: any) => {
       yAxis.axisLabel.fontSize = usedStandards.fontSize;
       yAxis.nameTextStyle.fontSize = usedStandards.fontSize;
     });
@@ -1107,7 +1041,7 @@ export class EchartsLinkageModel {
       return metrics.width;
     }
 
-    function setGridrightAndxAxis (grid: echarts.GridComponentOption, xAxis: any, right: number) {
+    function setGridrightAndxAxis (grid: GridComponentOption, xAxis: any, right: number) {
       grid.right = right;
       xAxis.nameTextStyle.align = 'left';
       xAxis.nameTextStyle.padding = 0;
@@ -1115,7 +1049,7 @@ export class EchartsLinkageModel {
     }
     console.log("容器宽度：" + width);
     const xAxis = (this.resultOption.xAxis as Array<any>)[0];
-    const grid = this.resultOption.grid as echarts.GridComponentOption;
+    const grid = this.resultOption.grid as GridComponentOption;
     const name = xAxis.name;
     // 如果没有设置xAxis.name，则不重新设置grid.right
     if (name === '') return this;

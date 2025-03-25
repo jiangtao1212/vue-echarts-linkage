@@ -7,7 +7,7 @@
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
 
-import { type EChartsOption, type MarkLineComponentOption } from "echarts";
+import type { EChartsOption, MarkLineComponentOption } from "@/models/my-echarts/index";
 import SaveAsImageSvg from '@/assets/svg/save-image.svg';
 import DeleteSvg from '@/assets/svg/delete.svg';
 import ExcelSvg from "@/assets/svg/file-excel.svg";
