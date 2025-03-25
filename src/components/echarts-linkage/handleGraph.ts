@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-25 15:13:36
+ * @LastEditTime: 2025-03-25 16:48:16
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -20,7 +20,7 @@ let animating = false;
 const isNeedUpdateGraphic = (item: SeriesIdDataType, currentEchartsId: string, props: any) => {
   let isNeedUpdate = true;
   if (!props.isLinkage && (item.id !== currentEchartsId)) isNeedUpdate = false; // 非联动状态，只处理当前实例的图形
-  if (!item.data || item.data.length === 0 || item.data[0].name === '') isNeedUpdate = false; // 数据为空，不更新图形
+  if (!item.data || item.data.length === 0 || !item.xAxisdata || item.xAxisdata.length === 0 || item.data[0].name === '') isNeedUpdate = false; // 数据为空，不更新图形
   return isNeedUpdate;
 }
 
