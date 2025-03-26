@@ -376,7 +376,7 @@ const judgeAndPackageLinkData = (oneDataType?: OneDataType | OneDataType[], echa
 /**
  * @description 新增echart, id最大序号自增操作 --- 导出
  */
-const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
+const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: boolean = true) => {
   oneDataType = judgeAndPackageLinkData(oneDataType);
   dataAbout.maxEchartsIdSeq++;
   const id = 'echart' + dataAbout.maxEchartsIdSeq;
@@ -399,10 +399,12 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[]) => {
     }
     dataAll = [{ ...oneDataType }];
   }
+  
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, data: dataAll, theme, graphics };
   dataAbout.data.push(obj);
   judgeOverEchartsMaxCountHandle();
+  if (!isRender) return;
   Extension.setStyleProperty(props, dataAbout.data.length);
   allUpdateHandleCommon();
 };
@@ -721,7 +723,11 @@ const setDragPosition = (height: number) => {
 const initEmptyEcharts = (count: number) => {
   if (!count || count < 1) return;
   for (let i = 0; i < count; i++) {
-    addEchart();
+    if (i < count - 1) {
+      addEchart(undefined, false);
+    } else {
+      addEchart();
+    }
   }
 }
 

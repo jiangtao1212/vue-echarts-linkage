@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-25 09:35:41
+ * @LastEditTime: 2025-03-26 15:59:37
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -16,7 +16,8 @@ import type {
   LegendComponentOption, 
   GridComponentOption,
   TooltipComponentOption,
-  YAXisComponentOption
+  YAXisComponentOption,
+  MarkLineComponentOption
 } from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
@@ -96,7 +97,7 @@ export class EchartsLinkageModel {
   private legendShow = true; // 是否显示图例
   private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
-  private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)); // 标记线模板
+  private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)) as MarkLineComponentOption; // 标记线模板
   // private optionTemplate: EChartsOption; // 折线图表模板
   private resultOption: EChartsOption; // 最终的option
 
@@ -504,9 +505,9 @@ export class EchartsLinkageModel {
     }
     markLineArray.forEach((markLine: number | object) => {
       if (typeof markLine === 'number') {
-        (this.lineSeriesMarkLineTemplate.data as Array<any>).push({ yAxis: markLine });
+        this.lineSeriesMarkLineTemplate.data && (this.lineSeriesMarkLineTemplate.data).push({ yAxis: markLine });
       } else {
-        (this.lineSeriesMarkLineTemplate.data as Array<any>).push(markLine);
+        this.lineSeriesMarkLineTemplate.data && (this.lineSeriesMarkLineTemplate.data).push(markLine);
       }
     });
     return this;

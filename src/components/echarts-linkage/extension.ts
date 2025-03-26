@@ -35,7 +35,7 @@ const computedFixedRows = (isEchartsHeightChange: boolean, echartsHeightFixedCou
  * 样式变量 --rows: echarts图表行数
  * 样式变量 --item-width: echarts图表宽度
  */
-const setStyleProperty = (props: any,  chartCount: number) => {
+const setStyleProperty = (props: any, chartCount: number) => {
   const { cols, isEchartsHeightChange, echartsHeightFixedCount } = props;
   const count = chartCount;
   const element = document.querySelector('.main-container') as HTMLElement;
