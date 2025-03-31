@@ -35,7 +35,8 @@ import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType, 
-  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
+  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType, 
+  ExtraTooltipDataItemType, ExtraTooltipType
 } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
@@ -321,13 +322,14 @@ const deleteItemsAll = async (echartsIndex: number) => {
  * @param data 系列数据
  * @returns EchartsLinkageModel 实例
  */
-const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark') => {
+const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark', extraTooltip?: ExtraTooltipType) => {
   const echartsLinkageModel = new EchartsLinkageModel({
     seriesOptionArray: data,
     theme,
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
+    extraTooltip: extraTooltip,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
 }
@@ -667,7 +669,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
       seriesLinkMode: item.seriesLink?.isLinkMode,
     });
   });
-  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme);
+  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme, dataArray.extraTooltip);
   console.log('数据', dataArray.data);
   // 各种处理
   echartsLinkageModel.setMyDeleteButton((_e: any) => deleteEchart(dataArray.id))
@@ -1324,6 +1326,46 @@ const changeAllEchartsTheme = (theme: ThemeType) => {
   allUpdateHandleCommon();
 }
 
+/**
+ * @description 新增额外的tooltip数据，如果id存在，则添加单个图表，否则添加所有图表
+ * @param extraTooltipData 额外的tooltip数据
+ * @param id 图表id
+ */
+const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => {
+  if (id) {
+    // 添加单个图表的额外的tooltip数据
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    if ((data.extraTooltip?.data || []).length > 0) return;
+    data.extraTooltip = { show: true, data: extraTooltipData };
+  } else {
+    // 添加所有图表的额外的tooltip数据
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if ((item.extraTooltip?.data || []).length > 0) return;
+      item.extraTooltip = { show: true, data: extraTooltipData };
+    });
+  }
+}
+
+/**
+ * @description 更新额外的tooltip数据，如果id存在，则更新单个图表，否则更新所有图表
+ * @param extraTooltipData 额外的tooltip数据
+ * @param id 图表id
+ */
+const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => {
+  if (id) {
+    // 更新单个图表的额外的tooltip数据
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    if (!data.extraTooltip) return;
+    data.extraTooltip!.data = extraTooltipData;
+  } else {
+    // 更新所有图表的额外的tooltip数据
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!item.extraTooltip) return;
+      item.extraTooltip.data = extraTooltipData;
+    });
+  }
+}
+
 // echarts上的主题切换事件
 const switchEchartsTheme = async (e: any, id: string) => {
   console.log('switchEchartsTheme', id);
@@ -1507,6 +1549,8 @@ const exposedMethods: ExposedMethods = {
   updateOneEchartsVisualMapSeries,
   handleMultipleLinkData,
   changeAllEchartsTheme,
+  addExtraTooltip,
+  updateExtraTooltip,
 };
 defineExpose(exposedMethods);
 

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-26 15:59:37
+ * @LastEditTime: 2025-03-31 17:03:11
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -21,7 +21,8 @@ import type {
 } from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType, ThemeType, SeriesType, OneDataType } from "@/components/echarts-linkage/types/index";
+import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType,
+   ThemeType, SeriesType, OneDataType, ExtraTooltipType, ExtraTooltipDataItemType } from "@/components/echarts-linkage/types/index";
 
 let mergedOptionTemplate: EChartsOption = optionTemplate; // 合并后的option模板
 const COLOR_KEY = 'color';
@@ -79,6 +80,7 @@ export type EchartsLinkageModelType = {
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
   useSeriesDataSetYAxisMinMax: boolean,
+  extraTooltip?: ExtraTooltipType,
 }
 
 type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
@@ -95,6 +97,7 @@ export class EchartsLinkageModel {
   private gridTopInit = 40; // 上方边距
   private echartsColors = ECHARTS_COLORS; // 颜色数组
   private legendShow = true; // 是否显示图例
+  private extraTootip: ExtraTooltipType | undefined; // 额外的tooltip
   private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)) as MarkLineComponentOption; // 标记线模板
@@ -102,7 +105,7 @@ export class EchartsLinkageModel {
   private resultOption: EChartsOption; // 最终的option
 
   constructor(param: EchartsLinkageModelType) {
-    console.groupCollapsed('EchartsLinkageModel')
+    console.groupCollapsed('EchartsLinkageModel');
     console.log('param', param);
     const myOptionTemplate = ObjUtil.deepCopy(mergedOptionTemplate);
     // this.optionTemplate = myOptionTemplate;
@@ -113,6 +116,7 @@ export class EchartsLinkageModel {
     this.swichThemeIcon = this.theme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
+    this.extraTootip = param.extraTooltip;
     this.init();
     console.groupEnd();
   }
@@ -315,7 +319,7 @@ export class EchartsLinkageModel {
 
   // 设置基准线值在tooltip中显示
   setBaseLineOnToolTip = (tooltip: TooltipComponentOption) => {
-    // // 显示在tooltip中的模式：pieces（非基线模式，自定义模式）| baseLine（基线模式）| false（不显示）
+    // 显示在tooltip中的模式：pieces（非基线模式，自定义模式）| baseLine（基线模式）| false（不显示）
     const baseLines: Array<{ seriesShow: boolean, showOnToolTipMode: VisualMapShowOnToolTipModeType, baseLineValue: SeriesDataType | undefined, piecesOnTooltipValue: string }> = [];
     let someIsShowOnToolTip = false; // 是否有series的isShowOnToolTip为true
     this.seriesOptionArray.forEach((item: SeriesOptionType) => {
@@ -357,6 +361,7 @@ export class EchartsLinkageModel {
         tooltipHtml += `${params[0].name}</br>`;
         params.forEach((item: any) => {
           const index = item.componentIndex; // 未被隐藏系列的索引，params中不含有隐藏系列的数据
+          const dataIndex = item.dataIndex;
           const seriesShow = baseLines[index].seriesShow;
           const showOnToolTipMode = baseLines[index].showOnToolTipMode;
           let value = Array.isArray(item.value) ? item.value[1] : item.value; // 实际值
@@ -367,16 +372,28 @@ export class EchartsLinkageModel {
           } else if (showOnToolTipMode === 'baseLine') {
             // 显示在tooltip中，实际值 (基线值)
             const baseLineValue = baseLines[index].baseLineValue as SeriesDataType;
-            const pointBaseValue = Array.isArray(baseLineValue[item.dataIndex]) ? baseLineValue[item.dataIndex][1] : baseLineValue[item.dataIndex];
+            const pointBaseValue = Array.isArray(baseLineValue[dataIndex]) ? baseLineValue[dataIndex][1] : baseLineValue[dataIndex];
             value = `${value}&nbsp;<span style="color: green;">(${pointBaseValue})<span>`;
           } else {
             // 预留，未来可能支持其他模式
           }
           // 获取对应series的opacity值
           if (seriesShow) { // 检查series中lineStyle的opacity值
+            console.log("item.marker", item.marker);
             tooltipHtml += `<div>${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<span style="float: right;">${value}</span></div>`;
           }
         });
+        // 添加额外的tooltip数据
+        if (this.extraTootip?.show && this.extraTootip?.data.length > 0) {
+          const span1 = `<span style="display:inline-block; margin-right:4px; width:10px; height:10px; color: #ccc;">--</span>`;
+          this.extraTootip!.data.forEach((extraTooltip: ExtraTooltipDataItemType) => {
+            const label = extraTooltip.label;
+            const data1 = extraTooltip.value;
+            const xDataIndex = params[0].dataIndex; // x轴数据索引
+            const value = Array.isArray(data1[xDataIndex]) ? data1[xDataIndex][1] : data1[xDataIndex];
+            tooltipHtml += `<div>${span1}&nbsp;${label}&nbsp;&nbsp;&nbsp;&nbsp;<span style="float: right;">${value}</span></div>`;
+          });
+        }
       }
       return tooltipHtml;
     }

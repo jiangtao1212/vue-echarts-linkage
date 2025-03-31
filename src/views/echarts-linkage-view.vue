@@ -27,6 +27,7 @@
     </div>
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
+      <div class="drag-rect drag-rect-line-extra" draggable="true"><span>可拖拽系列(折线-额外信息)</span></div>
       <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
       <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
     </div>
@@ -67,6 +68,7 @@ import LightSvg from "@/assets/svg/light.svg";
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as 'line' | 'bar';
 let switchFlag = false;
+let extraTooltipFlag = false;
 const theme = ref<ThemeType>('light');
 
 // 额外的配置项
@@ -626,6 +628,13 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     switchFlag = false;
   }
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
+  if (extraTooltipFlag) {
+    echartsLinkageRef.value!.addExtraTooltip([
+      { label: '额外信息1', value: RandomUtil.getSeriesData(1000) },
+      { label: '额外信息2', value: RandomUtil.getSeriesData(1000) },
+    ], id);
+    extraTooltipFlag = false;
+  }
 }
 
 // 拖拽回调事件
@@ -642,6 +651,7 @@ const deleteEchart = (data: DeleteEchartType) => {
 // 监听拖拽事件
 const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
+  const dragRectLineExtra: HTMLElement = document.querySelector('.drag-rect-line-extra') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
   const dragSwitch: HTMLElement = document.querySelector('.drag-rect-switch') as HTMLElement;
 
@@ -650,6 +660,13 @@ const initLisener = () => {
     seriesType = 'line';
     e.dataTransfer!.setData('text', "123");
     e.dataTransfer!.dropEffect = 'move';
+  });
+  dragRectLineExtra.addEventListener('dragstart', (e: DragEvent) => {
+    console.log("dragstart");
+    seriesType = 'line';
+    e.dataTransfer!.setData('text', "123");
+    e.dataTransfer!.dropEffect = 'move';
+    extraTooltipFlag = true;
   });
   dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
     console.log("dragstart");

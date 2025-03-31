@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-19 13:31:43
+ * @LastEditTime: 2025-03-31 15:58:45
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -29,6 +29,8 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
  * @param {Function} handleMultipleLinkData 处理前后关联数据，多条关联数据进行首尾相连操作，primaryData中必须设置seriesLink，否则不进行处理，直接返回
  * @param {Function} changeAllEchartsTheme 切换所有echarts图表主题
+ * @param {Function} addExtraTooltip 新增额外的tooltip数据
+ * @param {Function} updateExtraTooltip 更新额外的tooltip数据
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -49,6 +51,8 @@ export interface ExposedMethods {
   updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
   handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
   changeAllEchartsTheme: (theme: ThemeType) => void;
+  addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
+  updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
 }
 
 /**
@@ -202,6 +206,26 @@ export type excelViewType = {
 export type ThemeType = 'dark' | 'light';
 
 /**
+ * @description: 额外的tooltip数据项类型
+ * @param {string} label 标签
+ * @param {SeriesDataType} value 数据
+ */
+export type ExtraTooltipDataItemType = {
+  label: string,
+  value: SeriesDataType,
+}
+
+/**
+ * @description: 额外的tooltip数据类型
+ * @param {boolean} show 是否显示
+ * @param {Array<ExtraTooltipDataItemType>} data 数据
+ */
+export type ExtraTooltipType = {
+  show: boolean,
+  data: Array<ExtraTooltipDataItemType>,
+}
+
+/**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
@@ -210,6 +234,7 @@ export type ThemeType = 'dark' | 'light';
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
  * @param {ThemeType} theme 主题
+ * @param {ExtraTooltipType} extraTooltip 额外的tooltip数据
  */
 export type SeriesIdDataType = {
   id: string;
@@ -219,6 +244,7 @@ export type SeriesIdDataType = {
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: ThemeType,
+  extraTooltip?: ExtraTooltipType,
 }
 
 /**
