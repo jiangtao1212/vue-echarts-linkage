@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-01 09:17:17
+ * @LastEditTime: 2025-04-01 14:57:23
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -352,8 +352,8 @@ export class EchartsLinkageModel {
       baseLines.push(data);
     });
     console.log("someIsShowOnToolTip", someIsShowOnToolTip);
-    // 没有series的isShowOnToolTip为true，则返回；有，则组装tooltip的formatter
-    if (!someIsShowOnToolTip) return;
+    // 没有series的isShowOnToolTip为true，则返回；有，则组装tooltip的formatter；并且没有额外的tooltip数据，则返回
+    if (!someIsShowOnToolTip && (!this.extraTootip?.show || this.extraTootip?.data.length === 0)) return;
     tooltip.formatter = (params: any) => {
       let tooltipHtml = '';
       // console.log("params", params);
@@ -389,7 +389,8 @@ export class EchartsLinkageModel {
             const label = extraTooltip.label;
             const data1 = extraTooltip.value;
             const xDataIndex = params[0].dataIndex; // x轴数据索引
-            const value = Array.isArray(data1[xDataIndex]) ? data1[xDataIndex][1] : data1[xDataIndex];
+            const pointData = data1[xDataIndex]; // 对应的点数据
+            const value = Array.isArray(pointData) ? pointData[1] : pointData; // 判断是否为数组，是则取第二个值，否则取第一个值
             tooltipHtml += `<div>${span1}&nbsp;${label}&nbsp;&nbsp;&nbsp;&nbsp;<span style="float: right;">${value}</span></div>`;
           });
         }
