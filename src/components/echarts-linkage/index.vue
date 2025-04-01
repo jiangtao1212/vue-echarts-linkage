@@ -1374,16 +1374,21 @@ const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, i
  * @param id 图表id
  */
 const clearExtraTooltip = (id?: string) => {
+  dataAbout.currentHandleChartIds = [];
   if (id) {
     // 更新单个图表的额外的tooltip数据
     const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
     data.extraTooltip = undefined;
+    dataAbout.currentHandleChartIds = [id];
   } else {
     // 更新所有图表的额外的tooltip数据
     dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!item.extraTooltip) return;
       item.extraTooltip = undefined;
+      dataAbout.currentHandleChartIds.push(item.id);
     });
   }
+  initEcharts();
 }
 
 // echarts上的主题切换事件
