@@ -5,7 +5,8 @@ import VueEchartsLinkage from '@/components/echarts-linkage/index.vue';
 export type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   SeriesDataType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, MarkLineDataType,
-  VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType
+  VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
+  ExtraTooltipType, ExtraTooltipDataItemType
 } from '@/components/echarts-linkage/types/index';
 
 export type { DragItemType } from '@/components/drag/type/index';

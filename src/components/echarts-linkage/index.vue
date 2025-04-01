@@ -1327,7 +1327,8 @@ const changeAllEchartsTheme = (theme: ThemeType) => {
 }
 
 /**
- * @description 新增额外的tooltip数据，如果id存在，则添加单个图表，否则添加所有图表
+ * @author jiangtao
+ * @description 新增额外的tooltip数据，如果id存在，则添加单个图表，否则添加所有图表 --- 导出
  * @param extraTooltipData 额外的tooltip数据
  * @param id 图表id
  */
@@ -1347,7 +1348,8 @@ const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?:
 }
 
 /**
- * @description 更新额外的tooltip数据，如果id存在，则更新单个图表，否则更新所有图表
+ * @author jiangtao
+ * @description 更新额外的tooltip数据，如果id存在，则更新单个图表，否则更新所有图表 --- 导出
  * @param extraTooltipData 额外的tooltip数据
  * @param id 图表id
  */
@@ -1362,6 +1364,24 @@ const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, i
     dataAbout.data.forEach((item: SeriesIdDataType) => {
       if (!item.extraTooltip) return;
       item.extraTooltip.data = extraTooltipData;
+    });
+  }
+}
+
+/**
+ * @author jiangtao
+ * @description 清除额外的tooltip数据，如果id存在，则清除单个图表，否则清除所有图表 --- 导出
+ * @param id 图表id
+ */
+const clearExtraTooltip = (id?: string) => {
+  if (id) {
+    // 更新单个图表的额外的tooltip数据
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    data.extraTooltip = undefined;
+  } else {
+    // 更新所有图表的额外的tooltip数据
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      item.extraTooltip = undefined;
     });
   }
 }
@@ -1551,6 +1571,7 @@ const exposedMethods: ExposedMethods = {
   changeAllEchartsTheme,
   addExtraTooltip,
   updateExtraTooltip,
+  clearExtraTooltip,
 };
 defineExpose(exposedMethods);
 

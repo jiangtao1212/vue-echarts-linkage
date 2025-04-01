@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-31 15:58:45
+ * @LastEditTime: 2025-04-01 09:13:12
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -31,6 +31,7 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} changeAllEchartsTheme 切换所有echarts图表主题
  * @param {Function} addExtraTooltip 新增额外的tooltip数据
  * @param {Function} updateExtraTooltip 更新额外的tooltip数据
+ * @param {Function} clearExtraTooltip 清除额外的tooltip数据
  */
 export interface ExposedMethods {
   addEchart: (data?: OneDataType | OneDataType[]) => void;
@@ -53,6 +54,7 @@ export interface ExposedMethods {
   changeAllEchartsTheme: (theme: ThemeType) => void;
   addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
   updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
+  clearExtraTooltip: (id?: string) => void;
 }
 
 /**

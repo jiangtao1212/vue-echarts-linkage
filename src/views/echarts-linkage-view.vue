@@ -5,6 +5,7 @@
       <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
       <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
       <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
+      <el-button type="primary" size="small" @click="updateAllLinkageExtraBtnClick">批量更新echarts(额外信息)</el-button>
       <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
       <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
       <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
@@ -215,6 +216,22 @@ const updateAllLinkageBtnClick = () => {
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+}
+
+// 批量更新echarts(额外信息)
+const updateAllLinkageExtraBtnClick = () => {
+  const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
+  console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
+    if (item.dataType === 'switch') {
+      item.seriesData = RandomUtil.getSwitchData(1000);
+    } else {
+      const seriesData = RandomUtil.getSeriesData(1000);
+      item.seriesData = seriesData;
+    }
+  });
+  echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
+  echartsLinkageRef.value?.updateExtraTooltip([{ label: '额外信息' + Math.floor(Math.random() * 1000), value: RandomUtil.getSeriesData(1000) }]);
 }
 
 // 批量更新按钮--简单更新
