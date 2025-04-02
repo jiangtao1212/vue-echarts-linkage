@@ -1,4 +1,5 @@
 # vue-echarts-linkage
+> vue3 echarts 的联动组件
 
 ## 1. 介绍
 
@@ -132,6 +133,6 @@ const dropEchart = (data: dropEchartType) => {
 | updateOneEchartsVisualMapSeries | 更新单个echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色 | `(id: string, data: VisualMapSeriesType[] / VisualMapSeriesType) => void` |
 | handleMultipleLinkData | 处理前后关联数据，多条关联数据进行首尾相连操作 | `(primaryData: OneDataType) => OneDataType` |
 | changeAllEchartsTheme | 切换所有echarts图表主题 | `(theme: ThemeType) => void` |
-| addExtraTooltip | 新增额外的提示框tooltip数据，如果id存在，则添加单个图表，否则添加所有图表 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void` |
-| updateExtraTooltip | 更新额外的提示框tooltip数据，如果id存在，则更新单个图表，否则更新所有图表 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void` |
-| clearExtraTooltip | 清除额外的提示框tooltip数据，如果id存在，则清除单个图表，否则清除所有图表 | `(id?: string) => void` |
+| addExtraTooltip | 新增额外的提示框tooltip数据，如果id存在，则添加单个图表，否则添加所有图表；isRender：是否重新渲染echarts，默认true不重新渲染 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender: boolean = false) => void` |
+| updateExtraTooltip | 更新额外的提示框tooltip数据，如果id存在，则更新单个图表，否则更新所有图表；isRender：是否重新渲染echarts，默认true不重新渲染 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender: boolean = false) => void` |
+| clearExtraTooltip | 清除额外的提示框tooltip数据，如果id存在，则清除单个图表，否则清除所有图表；isRender：是否重新渲染echarts，默认true重新渲染 | `(id?: string, isRender: boolean = true) => void` |

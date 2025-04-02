@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-01 09:13:12
+ * @LastEditTime: 2025-04-02 16:44:14
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -11,6 +11,7 @@ import { type DragItemType } from '@/components/drag/type';
 
 /**
  * @description: 组件暴露的接口类型
+ * @param {Function} initEcharts 初始化echarts
  * @param {Function} addEchart 添加echarts图表
  * @param {Function} addEchartSeries 添加echarts图表系列
  * @param {Function} deleteEchart 删除echarts图表
@@ -29,14 +30,15 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
  * @param {Function} handleMultipleLinkData 处理前后关联数据，多条关联数据进行首尾相连操作，primaryData中必须设置seriesLink，否则不进行处理，直接返回
  * @param {Function} changeAllEchartsTheme 切换所有echarts图表主题
- * @param {Function} addExtraTooltip 新增额外的tooltip数据
- * @param {Function} updateExtraTooltip 更新额外的tooltip数据
- * @param {Function} clearExtraTooltip 清除额外的tooltip数据
+ * @param {Function} addExtraTooltip 新增额外的tooltip数据，默认值为false，不重新渲染echarts
+ * @param {Function} updateExtraTooltip 更新额外的tooltip数据，默认值为false，不重新渲染echarts
+ * @param {Function} clearExtraTooltip 清除额外的tooltip数据，默认值为true，重新渲染echarts
  */
 export interface ExposedMethods {
-  addEchart: (data?: OneDataType | OneDataType[]) => void;
-  addEchartSeries: (id: string, data: OneDataType) => void;
-  deleteEchart: (id: string) => void;
+  initEcharts: () => Promise<void>;
+  addEchart: (data?: OneDataType | OneDataType[]) => Promise<void>;
+  addEchartSeries: (id: string, data: OneDataType) => Promise<void>;
+  deleteEchart: (id: string) => Promise<void>;
   getDataLength: () => number;
   getMaxEchartsIdSeq: () => number;
   getAllDistinctSeriesTagInfo: () => Array<SeriesTagType>;
@@ -46,15 +48,15 @@ export interface ExposedMethods {
   updateAllEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
   updateSimpleEcharts: (newAllSeriesdata: Array<SeriesTagType>) => Promise<boolean>;
   clearAllEchartsData: (mode?: 'clear' | 'delete') => Promise<void>;
-  replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => void;
+  replaceAllEchartsData: (newAllSeriesdata: Array<OneDataType[]>) => Promise<void>;
   downloadAllEchartsImg: () => void;
   realTimeUpdate: (allRealTimeData: Array<SeriesTagType>, limitCount?: number) => void;
   updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
   handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
   changeAllEchartsTheme: (theme: ThemeType) => void;
-  addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
-  updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => void;
-  clearExtraTooltip: (id?: string) => void;
+  addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
+  updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
+  clearExtraTooltip: (id?: string, isRender?: boolean) => void;
 }
 
 /**

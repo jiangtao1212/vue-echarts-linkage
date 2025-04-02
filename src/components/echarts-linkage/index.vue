@@ -1331,8 +1331,9 @@ const changeAllEchartsTheme = (theme: ThemeType) => {
  * @description 新增额外的tooltip数据，如果id存在，则添加单个图表，否则添加所有图表 --- 导出
  * @param extraTooltipData 额外的tooltip数据
  * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认false
  */
-const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => {
+const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender = false) => {
   if (id) {
     // 添加单个图表的额外的tooltip数据
     const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
@@ -1345,6 +1346,7 @@ const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?:
       item.extraTooltip = { show: true, data: extraTooltipData };
     });
   }
+  isRender && containerResizeFn();
 }
 
 /**
@@ -1352,8 +1354,9 @@ const addExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?:
  * @description 更新额外的tooltip数据，如果id存在，则更新单个图表，否则更新所有图表 --- 导出
  * @param extraTooltipData 额外的tooltip数据
  * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认false
  */
-const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string) => {
+const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender = false) => {
   if (id) {
     // 更新单个图表的额外的tooltip数据
     const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
@@ -1366,14 +1369,16 @@ const updateExtraTooltip = (extraTooltipData: Array<ExtraTooltipDataItemType>, i
       item.extraTooltip.data = extraTooltipData;
     });
   }
+  isRender && containerResizeFn();
 }
 
 /**
  * @author jiangtao
  * @description 清除额外的tooltip数据，如果id存在，则清除单个图表，否则清除所有图表 --- 导出
  * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认true
  */
-const clearExtraTooltip = (id?: string) => {
+const clearExtraTooltip = (id?: string, isRender = true) => {
   dataAbout.currentHandleChartIds = [];
   if (id) {
     // 更新单个图表的额外的tooltip数据
@@ -1388,7 +1393,7 @@ const clearExtraTooltip = (id?: string) => {
       dataAbout.currentHandleChartIds.push(item.id);
     });
   }
-  initEcharts();
+  isRender && containerResizeFn();
 }
 
 // echarts上的主题切换事件
@@ -1556,6 +1561,7 @@ const setExcelView = (e: any, id: string) => {
 
 // 子组件暴露变量和方法
 const exposedMethods: ExposedMethods = {
+  initEcharts,
   addEchart,
   addEchartSeries,
   deleteEchart,

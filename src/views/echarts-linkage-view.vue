@@ -9,12 +9,15 @@
       <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
       <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
       <el-button type="primary" size="small" @click="clearAllLinkageExtraBtnClick">批量清除额外信息</el-button>
-      <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
-      <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
       <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
       <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
       <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
       <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button>
+    </div>
+    <div class="btn_click">
+      <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
+      <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
+      <el-button type="primary" size="small" @click="replaceAllEchartsData2">批量替换echarts数据(提示额外信息)</el-button>
     </div>
     <div class="btn_realtime">
       <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
@@ -56,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
 import type {
@@ -378,6 +381,36 @@ const replaceAllEchartsData1 = () => {
   }
   console.log("res", res);
   echartsLinkageRef.value?.replaceAllEchartsData(res);
+}
+
+const replaceAllEchartsData2 = async () => {
+  const res: Array<OneDataType[]> = [];
+  for (let i = 0; i < 3; i++) {
+    const oneDataTypeArray: OneDataType[] = [];
+    for (let j = 0; j < 2; j++) {
+      const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
+      const oneDataType: OneDataType = {
+        name: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        type: 'line',
+        seriesData: RandomUtil.getSeriesData(1000),
+        customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
+        xAxisName: '[m]',
+        yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+      };
+      oneDataTypeArray.push(oneDataType);
+    }
+    res.push(oneDataTypeArray);
+  }
+  await echartsLinkageRef.value?.replaceAllEchartsData(res);
+  echartsLinkageRef.value?.clearExtraTooltip();
+  const allSeriesTagInfo = echartsLinkageRef.value?.getAllSeriesTagInfo();
+  console.log("allSeriesTagInfo", allSeriesTagInfo);
+  allSeriesTagInfo!.forEach((item: { id: string, series: Array<SeriesTagType> }) => {
+    echartsLinkageRef.value?.addExtraTooltip([
+      { label: '额外信息11', value: RandomUtil.getSeriesData(1000) },
+      { label: '额外信息12', value: RandomUtil.getSeriesData(1000) },
+    ], item.id, true);
+  });
 }
 
 // 新增line-series按钮
