@@ -1,5 +1,5 @@
 # vue-echarts-linkage
-> vue3 echarts 的联动组件
+vue3 echarts 的联动组件
 
 ## 1. 介绍
 

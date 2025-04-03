@@ -602,8 +602,9 @@ const getTemplateTagsOptionBtnClick = () => {
       const maxEchartsIdSeq = echartsLinkageRef.value!.getMaxEchartsIdSeq();
       const oneDataType: OneDataType = {
         name: templateTags[j].name,
-        type: 'line',
-        seriesData: RandomUtil.getSeriesData(1000),
+        type: templateTags[j].seriesOption?.type || 'line',
+        dataType: templateTags[j].seriesOption?.dataType || 'pulse',
+        seriesData: templateTags[j].seriesOption?.dataType === 'switch' ? RandomUtil.getSwitchData(1000) : RandomUtil.getSeriesData(1000),
         customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
         xAxisName: '[m]',
         yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,

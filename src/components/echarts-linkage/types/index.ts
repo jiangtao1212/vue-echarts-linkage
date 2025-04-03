@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-02 16:44:14
+ * @LastEditTime: 2025-04-03 10:20:04
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -93,14 +93,20 @@ export type SeriesLinkType = {
 
 /**
  * @description: series数据类型
- * @param {'switch' | 'pulse' | 'markLine'} SeriesType series数据类型：switch 开关量， pulse 脉冲量， markLine 标记线
+ * @param {'switch' | 'pulse' | 'markLine'} SeriesType series数据类型：switch 开关量， pulse 脉冲量， markLine 标记线 --- 默认值为pulse
  */
 export type SeriesType = 'switch' | 'pulse' | 'markLine';
+
+export const SERIES_TYPE_DEFAULT = 'pulse';
+
+export type SeriesClassType = 'line' | 'bar';
+
+export const SERIES_CLASS_TYPE_DEFAULT = 'line';
 
 /**
  * @description: echarts图表中单个系列数据类型
  * @param {string} name 系列名称
- * @param {'line' | 'bar'} type 图表类型
+ * @param {SeriesClassType} type 图表类型
  * @param {SeriesDataType} seriesData 系列数据
  * @param {SeriesDataType} seriesDataCache 缓存的系列数据
  * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
@@ -119,7 +125,7 @@ export type SeriesType = 'switch' | 'pulse' | 'markLine';
  */
 export type OneDataType = {
   name: string;
-  type: 'line' | 'bar';
+  type: SeriesClassType;
   seriesData: SeriesDataType;
   seriesDataCache?: SeriesDataType;
   seriesLink?: SeriesLinkType;
@@ -287,7 +293,7 @@ export type DataAboutType = {
  * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
  * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  */
-export type SeriesTagType = Pick<OneDataType, 'name' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries' | 'yAxisMin' | 'yAxisMax'>;
+export type SeriesTagType = Pick<OneDataType, 'name' | 'type' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries' | 'yAxisMin' | 'yAxisMax'>;
 
 /**
  * @description 指定echarts图表的标签信息类型

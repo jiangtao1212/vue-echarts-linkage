@@ -34,10 +34,11 @@ import { THEME } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
-  DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType, 
-  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType, 
-  ExtraTooltipDataItemType, ExtraTooltipType
+  DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
+  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
+  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType
 } from './types/index';
+import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
@@ -385,7 +386,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
     // 1.空数据，默认新增一个line
-    oneDataType = setOneData('', 'line', [], '', []) as OneDataType;
+    oneDataType = setOneData('', SERIES_CLASS_TYPE_DEFAULT, [], '', []) as OneDataType;
     dataAll = [{ ...oneDataType }];
   } else if (Array.isArray(oneDataType)) {
     // 2.新增多个echarts，数组
@@ -397,11 +398,11 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   } else {
     // 3.新增单个echarts，如果没有seriesData，则默认新增一个line
     if (!oneDataType.seriesData || oneDataType.seriesData.length < 1) {
-      oneDataType = setOneData(oneDataType.name, 'line', [], oneDataType.customData, []);
+      oneDataType = setOneData(oneDataType.name, SERIES_CLASS_TYPE_DEFAULT, [], oneDataType.customData, []);
     }
     dataAll = [{ ...oneDataType }];
   }
-  
+
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, data: dataAll, theme, graphics };
   dataAbout.data.push(obj);
@@ -411,8 +412,8 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   allUpdateHandleCommon();
 };
 // 组装数据
-const setOneData = (name: string, type: 'line' | 'bar', seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
-  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: 'pulse', visualMapSeries: undefined };
+const setOneData = (name: string, type: SeriesClassType, seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
+  return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: SERIES_TYPE_DEFAULT, visualMapSeries: undefined };
 }
 // 新增echart，判断是否联动，如果联动并且已经有echart存在的情况，需要考虑新增echart的图形位置和主题
 const addEchartJudgeLinkage = () => {
@@ -559,7 +560,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       myChart.clear();
       if (currentData.data.length === 0) {
         // 如果数据全被删除，则新增一个空数据进行占位
-        currentData.data = [setOneData('', 'line', [], '', []) as OneDataType];
+        currentData.data = [setOneData('', SERIES_CLASS_TYPE_DEFAULT, [], '', []) as OneDataType];
       }
       needHandle = true;
     } else { // 实例存在且不是删除子项item操作，判断是否需要更新
@@ -664,7 +665,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
       yAxisMax: item.yAxisMax,
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
-      dataType: item.dataType || 'pulse',
+      dataType: item.dataType || SERIES_TYPE_DEFAULT,
       visualMapSeries: item.visualMapSeries,
       seriesLinkMode: item.seriesLink?.isLinkMode,
     });
@@ -853,6 +854,7 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
       const isExist = res.some(item => item.name === series.name && JSON.stringify(item.customData) === JSON.stringify(series.customData));
       series.name && !isExist && res.push({
         name: series.name,
+        type: series.type,
         customData: series.customData,
         dataType: series.dataType,
         seriesData: JSON.parse(JSON.stringify(series.seriesData)), // 暴露缓存数据，原因是外部可能还会使用缓存数据进行渲染
@@ -871,6 +873,7 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTag
     echart.data.forEach((series: OneDataType) => {
       oneEchartInfo.series.push({
         name: series.name,
+        type: series.type,
         customData: series.customData,
         dataType: series.dataType,
         seriesData: JSON.parse(JSON.stringify(series.seriesData)),
@@ -883,22 +886,35 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTag
 
 // 获取所有echarts图表的拖拽子项配置(用于模版渲染) --- 导出
 const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
+  // 将series数据包装成SeriesTagType类型
+  function packageSeriesOption(series: OneDataType): SeriesTagType {
+    return {
+      name: series.name,
+      type: series.type,
+      customData: series.customData,
+      dataType: series.dataType,
+      seriesData: [],
+      yAxisMin: series.yAxisMin,
+      yAxisMax: series.yAxisMax,
+    }
+  }
   const res: Array<Array<DragItemType>> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType, index: number) => {
     const oneEchartInfo: Array<DragItemType> = [];
     echart.data.forEach((series: OneDataType) => {
       if (series.dragItemOption) {
+        series.dragItemOption.seriesOption = packageSeriesOption(series);
         oneEchartInfo.push(series.dragItemOption);
       } else {
-        if (series.name) {
-          oneEchartInfo.push({
-            name: series.name,
-            id: (index + 1).toString(),
-            followId: (index + 1).toString(),
-            isShow: true,
-            isDrag: true,
-          });
-        }
+        if (!series.name) return; // 没有name，跳过
+        oneEchartInfo.push({
+          name: series.name,
+          id: (index + 1).toString(),
+          followId: (index + 1).toString(),
+          isShow: true,
+          isDrag: true,
+          seriesOption: packageSeriesOption(series),
+        });
       }
     });
     oneEchartInfo.length > 0 && res.push(oneEchartInfo);

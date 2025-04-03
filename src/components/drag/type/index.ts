@@ -2,11 +2,12 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-14 10:16:52
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-03-14 10:16:07
+ * @LastEditTime: 2025-04-03 09:06:04
  * @FilePath: \vue-echarts-linkage\src\components\drag\type\index.ts
  * @Description: 拖拽组件的类型定义
  */
 
+import type { SeriesTagType } from '@/components/echarts-linkage/types/index';
 
 /**
  * @description 拖拽组件暴露的方法类型定义
@@ -32,6 +33,7 @@ export type DragItemType = {
   followId: string,
   isShow: boolean,
   isDrag: boolean,
+  seriesOption?: SeriesTagType,
 }
 
 /**
