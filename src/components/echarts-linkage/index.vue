@@ -111,6 +111,7 @@ HandleGraph.setEmit(emit);
 const dataAbout = reactive({
   groupsName: [], // 组名数组
   groupDefault: '', // 默认组名
+  usedGroupNames: [] as Array<string>, // 已使用的组名
   maxEchartsIdSeq: 0, // 最大序号
   data: [] as Array<SeriesIdDataType>, // 所有echarts数据
   currentHandleChartIds: [''], // 当前操作的echart图表id集合
@@ -738,18 +739,18 @@ const initEmptyEcharts = (count: number) => {
 const initEcharts = async () => {
   // 基于准备好的dom，初始化echarts图表
   // disposeEcharts(); // 清除之前的分组实例
-  const usedGroupNames: string[] = []; // 已使用的组名
+  dataAbout.usedGroupNames = []; // 已使用的组名
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
     const myChart = initOneEcharts(item);
     // 给echarts实例分组，并且记录已使用的组名
     const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName);
     myChart.group = groupName;
-    !usedGroupNames.includes(groupName) && usedGroupNames.push(groupName);
+    !dataAbout.usedGroupNames.includes(groupName) && dataAbout.usedGroupNames.push(groupName);
   });
   props.useGraphicLocation && HandleGraph.emitGraphicLocation(dataAbout); // 初始化时发送图形位置信息
   dataAbout.restoreClickBool = false;
   dataAbout.currentMaxShowYCount = computerMaxShowYCount(); // 记录当前显示的echarts中y轴数量的最大值
-  props.isLinkage && echartsConnect(usedGroupNames); // 联动
+  props.isLinkage && echartsConnect(); // 联动
 }
 
 // 初始化组名数据
@@ -759,17 +760,30 @@ const initGroupData = () => {
 }
 
 // echarts分组连接
-const echartsConnect = (usedGroupNames: string[]) => {
-  usedGroupNames.forEach((groupName: string) => {
-    echarts.connect(groupName);
+const echartsConnect = () => {
+  dataAbout.usedGroupNames.forEach((groupName: string) => {
+    groupName && echarts.connect(groupName);
   });
 }
 
 // echarts解除分组连接
-const echartsDisConnect = (usedGroupNames: string[]) => {
-  usedGroupNames.forEach((groupName: string) => {
+const echartsDisConnect = () => {
+  dataAbout.usedGroupNames.forEach((groupName: string) => {
     echarts.disconnect(groupName);
   });
+}
+
+/**
+ * @author jiangtao
+ * @description 切换联动或分组
+ */
+const changeLinkageOrGroups = () => {
+  echartsDisConnect();
+  if (props.isLinkage && props.groups && props.groups.length > 0) {
+    // 如果是联动状态，并且groups有值，重新初始化group
+    initGroupData();
+  }
+  initEcharts();
 }
 
 // 清除echarts分组实例
@@ -1610,6 +1624,18 @@ watch(() => dataAbout.data.length, () => {
 // 监听theme的变化，重新设置所有Echarts实例的主题
 watch(() => props.theme, (newThemeValue) => {
   changeAllEchartsTheme(newThemeValue);
+});
+
+// 监听groups分组的变化，重新初始化group
+watch(() => props.groups, (groups) => {
+  console.log("groups", groups);
+  changeLinkageOrGroups();
+});
+
+// 监听isLinkage的变化，重新初始化echarts
+watch(() => props.isLinkage, (isLinkage) => {
+  console.log("isLinkage", isLinkage);
+  changeLinkageOrGroups();
 });
 
 onBeforeMount(() => {

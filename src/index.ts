@@ -6,8 +6,9 @@ export type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   SeriesDataType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, MarkLineDataType,
   VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
-  ExtraTooltipType, ExtraTooltipDataItemType
+  ExtraTooltipType, ExtraTooltipDataItemType, SeriesType, SeriesClassType
 } from '@/components/echarts-linkage/types/index';
+export { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from '@/components/echarts-linkage/types/index';
 
 export type { DragItemType } from '@/components/drag/type/index';
 

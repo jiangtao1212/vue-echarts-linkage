@@ -2,33 +2,46 @@
   <div class="btn-container">
     <div class="btn_click">
       <el-button type="primary" size="small" @click="addLinkageBtnClick">新增echarts实例</el-button>
-      <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
       <el-button type="primary" size="small" @click="addLotEmptyLinkageBtnClick">批量新增空白echarts</el-button>
-      <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
-      <el-button type="primary" size="small" @click="updateAllLinkageExtraBtnClick">批量更新echarts(额外信息)</el-button>
-      <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
-      <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
-      <el-button type="primary" size="small" @click="clearAllLinkageExtraBtnClick">批量清除额外信息</el-button>
       <el-button type="primary" size="small" @click="addLinkageLineSeriesBtnClick">新增line-series</el-button>
       <el-button type="primary" size="small" @click="addLinkageBarSeriesBtnClick">新增bar-series</el-button>
+      <span>--</span>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="clearAllEchartsData">批量清除echarts数据</el-button>
+        <el-button type="primary" size="small" @click="clearAllLinkageExtraBtnClick">批量清除额外信息</el-button>
+      </el-button-group>
+      <span>--</span>
       <el-button type="primary" size="small" @click="downloadImg">下载图片</el-button>
+      <el-button type="primary" size="small" @click="testBaseLineBtnClick">测试基准线</el-button>
       <el-button type="primary" size="small" @click="updateVisualMapBtnClick">修改映射数据</el-button>
     </div>
     <div class="btn_click">
-      <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
-      <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
-      <el-button type="primary" size="small" @click="replaceAllEchartsData2">批量替换echarts数据(提示额外信息)</el-button>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="updateAllLinkageBtnClick">批量更新echarts</el-button>
+        <el-button type="primary" size="small" @click="updateAllLinkageExtraBtnClick">批量更新echarts(额外信息)</el-button>
+        <el-button type="primary" size="small" @click="updateAllLinkageTimeBtnClick">批量更新echarts(时间分析)</el-button>
+      </el-button-group>
+      <span>--</span>
+      <el-button-group>
+        <!-- <el-button type="primary" size="small" @click="replaceAllEchartsData">批量替换echarts数据</el-button> -->
+        <el-button type="primary" size="small" @click="replaceAllEchartsData1">批量替换echarts数据(多卷)</el-button>
+        <el-button type="primary" size="small" @click="replaceAllEchartsData2">批量替换echarts数据(提示额外信息)</el-button>
+      </el-button-group>
     </div>
     <div class="btn_realtime">
-      <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
-      <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
-      <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
-      <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="realTimeUpdateLengthBtnClick">实时更新(长度)</el-button>
+        <el-button type="primary" size="small" @click="realTimeUpdateTimeBtnClick">实时更新(时间)</el-button>
+        <el-button type="primary" size="small" @click="realTimeUpdateCancelBtnClick">实时更新-关闭</el-button>
+        <el-button type="primary" size="small" @click="realTimeUpdateIntervalBtnClick">模拟简单频繁更新</el-button>
+      </el-button-group>
       <span>--</span>
-      <el-button type="primary" size="small" @click="updateTemplateBtnClick()">模拟模板更新</el-button>
-      <el-button type="primary" size="small" @click="updateTemplateBtnClick('template')">模拟模板更新（叠加）</el-button>
-      <el-button type="primary" size="small" @click="replaceAllEchartsData">模拟数据更新（非模版）</el-button>
-      <el-button type="primary" size="small" @click="getTemplateTagsOptionBtnClick">获取模板信息</el-button>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="updateTemplateBtnClick()">模拟模板更新</el-button>
+        <el-button type="primary" size="small" @click="updateTemplateBtnClick('template')">模拟模板更新（叠加）</el-button>
+        <el-button type="primary" size="small" @click="replaceAllEchartsData">模拟数据更新（非模版）</el-button>
+        <el-button type="primary" size="small" @click="getTemplateTagsOptionBtnClick">获取模板信息</el-button>
+      </el-button-group>
     </div>
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
@@ -43,6 +56,16 @@
         <el-button type="primary" size="small" @click="changeAllEchartsTheme('dark')">
           <el-icon><img :src="DarkSvg" class="w-100% h-100%" /></el-icon>黑夜模式</el-button>
       </el-button-group>
+      <span>--</span>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="() => groups = []">默认分组（联动）</el-button>
+        <el-button type="primary" size="small" @click="() => groups = [[1], [2], [3], [4]]">清除分组</el-button>
+        <el-button type="primary" size="small" @click="() => groups = [[1, 2], [3, 4]]">修改分组</el-button>
+      </el-button-group>
+      <el-button-group>
+        <el-button type="primary" size="small" @click="() => isLinkage = true">联动（开启）</el-button>
+        <el-button type="primary" size="small" @click="() => isLinkage = false">联动（关闭）</el-button>
+      </el-button-group>
     </div>
   </div>
 
@@ -51,30 +74,32 @@
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
-    :theme="theme" :is-linkage="true" :use-graphic-location="false" :is-echarts-height-change="false"
-    :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="[[1, 3], [2, 4]]" @drop-echart="dropEchart"
+    :theme="theme" :is-linkage="isLinkage" :use-graphic-location="false" :is-echarts-height-change="false"
+    :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from "vue";
+import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
 import type {
-  OneDataType, SeriesTagType, DropEchartType, DeleteEchartType,
-  ListenerGrapicLocationType, SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
+  OneDataType, SeriesTagType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, 
+  SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType, SeriesClassType
 } from '@/components/echarts-linkage/types/index';
 import type { DragItemType } from '@/components/drag/type/index';
 import DarkSvg from "@/assets/svg/dark.svg";
 import LightSvg from "@/assets/svg/light.svg";
 
 const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
-let seriesType = 'line' as 'line' | 'bar';
+let seriesType = 'line' as SeriesClassType;
 let switchFlag = false;
 let extraTooltipFlag = false;
 const theme = ref<ThemeType>('light');
+let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
+let isLinkage = ref<boolean>(true);
 
 // 额外的配置项
 const extraOption = {
@@ -192,14 +217,13 @@ const addLotEmptyLinkageBtnClick = () => {
 const updateAllLinkageBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-  const res: { [key: string]: Array<number[]> } = {};
-  const linkCount = Math.floor(Math.random() * 3) + 1; // 首尾连接的数量
-  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+  // const linkCount = Math.floor(Math.random() * 3) + 1; // 首尾连接的数量
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
       const seriesData = RandomUtil.getSeriesData(1000);
-      const baseLineData = JSON.parse(JSON.stringify(seriesData));
+      // const baseLineData = JSON.parse(JSON.stringify(seriesData));
       // for (let i = 0; i < 100; i++) {
       //   baseLineData[i][1] = 100000;
       // }
@@ -249,7 +273,7 @@ const updateSimpleBtnClick = (interval = 0) => {
   // console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
   // const defaultValue = RandomUtil.getRandomDataFromInterval(0, 1000);
   const defaultValue = interval;
-  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
@@ -275,8 +299,7 @@ const getRandomCountLinkData = (count: number) => {
 const updateAllLinkageTimeBtnClick = () => {
   const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
   console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-  const res: { [key: string]: Array<number[]> } = {};
-  allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+  allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
     if (item.dataType === 'switch') {
       item.seriesData = RandomUtil.getSwitchData(1000);
     } else {
@@ -433,7 +456,7 @@ const realTimeUpdateLengthBtnClick = () => {
   mySetInterval = setInterval(() => {
     const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
     console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-    allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+    allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
       let seq = count;
       let imitate: Array<(number | string)[]> = [];
       if (item.dataType === 'switch') {
@@ -441,7 +464,7 @@ const realTimeUpdateLengthBtnClick = () => {
       } else {
         imitate = RandomUtil.getSeriesData(randomCount);
       }
-      imitate.forEach((item, index) => {
+      imitate.forEach((item) => {
         seq++;
         item[0] = seq;
       });
@@ -461,7 +484,7 @@ const realTimeUpdateTimeBtnClick = () => {
   mySetIntervalTime = setInterval(() => {
     const allDistinctSeriesTagInfo: SeriesTagType[] = echartsLinkageRef.value?.getAllDistinctSeriesTagInfo() as SeriesTagType[];
     console.log("allDistinctSeriesTagInfo", allDistinctSeriesTagInfo);
-    allDistinctSeriesTagInfo.forEach((item: SeriesTagType, index: number) => {
+    allDistinctSeriesTagInfo.forEach((item: SeriesTagType) => {
       let imitate: Array<(number | string)[]> = [];
       if (item.dataType === 'switch') {
         imitate = RandomUtil.getSwitchData(randomCount);
@@ -703,6 +726,8 @@ const dropEchart = (data: DropEchartType) => {
 const deleteEchart = (data: DeleteEchartType) => {
   // id: 删除的实例id，remainCount: 剩余实例数量
   const { id, remainCount } = data;
+  console.log("id", id);
+  console.log("remainCount", remainCount);
 }
 
 // 监听拖拽事件

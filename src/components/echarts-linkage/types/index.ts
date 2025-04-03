@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-03 10:20:04
+ * @LastEditTime: 2025-04-03 14:08:49
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -261,6 +261,7 @@ export type SeriesIdDataType = {
  * @description: ../index.vue文件中响应式数据所有相关数据类型
  * @param {Array<string>} groupsName echarts所有关联图表组名数组
  * @param {string} groupDefault 默认的echarts图表组名
+ * @param {Array<string>} usedGroupNames 已使用的组名
  * @param {number} maxEchartsIdSeq 最大的echarts图表id序号
  * @param {Array<seriesIdDataType>} data 所有echarts图表数据
  * @param {string} currentHandleChartIds 当前操作的echarts图表id集合
@@ -273,6 +274,7 @@ export type SeriesIdDataType = {
 export type DataAboutType = {
   groupsName: Array<string>;
   groupDefault: string;
+  usedGroupNames: Array<string>;
   maxEchartsIdSeq: number;
   data: Array<SeriesIdDataType>;
   currentHandleChartIds: Array<string>;
