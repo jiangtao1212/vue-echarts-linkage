@@ -387,8 +387,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   let dataAll: OneDataType[] = []; // 所有数据
   if (!oneDataType) {
     // 1.空数据，默认新增一个line
-    oneDataType = setOneData('', SERIES_CLASS_TYPE_DEFAULT, [], '', []) as OneDataType;
-    dataAll = [{ ...oneDataType }];
+    dataAll = [setOneDataEmpty()];
   } else if (Array.isArray(oneDataType)) {
     // 2.新增多个echarts，数组
     const data: OneDataType[] = [];
@@ -412,6 +411,11 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   Extension.setStyleProperty(props, dataAbout.data.length);
   allUpdateHandleCommon();
 };
+
+// 设置一个空数据，进行echarts初始化占位
+const setOneDataEmpty = (): OneDataType => {
+  return setOneData('', SERIES_CLASS_TYPE_DEFAULT, [], '', []) as OneDataType;
+}
 // 组装数据
 const setOneData = (name: string, type: SeriesClassType, seriesData: number[][], customData: string, markLineArray: number[]): OneDataType => {
   return { name, type, seriesData, seriesDataCache: seriesData, customData, markLineArray, dataType: SERIES_TYPE_DEFAULT, visualMapSeries: undefined };
@@ -496,7 +500,12 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 
 // 初始化某个echarts中所有series
 const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) => {
-  const EchartsIndex = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  const echartsIndex = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  if (oneDataArray.length === 0) {
+    // 空数据，则新增一个空数据进行占位
+    dataAbout.data[echartsIndex].data = [setOneDataEmpty()];
+    return;
+  }
   oneDataArray.forEach((item: OneDataType, index: number) => {
     if (!item.dragItemOption) {
       const id = (index + 1).toString();
@@ -504,7 +513,7 @@ const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) =
     }
     item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
   });
-  dataAbout.data[EchartsIndex].data = oneDataArray;
+  dataAbout.data[echartsIndex].data = oneDataArray;
   // 注：这里不需要渲染，因为drag组件中已经监听了data中dragItemOption数据的变化，会自动渲染
 }
 
@@ -561,7 +570,7 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       myChart.clear();
       if (currentData.data.length === 0) {
         // 如果数据全被删除，则新增一个空数据进行占位
-        currentData.data = [setOneData('', SERIES_CLASS_TYPE_DEFAULT, [], '', []) as OneDataType];
+        currentData.data = [setOneDataEmpty()];
       }
       needHandle = true;
     } else { // 实例存在且不是删除子项item操作，判断是否需要更新
@@ -914,7 +923,11 @@ const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
   }
   const res: Array<Array<DragItemType>> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType, index: number) => {
-    const oneEchartInfo: Array<DragItemType> = [];
+    let oneEchartInfo: Array<DragItemType>  = [];
+    if (echart.data.length === 1 && echart.data[0].name === '') {
+      // 空echarts，返回空数组
+      oneEchartInfo = [];
+    }
     echart.data.forEach((series: OneDataType) => {
       if (series.dragItemOption) {
         series.dragItemOption.seriesOption = packageSeriesOption(series);
@@ -931,7 +944,7 @@ const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
         });
       }
     });
-    oneEchartInfo.length > 0 && res.push(oneEchartInfo);
+    res.push(oneEchartInfo);
   });
   return JSON.parse(JSON.stringify(res));
 }

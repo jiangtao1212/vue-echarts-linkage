@@ -616,7 +616,6 @@ const updateTemplateBtnClick = (mode: "template" | "normal" = 'normal') => {
 const getTemplateTagsOptionBtnClick = () => {
   const templateTagsOption = echartsLinkageRef.value?.getTemplateTagsOption() as Array<Array<DragItemType>>;
   console.log("templateTagsOption", templateTagsOption);
-
   const res: Array<OneDataType[]> = [];
   for (let i = 0; i < templateTagsOption.length; i++) {
     const templateTags = templateTagsOption[i];
@@ -804,11 +803,11 @@ const init = () => {
 }
 
 // 初始化时测试all-replace
-const testInitAllReplace = () => {
-  // replaceAllEchartsData();
-  // updateTemplateBtnClick();
-  // updateTemplateBtnClick('template');
-}
+// const testInitAllReplace = () => {
+//   // replaceAllEchartsData();
+//   // updateTemplateBtnClick();
+//   // updateTemplateBtnClick('template');
+// }
 
 onMounted(() => {
   init();
