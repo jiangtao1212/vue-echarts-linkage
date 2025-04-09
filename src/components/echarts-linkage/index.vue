@@ -581,11 +581,13 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
       currentData.data.length === 0 && (needHandle = false); // 空数据，不需要渲染
     }
     if ((dataAbout.isAllUpdate || (dataAbout.currentHandleChartIds.includes(id) && dataEcharts.data.length === 1))
-      && (dataEcharts.data.length > 0 && dataEcharts.data[0].visualMapSeries)) {
+      // && (dataEcharts.data.length > 0 && dataEcharts.data[0].visualMapSeries)) {
+      && (dataEcharts.data.length > 0)) {
       // 在初始化时，新增了一个空数据进行占位，当后续有数据时，需要先销毁实例，然后重新初始化实例
       // 注：这里有两种情况，首先第一个数据中visualMapSeries必须存在
       // 情况1：整体更新时，传入了视觉映射数据，则需要重新渲染实例
       // 情况2：拖入数据时，传入了视觉映射数据，如果当前echarts实例中只有一条数据，则需要重新渲染实例
+      // 情况3：视觉映射数据切换为非视觉映射数据时，也需要重新渲染实例
       myChart.dispose();
       myChart = echarts.init(element, dataEcharts.theme); // 切换主题时，需要重新初始化实例
     }
@@ -1060,6 +1062,7 @@ const judgeTagIsSame = (tag1: SeriesTagType, tag2: OneDataType) => {
  * @param isLink 首尾相连模式，true：首尾相连，false：非首尾相连
  */
 const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<SeriesTagType>, isLink: boolean) => {
+  let isNeedHandle = false;
   if (isLink) {
     // 首尾相连模式
     echart.data.forEach((series: OneDataType) => {
@@ -1086,7 +1089,9 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       const { packageData, markLineData } = linkToSeries(linkData);
       series.seriesData = packageData;
       series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
-      seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
+      // visualMapSeries数据为空，tooltip中需要恢复默认显示
+      !seriesTag.visualMapSeries && (isNeedHandle = true);
+      series.visualMapSeries = seriesTag.visualMapSeries;
       (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
       (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
@@ -1097,10 +1102,16 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       if (!seriesTag) return; // 未找到匹配的标签，跳过
       const newSeriesData = seriesTag.seriesData;
       newSeriesData && (series.seriesData = newSeriesData);
-      seriesTag.visualMapSeries && (series.visualMapSeries = seriesTag.visualMapSeries);
+      // visualMapSeries数据为空，tooltip中需要恢复默认显示
+      !seriesTag.visualMapSeries && (isNeedHandle = true);
+      series.visualMapSeries = seriesTag.visualMapSeries;
       (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
       (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
+  }
+  if (isNeedHandle) {
+    // 需要重新渲染，因为visualMapSeries数据为空，tooltip中需要恢复默认显示
+    !dataAbout.currentHandleChartIds.includes(echart.id) && (dataAbout.currentHandleChartIds.push(echart.id));
   }
 }
 
