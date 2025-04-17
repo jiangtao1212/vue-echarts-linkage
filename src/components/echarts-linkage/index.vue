@@ -1479,21 +1479,46 @@ const switchEchartsTheme = async (e: any, id: string) => {
 
 // echarts上的放缩事件
 const switchEchartsEnlargeShrink = async (e: any, id: string) => {
+
+  /**
+   * @description 设置其他echarts的tooltip的显示状态
+   * @param id 图表id
+   * @param show 显示状态
+   */
+  function setOtherEchartsTooltipShow(id: string, show: boolean) {
+    dataAbout.data.forEach((echart: SeriesIdDataType) => {
+      if (echart.id === id) return;
+      const element: HTMLElement = document.getElementById(echart.id) as HTMLElement;
+      const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
+      echartsInstance.setOption({
+        tooltip: {
+          show: show,
+        }
+      });
+    });
+  }
+
   console.log('switchEchartsEnlargeShrink', id);
   const container = document.querySelector('.main-container') as HTMLElement;
-  const elements = container?.querySelectorAll('.main-container .echarts-container') as NodeListOf<HTMLElement>;
+  const elements = container?.querySelectorAll('.echarts-container') as NodeListOf<HTMLElement>;
   const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
   const echart = dataAbout.data[index];
   const element = elements[index];
   if (!element) return;
+  let isNeedSetOtherEchartsTooltipShow = false; // 是否需要显示其他echarts的tooltip
   HandleEnlargeShrink.handleEnlargeShrink(element, container, () => {
-    echart.enlargeShrink = MODE_ENLARGE; // 恢复原状后，设置放缩类型为放大
+    // 放大操作
+    echart.enlargeShrink = MODE_SHRINK; // 撑满后，设置放缩icon类型为缩小
+    isNeedSetOtherEchartsTooltipShow = false; // 不需要显示其他echarts的tooltip
   }, () => {
-    echart.enlargeShrink = MODE_SHRINK; // 撑满后，设置放缩类型为缩小
+    // 恢复操作
+    echart.enlargeShrink = MODE_ENLARGE; // 恢复原状后，设置放缩icon类型为放大
+    isNeedSetOtherEchartsTooltipShow = true; // 需要显示其他echarts的tooltip
   });
   dataAbout.currentHandleChartIds = [id];
   await nextTick();
-  initEcharts();
+  await initEcharts();
+  setOtherEchartsTooltipShow(id, isNeedSetOtherEchartsTooltipShow);
 }
 
 // echarts上的excel 视窗事件

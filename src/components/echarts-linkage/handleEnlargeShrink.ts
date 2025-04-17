@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:14:11
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-17 14:29:20
+ * @LastEditTime: 2025-04-17 15:57:55
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleEnlargeShrink.ts
  * @Description: 处理放缩事件
  */
@@ -60,19 +60,19 @@ function restoreBox(box: HTMLElement) {
 const handleEnlargeShrink = (element: HTMLElement, container: HTMLElement, enlargeCallback?: Function, shrinkCallback?: Function) => {
   if (!element || !container) throw new Error('放缩的元素或容器不存在，请检查！');
   if (expandedBox === element) {
-    // 当前div已撑满，恢复原状
+    // 当前div已撑满，需恢复原状，并调用缩小回调
     restoreBox(element);
     expandedBox = null;
-    enlargeCallback && enlargeCallback();
+    shrinkCallback && shrinkCallback();
   } else {
     // 如果有其他div撑满，先恢复
     if (expandedBox) {
       restoreBox(expandedBox);
     }
-    // 撑满当前div
+    // 撑满当前div，并调用放大回调
     expandBox(element, container);
     expandedBox = element;
-    shrinkCallback && shrinkCallback();
+    enlargeCallback && enlargeCallback();
   }
 }
 
