@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-01 14:57:23
+ * @LastEditTime: 2025-04-17 09:46:46
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -13,22 +13,22 @@ import type {
   BarSeriesOption,
   SeriesOption,
   ToolboxComponentOption,
-  LegendComponentOption, 
+  LegendComponentOption,
   GridComponentOption,
   TooltipComponentOption,
   YAXisComponentOption,
   MarkLineComponentOption
 } from "@/models/my-echarts/index";
-import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates"
+import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
-import type { GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType,
-   ThemeType, SeriesType, OneDataType, ExtraTooltipType, ExtraTooltipDataItemType } from "@/components/echarts-linkage/types/index";
+import type {
+  GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType,
+  ThemeType, SeriesType, OneDataType, ExtraTooltipType, ExtraTooltipDataItemType, EnlargeShrinkType
+} from "@/components/echarts-linkage/types/index";
 
 let mergedOptionTemplate: EChartsOption = optionTemplate; // 合并后的option模板
 const COLOR_KEY = 'color';
 const COLOR_CACHE_KEY = 'colorCache';
-const THEME_DARK = 'dark';
-const THEME_LIGHT = 'light';
 
 /**
  * @description 图表数据类型
@@ -81,6 +81,7 @@ export type EchartsLinkageModelType = {
   useMergedLegend?: boolean,
   useSeriesDataSetYAxisMinMax: boolean,
   extraTooltip?: ExtraTooltipType,
+  enlargeShrink?: EnlargeShrinkType,
 }
 
 type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
@@ -90,6 +91,7 @@ export class EchartsLinkageModel {
   private seriesOptionArray: Array<SeriesOptionType>; // 原始数据
   private segment; // 图表分段数
   private theme: ThemeType; // 主题
+  private enlargeShrink: EnlargeShrinkType; // 放缩类型
   private swichThemeIcon: ThemeType; // 切换按钮的icon主题，与theme相反
   private xAxisInterval = 1; // x轴刻度标签显示间隔
   private offsetNum = 40; // Y轴偏移量
@@ -113,7 +115,9 @@ export class EchartsLinkageModel {
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.theme = param.theme;
+    this.enlargeShrink = param.enlargeShrink || MODE_ENLARGE;
     this.swichThemeIcon = this.theme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
+    this.enlargeShrink = this.enlargeShrink === MODE_ENLARGE ? MODE_ENLARGE : MODE_SHRINK;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
     this.extraTootip = param.extraTooltip;
@@ -127,6 +131,7 @@ export class EchartsLinkageModel {
     this.setYAxis();
     this.setToolTip();
     this.setThemeButtonIcon();
+    this.setEnlargeShrinkButtonIcon();
     this.initOptionTemplate();
     this.setResultOption();
     this.setVisualMap(); // 视觉映射，必须等所有series都设置完毕后再设置
@@ -453,6 +458,34 @@ export class EchartsLinkageModel {
     }
   }
 
+  // 设置放缩按钮图标
+  setEnlargeShrinkButtonIcon = () => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      // const xAxis = this.resultOption.xAxis as XAXisComponentOption[];
+      if (toolbox.feature && toolbox.feature.myEnlargeShrinkButton) {
+        const enlargeSvg = FileUtil.getAssetsFile('svg/enlarge.svg');
+        const shrinkSvg = FileUtil.getAssetsFile('svg/shrink.svg');
+        let icon = enlargeSvg;
+        if (this.enlargeShrink === MODE_ENLARGE) {
+          // 切换图标为dark，则当前主题为light
+          icon = enlargeSvg;
+        } else {
+          // 切换图标为light，则当前主题为dark
+          icon = shrinkSvg;
+        }
+        toolbox.feature.myEnlargeShrinkButton.icon = 'image://' + icon;
+      } else {
+        console.error("myEnlargeShrinkButton is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+
+
   // 组装option
   setResultOption = () => {
     const _that = this;
@@ -751,6 +784,26 @@ export class EchartsLinkageModel {
         toolbox.feature.myThemeButton.onclick = callback;
       } else {
         console.error("myThemeButton is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /** 
+   * @description 设置echarts实例的放缩按钮的点击事件
+   * @param callback 放缩按钮的自定义点击事件回调函数
+   * @returns this 链式调用
+   */
+  setMyEnlargeShrinkButtonClickEvent = (callback: Function) => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.myEnlargeShrinkButton) {
+
+        toolbox.feature.myEnlargeShrinkButton.onclick = callback;
+      } else {
+        console.error("myEnlargeShrinkButton is not defined in toolbox feature");
       }
     } else {
       console.error("toolbox is not defined in resultOption");
@@ -1059,7 +1112,7 @@ export class EchartsLinkageModel {
       return metrics.width;
     }
 
-    function setGridrightAndxAxis (grid: GridComponentOption, xAxis: any, right: number) {
+    function setGridrightAndxAxis(grid: GridComponentOption, xAxis: any, right: number) {
       grid.right = right;
       xAxis.nameTextStyle.align = 'left';
       xAxis.nameTextStyle.padding = 0;

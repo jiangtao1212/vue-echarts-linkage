@@ -215,6 +215,9 @@ export type excelViewType = {
 // 主题类型
 export type ThemeType = 'dark' | 'light';
 
+// 放缩类型
+export type EnlargeShrinkType = 'enlarge' | 'shrink';
+
 /**
  * @description: 额外的tooltip数据项类型
  * @param {string} label 标签
@@ -255,6 +258,7 @@ export type SeriesIdDataType = {
   graphics?: Array<GraphicLocationInfoType>,
   theme: ThemeType,
   extraTooltip?: ExtraTooltipType,
+  enlargeShrink?: EnlargeShrinkType,
 }
 
 /**
@@ -352,10 +356,8 @@ export type SegementType = number | {
  * @description: 数据视图按钮点击回调的参数类型
  * @param {string} id 图表id
  * @param {SeriesLinkType} seriesLink 首尾相连的数据
- * @param {Function} callback 回调函数, 接收excelViewType参数
  */
 export type ListenerExcelViewType = {
   id: string,
   seriesLink?: SeriesLinkType,
-  callback: (excelView: excelViewType) => void,
 }

@@ -30,13 +30,13 @@ import echarts from "@/models/my-echarts/index";
 import type { EChartsOption, ToolboxComponentOption } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { THEME } from "@/models/echarts-linkage-model/staticTemplates"
+import { THEME, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
-  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType
+  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, SeriesLinkType
 } from './types/index';
 import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -46,6 +46,8 @@ import { type SheetHeadType } from '@/components/sheet/type/index';
 import { ObjUtil } from "@/utils/index";
 import Extension from './extension';
 import HandleGraph from './handleGraph';
+import HandleEnlargeShrink from './handleEnlargeShrink';
+import HandleExcel from './handleExcel';
 
 /**
  * @description 组件props类型
@@ -74,7 +76,7 @@ export type PropsType = {
   segment?: SegementType;
   language?: 'zh-cn' | 'en-us';
   gridAlign?: boolean, // 多echarts图表是否对齐
-  theme?: 'light' | 'dark', // 主题
+  theme?: ThemeType, // 主题
   background?: string, // 背景色
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
@@ -141,7 +143,7 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
   // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
   if (dataAbout.isSwitchingTheme) {
     // 切换主题时，优先级最高
-    if (echartsTheme === 'dark') {
+    if (echartsTheme === THEME_DARK) {
       res = THEME.DARK.BACKGROUND_COLOR;
     } else {
       res = THEME.LIGHT.BACKGROUND_COLOR;
@@ -150,7 +152,7 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
     if (props.background) {
       res = props.background;
     } else {
-      if (echartsTheme === 'dark') {
+      if (echartsTheme === THEME_DARK) {
         res = THEME.DARK.BACKGROUND_COLOR
       } else {
         res = THEME.LIGHT.BACKGROUND_COLOR;
@@ -324,7 +326,7 @@ const deleteItemsAll = async (echartsIndex: number) => {
  * @param data 系列数据
  * @returns EchartsLinkageModel 实例
  */
-const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark', extraTooltip?: ExtraTooltipType) => {
+const getEchartsLikageModel = (data: SeriesOptionType[], theme: ThemeType, extraTooltip?: ExtraTooltipType, enlargeShrink?: EnlargeShrinkType) => {
   const echartsLinkageModel = new EchartsLinkageModel({
     seriesOptionArray: data,
     theme,
@@ -332,6 +334,7 @@ const getEchartsLikageModel = (data: SeriesOptionType[], theme: 'light' | 'dark'
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
     extraTooltip: extraTooltip,
+    enlargeShrink: enlargeShrink,
   } as EchartsLinkageModelType);
   return echartsLinkageModel;
 }
@@ -682,12 +685,13 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
       seriesLinkMode: item.seriesLink?.isLinkMode,
     });
   });
-  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme, dataArray.extraTooltip);
+  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme, dataArray.extraTooltip, dataArray.enlargeShrink);
   console.log('数据', dataArray.data);
   // 各种处理
-  echartsLinkageModel.setMyDeleteButton((_e: any) => deleteEchart(dataArray.id))
+  echartsLinkageModel.setMyDeleteButton(() => deleteEchart(dataArray.id))
     .setSaveAsImageClickEvent((e: any) => saveAsImage(e, dataArray.id))
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
+    .setMyEnlargeShrinkButtonClickEvent((e: any) => switchEchartsEnlargeShrink(e, dataArray.id))
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
     .setCustomSeriesMarkLine(dataArray.data)
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
@@ -925,7 +929,7 @@ const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
   }
   const res: Array<Array<DragItemType>> = [];
   dataAbout.data.forEach((echart: SeriesIdDataType, index: number) => {
-    let oneEchartInfo: Array<DragItemType>  = [];
+    let oneEchartInfo: Array<DragItemType> = [];
     if (echart.data.length === 1 && echart.data[0].name === '') {
       // 空echarts，返回空数组
       oneEchartInfo = [];
@@ -1454,7 +1458,7 @@ const clearExtraTooltip = (id?: string, isRender = true) => {
 const switchEchartsTheme = async (e: any, id: string) => {
   console.log('switchEchartsTheme', id);
   const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  const theme = data.theme === 'light' ? 'dark' : 'light';
+  const theme = data.theme === THEME_LIGHT ? THEME_DARK : THEME_LIGHT;
   console.log('data', data);
   dataAbout.isSwitchingTheme = true;
   if (props.isLinkage) {
@@ -1473,144 +1477,44 @@ const switchEchartsTheme = async (e: any, id: string) => {
   dataAbout.isSwitchingTheme = false;
 }
 
+// echarts上的放缩事件
+const switchEchartsEnlargeShrink = async (e: any, id: string) => {
+  console.log('switchEchartsEnlargeShrink', id);
+  const container = document.querySelector('.main-container') as HTMLElement;
+  const elements = container?.querySelectorAll('.main-container .echarts-container') as NodeListOf<HTMLElement>;
+  const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  const echart = dataAbout.data[index];
+  const element = elements[index];
+  if (!element) return;
+  HandleEnlargeShrink.handleEnlargeShrink(element, container, () => {
+    echart.enlargeShrink = MODE_ENLARGE; // 恢复原状后，设置放缩类型为放大
+  }, () => {
+    echart.enlargeShrink = MODE_SHRINK; // 撑满后，设置放缩类型为缩小
+  });
+  dataAbout.currentHandleChartIds = [id];
+  await nextTick();
+  initEcharts();
+}
+
 // echarts上的excel 视窗事件
-const setExcelView = (e: any, id: string) => {
-  // excel数据视图点击事件发送给外部，外部处理之后的回调函数
-  function excelViewCallback(excelView: excelViewType) {
-    console.groupCollapsed('excelViewCallback');
-    console.time('excelViewCallback');
-    dialogVisible.value = true;
-    const headXname = excelView.headXname;
-    const preAdd = excelView.preAdd;
-    const postAdd = excelView.postAdd;
-    preAdd && Extension.isAutoPropertyTypeConsistent(preAdd, 'value'); // 检查前置数据value属性类型是否一致
-    postAdd && Extension.isAutoPropertyTypeConsistent(postAdd, 'value'); // 检查后置数据value属性类型是否一致
-    let head: SheetHeadType[] = []; // 表头
-    let body: Array<any> = []; // 表体
-    const itemNameArray = data.data.map((item: OneDataType, index: number): SheetHeadType => ({ 'label': item.name, 'prop': 'prop' + index }));
-    head = [...itemNameArray];
-    if (params.seriesLink) { // 考虑到尽管是多卷关联模式，但有些系列只有name，并没有数据，因此需要用params.seriesLink进行判断
-      // --多卷关联--
-      // 1.新增两列表头数据，一个是卷号列（关联的label），一个是X轴列
-      const primaryKey = 'primary'; // 数据主键
-      const mainProp = 'auto'; // 主数据列
-      head.unshift(...[{ 'label': '自定义', 'prop': mainProp }, { 'label': headXname, 'prop': 'xProp' }]); // 表头，多卷关联时，最前面增加卷号列和X轴列
-      // 2.第一次组装body数据
-      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item, 'auto': item.split('--')[0], 'xProp': item.split('--')[1] }))
-      // 3.处理传入的前置数据
-      if (preAdd && preAdd!.length > 0) {
-        // 3.1 提取前置数据，并且加入到表头数据中
-        const preAddHead = preAdd.map((item: excelViewHeadType, index: number) => {
-          if (item.isPrimaryKey) {
-            return { 'label': item.name, 'prop': mainProp }
-          } else {
-            return { 'label': item.name, 'prop': 'preAdd' + index }
-          }
-        });
-        res.head.shift(); // 先删除第一列, 是为了保持和传入的顺序一致，这样外部就可以自定义列的顺序了
-        res.head.unshift(...preAddHead); // 表头前面增加自定义列
-        // 3.2 提取主数据数组和其他数据数组
-        let mainDataArray: (string | number)[] = []; // 主数据数组
-        let otherDataArray: Array<{ value: any, prop: string }> = []; // 其他数据数组
-        preAdd.forEach((item: excelViewHeadType, index: number) => {
-          if (Array.isArray(item.value)) {
-            if (item.isPrimaryKey) {
-              mainDataArray = item.value;
-            } else {
-              otherDataArray.push({ value: item.value, 'prop': 'preAdd' + index })
-            }
-          } else {
-            if (item.isPrimaryKey) {
-              mainDataArray.push(item.value);
-            } else {
-              otherDataArray.push({ value: [item.value], 'prop': 'preAdd' + index })
-            }
-          }
-        });
-        // 3.3 组装数据，用于后续给body添加属性数据 { main1: { other1: value, other2: value }, main2: { other1: value, other2: value }
-        const packageData: { [key: string]: { [prop: string]: any } } = {};
-        mainDataArray.forEach((item: any, index: number) => {
-          const key = item + ''; // 防止key为数字时报错
-          packageData[key] = {} as any;
-          otherDataArray.forEach((item1: any) => {
-            packageData[key][item1.prop] = item1.value[index];
-          });
-        });
-        // console.log('packageData', packageData);
-        // 3.4 遍历body，给对象添加其他属性数据
-        res.body.forEach((item: any) => {
-          const mainKey = item[mainProp];
-          const addDataObj = packageData[mainKey];
-          if (!addDataObj) return;
-          for (const key in addDataObj) {
-            if (Object.prototype.hasOwnProperty.call(addDataObj, key)) {
-              item[key] = addDataObj[key];
-            }
-          }
-        });
-      }
-      // 4.处理传入的后置数据
-      head = res.head;
-      body = res.body;
-    } else {
-      // --非多卷关联--
-      const primaryKey = 'xProp'; // 数据主键
-      head.unshift(...[{ 'label': headXname, 'prop': 'xProp' }]); // 表头前面增加X轴列
-      const res = packageExcelViewBody(head, data, primaryKey, (item: string) => ({ [primaryKey]: item }));
-      if (preAdd && preAdd!.length > 0) {
-        res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'preAdd' + index }))); // 表头前面增加自定义列
-        res.body.forEach((item: any) => {
-          preAdd.forEach((item1: excelViewHeadType, index: number) => {
-            item['preAdd' + index] = item1.value;
-          });
-        });
-      }
-      if (postAdd && postAdd!.length > 0) {
-        res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'postAdd' + index }))); // 表头后面增加自定义列
-        res.body.forEach((item: any) => {
-          postAdd.forEach((item1: excelViewHeadType, index: number) => {
-            item['postAdd' + index] = item1.value;
-          });
-        });
-      }
-      head = res.head;
-      body = res.body;
-    }
-    console.log('head', head);
-    console.log('body', body);
-    sheetAbout.head = head;
-    sheetAbout.body = body;
-    console.log('计算结束---开启子画面');
-    console.timeEnd('excelViewCallback');
-    console.groupEnd();
-  }
-
-  // 组装body数据, primaryKey为数据主键
-  function packageExcelViewBody(head: SheetHeadType[], data: SeriesIdDataType, primaryKey: string, callBack: Function) {
-    const body = data.xAxisdata?.map((item: string) => callBack(item)) || [];
-    // const headProps = head.map(item => item.prop);
-    const series = data.data.map((item: OneDataType) => {
-      const key = head.find(item1 => item1.label === item.name)?.prop;
-      return { 'prop': key, 'value': item.seriesData };
-    });
-    body.forEach((item: any, index: number) => {
-      series.forEach((item1: any) => {
-        item[item1.prop] = item1.value[index][1];
-      });
-    });
-    return { head, body };
-  }
-
+const setExcelView = async (e: any, id: string) => {
   // console.log('setExcelView', id);
   const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
   // 筛选出多卷关联的系列数据，然后取第一个发送给外部
   const seriesData = data.data.filter((item: OneDataType) => item.seriesLink?.isLinkMode && item.seriesLink!.linkData.length > 0);
-  const params: ListenerExcelViewType = { id: id, callback: excelViewCallback };
+  const params: ListenerExcelViewType = { id: id };
   if (seriesData.length > 0) {
     params.seriesLink = JSON.parse(JSON.stringify(seriesData[0].seriesLink)); // 深拷贝数据，避免修改原数据导致相互关联
     params.seriesLink?.linkData.forEach((item: LinkDataType) => item.data = []); // 将关联的series数据置空，减少数据量
   }
-  emit('listener-excel-view', params);
+  let extraData: excelViewType | undefined = undefined;
+  emit('listener-excel-view', params, (excelView: excelViewType) => { extraData = excelView; });
+  await Promise.resolve();  // 切换至微任务队列
+  // console.log('子组件异步执行后续逻辑');  // 确保在 emit 后执行
+  dialogVisible.value = true;
+  const { head, body } = HandleExcel.handleExcel(data, extraData, params.seriesLink);
+  sheetAbout.head = head;
+  sheetAbout.body = body;
 }
 
 // 子组件暴露变量和方法
@@ -1698,6 +1602,7 @@ onBeforeUnmount(() => {
     overflow-x: hidden;
     overflow-y: auto;
     padding-bottom: var(--padding);
+    position: relative;
     .flex-row(flex-start);
     flex-wrap: wrap;
     align-content: flex-start;

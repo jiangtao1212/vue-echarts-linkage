@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-02-11 16:50:44
+ * @LastEditTime: 2025-04-16 15:42:12
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -11,6 +11,7 @@ import type { EChartsOption, MarkLineComponentOption } from "@/models/my-echarts
 import SaveAsImageSvg from '@/assets/svg/save-image.svg';
 import DeleteSvg from '@/assets/svg/delete.svg';
 import ExcelSvg from "@/assets/svg/file-excel.svg";
+import EnlargeSvg from "@/assets/svg/enlarge.svg";
 
 // x轴id
 export const XAXIS_ID = 'X1';
@@ -20,9 +21,20 @@ export const THEME = {
     BACKGROUND_COLOR: '#100C2A',
   },
   'LIGHT': { // 白色主题
-    BACKGROUND_COLOR: 'transparent',
+    BACKGROUND_COLOR: '#fff',
   }
 };
+
+// 主题：黑色
+export const THEME_DARK = 'dark';
+// 主题：白色
+export const THEME_LIGHT = 'light';
+
+// 放缩：放大
+export const MODE_ENLARGE = 'enlarge';
+// 放缩：缩小
+export const MODE_SHRINK = 'shrink';
+
 // 颜色数组
 export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];
 // 折线图表模板
@@ -63,7 +75,15 @@ export const optionTemplate: EChartsOption = {
           // 在这里添加你想要执行的代码
         }
       },
-
+      myEnlargeShrinkButton: { // 自定义的放缩功能
+        show: true,
+        title: `放大`,
+        icon: 'image://' + EnlargeSvg,
+        onclick: (e: any) => {
+          // console.log(e);
+          // 在这里添加你想要执行的代码
+        }
+      },
       myExcelView: {
         show: true,
         title: `数据视图`,

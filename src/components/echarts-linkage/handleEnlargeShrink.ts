@@ -1,0 +1,81 @@
+/*
+ * @Author: jiangtao 1106950092@qq.com
+ * @Date: 2025-04-17 09:14:11
+ * @LastEditors: jiangtao 1106950092@qq.com
+ * @LastEditTime: 2025-04-17 14:29:20
+ * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleEnlargeShrink.ts
+ * @Description: 处理放缩事件
+ */
+
+let expandedBox: HTMLElement | null = null; // 当前撑满的div容器
+const originalStyles = new WeakMap(); // 用WeakMap存储每个div的初始样式
+
+// 撑满容器
+function expandBox(box: HTMLElement, container: HTMLElement) {
+  // 记录初始样式
+  originalStyles.set(box, {
+    position: box.style.position,
+    width: box.style.width,
+    height: box.style.height,
+    top: box.style.top,
+    left: box.style.left,
+    zIndex: box.style.zIndex,
+    // flex: box.style.flex,
+    // marginBottom: box.style.marginBottom,
+  });
+
+  // 设置撑满容器的样式
+  box.style.position = 'absolute';
+  box.style.top = '0';
+  box.style.left = '0';
+  box.style.width = container.clientWidth + 'px';
+  box.style.height = container.clientHeight + 'px';
+  box.style.zIndex = '99';
+  box.style.backgroundColor = '#fff';
+  // box.style.flex = 'none';
+  // box.style.marginBottom = '10px';
+}
+
+// 恢复撑满容器的样式
+function restoreBox(box: HTMLElement) {
+  const style = originalStyles.get(box);
+  if (!style) return;
+  box.style.position = style.position;
+  box.style.width = style.width;
+  box.style.height = style.height;
+  box.style.top = style.top;
+  box.style.left = style.left;
+  box.style.zIndex = style.zIndex;
+  // box.style.flex = style.flex;
+  // box.style.marginBottom = style.marginBottom;
+}
+
+/**
+ * @description 处理放缩事件
+ * @param element 需要放缩的元素
+ * @param container 放缩的容器
+ * @param enlargeCallback 放大回调
+ * @param shrinkCallback 缩小回调
+ */
+const handleEnlargeShrink = (element: HTMLElement, container: HTMLElement, enlargeCallback?: Function, shrinkCallback?: Function) => {
+  if (!element || !container) throw new Error('放缩的元素或容器不存在，请检查！');
+  if (expandedBox === element) {
+    // 当前div已撑满，恢复原状
+    restoreBox(element);
+    expandedBox = null;
+    enlargeCallback && enlargeCallback();
+  } else {
+    // 如果有其他div撑满，先恢复
+    if (expandedBox) {
+      restoreBox(expandedBox);
+    }
+    // 撑满当前div
+    expandBox(element, container);
+    expandedBox = element;
+    shrinkCallback && shrinkCallback();
+  }
+}
+
+export default {
+  handleEnlargeShrink
+};

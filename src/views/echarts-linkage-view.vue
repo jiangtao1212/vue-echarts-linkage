@@ -71,7 +71,7 @@
 
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-  <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
+  <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="2" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
     :theme="theme" :is-linkage="isLinkage" :use-graphic-location="false" :is-echarts-height-change="false"
@@ -770,15 +770,15 @@ const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
 }
 
 // 监听excel数据视图按钮点击事件
-const listenerExcelView = (data: ListenerExcelViewType) => {
+const listenerExcelView = (data: ListenerExcelViewType, callback: (excelView: excelViewType) => void) => {
   console.log("listenerExcelView", data);
-  const { id, seriesLink, callback } = data;
+  const { id, seriesLink } = data;
   console.log("id", id);
   console.log("seriesLink", seriesLink);
-  let params: excelViewType;
+  let extraData: excelViewType;
   if (seriesLink && seriesLink.isLinkMode) {
     const primaryKeyValues = seriesLink?.linkData.map(item => item.label); // 提取主键值
-    params = { // 多卷
+    extraData = { // 多卷
       headXname: '长度',
       preAdd: [
         { name: '卷号', value: primaryKeyValues, isPrimaryKey: true },
@@ -787,13 +787,14 @@ const listenerExcelView = (data: ListenerExcelViewType) => {
       ] as excelViewHeadType[],
     }
   } else {
-    params = { // 单卷
+    extraData = { // 单卷
       headXname: '长度',
       preAdd: [{ name: '卷号', value: 'P202410210001', isPrimaryKey: true } as excelViewHeadType],
       postAdd: [{ name: '备注', value: '备注信息' } as excelViewHeadType],
     }
   }
-  callback(params);
+  callback(extraData);
+  console.log("extraData， 父级--------", extraData);
 }
 
 const init = () => {
@@ -862,7 +863,8 @@ onMounted(() => {
 
 .echarts-linkage-container {
   width: 100vw;
-  height: 95vh;
+  height: 83vh;
+  padding-bottom: 10px;
 }
 </style>
 <style scoped lang="less">
