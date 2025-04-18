@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-17 09:46:46
+ * @LastEditTime: 2025-04-18 10:33:53
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -115,7 +115,7 @@ export class EchartsLinkageModel {
     this.seriesOptionArray = param.seriesOptionArray;
     this.segment = param.segment;
     this.theme = param.theme;
-    this.enlargeShrink = param.enlargeShrink || MODE_ENLARGE;
+    this.enlargeShrink = param.enlargeShrink || MODE_SHRINK;
     this.swichThemeIcon = this.theme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
     this.enlargeShrink = this.enlargeShrink === MODE_ENLARGE ? MODE_ENLARGE : MODE_SHRINK;
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
@@ -468,11 +468,11 @@ export class EchartsLinkageModel {
         const shrinkSvg = FileUtil.getAssetsFile('svg/shrink.svg');
         let icon = enlargeSvg;
         if (this.enlargeShrink === MODE_ENLARGE) {
-          // 切换图标为dark，则当前主题为light
-          icon = enlargeSvg;
-        } else {
-          // 切换图标为light，则当前主题为dark
+          // 放大之后，切换图标为缩小svg图标
           icon = shrinkSvg;
+        } else {
+          // 缩小之后，切换图标为放大svg图标
+          icon = enlargeSvg;
         }
         toolbox.feature.myEnlargeShrinkButton.icon = 'image://' + icon;
       } else {
@@ -1087,6 +1087,7 @@ export class EchartsLinkageModel {
       yAxis.nameTextStyle.fontSize = usedStandards.fontSize;
     });
     usedStandards.echartsHeight = height;
+    console.log('usedStandards----------------------------', usedStandards);
     this.usedStandards = usedStandards;
     return this;
   }

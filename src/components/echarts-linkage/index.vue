@@ -695,7 +695,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
     .setCustomSeriesMarkLine(dataArray.data)
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
-    .setFontSizeAndMoreAuto(computerEchartsHeight(), props.useGraphicLocation) // 设置字体大小等自适应
+    .setFontSizeAndMoreAuto(computerEchartsHeight(dataArray.enlargeShrink), props.useGraphicLocation) // 设置字体大小等自适应
     .setGridRightByXAxisName(myChart.getWidth())
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
   echartsLinkageModel.setBackgroundColor('transparent') // 在echarts中设置透明，在父级设置背景色
@@ -719,11 +719,16 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
 
 /**
  * @description 计算echarts高度
+ * @param count 图表数量
  * @returns number
  */
-const computerEchartsHeight = () => {
-  const height = Extension.computerEchartsHeight(props, dataAbout.data.length);
+const computerEchartsHeight = (enlargeShrink?: EnlargeShrinkType | undefined) => {
+  let height = Extension.computerEchartsHeight(props, dataAbout.data.length);
   // console.log('height', height);
+  if (enlargeShrink === MODE_ENLARGE) {
+    // 放大之后，计算echarts高度
+    height = Extension.computerEchartsHeightByEnlarge(1);
+  }
   setDragPosition(height);
   return height;
 }
@@ -1508,11 +1513,11 @@ const switchEchartsEnlargeShrink = async (e: any, id: string) => {
   let isNeedSetOtherEchartsTooltipShow = false; // 是否需要显示其他echarts的tooltip
   HandleEnlargeShrink.handleEnlargeShrink(element, container, () => {
     // 放大操作
-    echart.enlargeShrink = MODE_SHRINK; // 撑满后，设置放缩icon类型为缩小
+    echart.enlargeShrink = MODE_ENLARGE; // 撑满状态
     isNeedSetOtherEchartsTooltipShow = false; // 不需要显示其他echarts的tooltip
   }, () => {
     // 恢复操作
-    echart.enlargeShrink = MODE_ENLARGE; // 恢复原状后，设置放缩icon类型为放大
+    echart.enlargeShrink = MODE_SHRINK; // 恢复原状状态
     isNeedSetOtherEchartsTooltipShow = true; // 需要显示其他echarts的tooltip
   });
   dataAbout.currentHandleChartIds = [id];

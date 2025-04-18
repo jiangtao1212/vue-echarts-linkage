@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-01-20 16:02:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-01-21 09:25:54
+ * @LastEditTime: 2025-04-18 10:09:05
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\extension.ts
  * @Description: 延伸的逻辑
  */
@@ -64,7 +64,7 @@ const setStyleProperty = (props: any, chartCount: number) => {
  * @param chartCount 图表数量
  * @returns number
  */
-const computerEchartsHeight = (props: any,  chartCount: number) => {
+const computerEchartsHeight = (props: any, chartCount: number) => {
   const { isEchartsHeightChange, echartsHeightFixedCount } = props;
   const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
   if (!element) return 0;
@@ -72,6 +72,19 @@ const computerEchartsHeight = (props: any,  chartCount: number) => {
   const fixedRows = computedFixedRows(isEchartsHeightChange, echartsHeightFixedCount);
   const count = fixedRows || chartCount;
   const height = Math.floor((element.offsetHeight - (count - 1) * gap) / count);
+  return height;
+}
+
+/**
+ * @description 放大之后，计算echarts高度
+ * @param chartCount 图表数量
+ * @returns number
+ */
+const computerEchartsHeightByEnlarge = (chartCount: number) => {
+  const element: HTMLElement = document.querySelector('.main-container') as HTMLElement;
+  if (!element) return 0;
+  const gap = GAP;
+  const height = Math.floor((element.offsetHeight - (chartCount - 1) * gap) / chartCount);
   return height;
 }
 
@@ -175,6 +188,7 @@ export default {
   setStyleProperty, 
   GAP, GROUP_DEFAULT, 
   computerEchartsHeight, 
+  computerEchartsHeightByEnlarge,
   setDragPosition, 
   initGroupData, 
   getGroupNameByChartSeq,

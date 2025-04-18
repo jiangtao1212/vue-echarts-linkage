@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:14:11
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-17 15:57:55
+ * @LastEditTime: 2025-04-18 09:46:45
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleEnlargeShrink.ts
  * @Description: 处理放缩事件
  */
@@ -21,7 +21,7 @@ function expandBox(box: HTMLElement, container: HTMLElement) {
     left: box.style.left,
     zIndex: box.style.zIndex,
     // flex: box.style.flex,
-    // marginBottom: box.style.marginBottom,
+    // margin: box.style.margin,
   });
 
   // 设置撑满容器的样式
@@ -29,11 +29,11 @@ function expandBox(box: HTMLElement, container: HTMLElement) {
   box.style.top = '0';
   box.style.left = '0';
   box.style.width = container.clientWidth + 'px';
-  box.style.height = container.clientHeight + 'px';
+  box.style.height = container.clientHeight - 10 + 'px'; // 减去10px，是因为echarts的图表底部有10px的间距
   box.style.zIndex = '99';
   box.style.backgroundColor = '#fff';
   // box.style.flex = 'none';
-  // box.style.marginBottom = '10px';
+  // box.style.margin = '10px';
 }
 
 // 恢复撑满容器的样式
@@ -47,7 +47,7 @@ function restoreBox(box: HTMLElement) {
   box.style.left = style.left;
   box.style.zIndex = style.zIndex;
   // box.style.flex = style.flex;
-  // box.style.marginBottom = style.marginBottom;
+  // box.style.margin = style.margin
 }
 
 /**
