@@ -864,7 +864,6 @@ onMounted(() => {
 .echarts-linkage-container {
   width: 100vw;
   height: 83vh;
-  padding-bottom: 10px;
 }
 </style>
 <style scoped lang="less">

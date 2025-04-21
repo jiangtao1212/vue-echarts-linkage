@@ -140,6 +140,16 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
   // const echartsId = data.id;
   const echartsTheme = data.theme;
   let res = '';
+  let light_bg = THEME.LIGHT.BACKGROUND_COLOR;
+  let dark_bg = THEME.DARK.BACKGROUND_COLOR;
+  if (props.background) {
+    // 外部传入了背景色，根据初始化主题，赋给对应主题的背景色
+    if (props.theme === THEME_LIGHT) {
+      light_bg = props.background;
+    } else if (props.theme === THEME_DARK) {
+      dark_bg = props.background;
+    }
+  }
   // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
   if (dataAbout.isSwitchingTheme) {
     // 切换主题时，优先级最高
@@ -149,14 +159,10 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
       res = THEME.LIGHT.BACKGROUND_COLOR;
     }
   } else {
-    if (props.background) {
-      res = props.background;
+    if (echartsTheme === THEME_DARK) {
+      res = dark_bg;
     } else {
-      if (echartsTheme === THEME_DARK) {
-        res = THEME.DARK.BACKGROUND_COLOR
-      } else {
-        res = THEME.LIGHT.BACKGROUND_COLOR;
-      }
+      res = light_bg;
     }
   }
   return res;
@@ -1659,6 +1665,10 @@ onBeforeUnmount(() => {
         z-index: 20;
       }
     }
+  }
+  .clip-bg {
+    background: inherit;
+    clip-path: inset(0 0 0 0);
   }
 }
 

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:14:11
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-18 09:46:45
+ * @LastEditTime: 2025-04-18 11:03:45
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleEnlargeShrink.ts
  * @Description: 处理放缩事件
  */
@@ -29,6 +29,8 @@ function expandBox(box: HTMLElement, container: HTMLElement) {
   box.style.top = '0';
   box.style.left = '0';
   box.style.width = container.clientWidth + 'px';
+  console.log('container.clientHeight', container.clientHeight);
+  console.log('container.offsetHeight', container.offsetHeight);
   box.style.height = container.clientHeight - 10 + 'px'; // 减去10px，是因为echarts的图表底部有10px的间距
   box.style.zIndex = '99';
   box.style.backgroundColor = '#fff';
