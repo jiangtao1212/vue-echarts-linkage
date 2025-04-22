@@ -57,6 +57,8 @@ export interface ExposedMethods {
   addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   clearExtraTooltip: (id?: string, isRender?: boolean) => void;
+  updateAllCustomContent: (htmls: string[]) => void;
+  updateCustomContentById: (id: string, html: string) => void;
 }
 
 /**

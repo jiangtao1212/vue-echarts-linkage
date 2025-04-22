@@ -4,7 +4,9 @@
     <div class="main-container" :class="{ 'hide-scroll': isEchartsHeightChange }">
       <div v-for="(item, index) in dataAbout.data" :key="item.id + '-' + index" class="echarts-container"
         :style="{ 'background-color': computedBackgroundColor(item), '--drag-top': dataAbout.drag.top + 'px' }">
+        <!-- 图表容器 -->
         <div :id="item.id" class="h-100% w-100%"></div>
+        <!-- 拖拽组件 -->
         <Drag v-if="useMergedLegend" :data="dragDataComputed(index)" :colors="echartsColors" :id="item.id"
           :group="item.id" :theme="item.theme" :item-font-size="dataAbout.drag.fontSize"
           @is-dragging="(isDragging) => dataAbout.drag.isDragging = isDragging"
@@ -12,6 +14,8 @@
           @delete-item="(data, number) => deleteItem(data, number, index)"
           @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
           @delete-items-all="deleteItemsAll(index)" />
+        <!-- 自定义内容 -->
+        <div class="custom-content" :id="item.id + '-custom-content'"></div>
       </div>
     </div>
 
@@ -27,7 +31,7 @@ import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, onBeforeMou
 import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
 import echarts from "@/models/my-echarts/index";
-import type { EChartsOption, ToolboxComponentOption } from "@/models/my-echarts/index";
+import type { EChartsOption, ToolboxComponentOption, GridComponentOption } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { THEME, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/models/echarts-linkage-model/staticTemplates"
@@ -637,8 +641,9 @@ const judgeEchartInstance = (dataEcharts: SeriesIdDataType) => {
 /**
  * @description 根据option数据，做一些其他地方的额外处理
  * @param option echarts option
+ * @param id 
  */
-const extraHandleByOption = (option: EChartsOption) => {
+const extraHandleByOption = (option: EChartsOption, id: string) => {
   /* 根据option中toolbox的feature数量，给拖拽组件设置右偏移量 --- start */
   const toolbox = option.toolbox as ToolboxComponentOption;
   let size = 0;
@@ -652,6 +657,11 @@ const extraHandleByOption = (option: EChartsOption) => {
   const element = document.querySelector('.main-container') as HTMLElement;
   element.style.setProperty('--toolbox-size', size.toString());
   /* 根据option中toolbox的feature数量，给拖拽组件设置右偏移量 --- end */
+
+  /* ---设置自定义内容容器的left位置，与grid保持一致--- */
+  const gridLeft = (option?.grid as GridComponentOption).left;
+  const cusElement = element.querySelector(`#${id}-custom-content`) as HTMLElement;
+  cusElement.style.setProperty('--left', gridLeft + 'px');
 }
 
 // 容器大小变化全部更新操作，使用防抖函数，只处理最后一次操作
@@ -709,7 +719,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
   // console.log('option', option);
   // console.log('myChart', myChart);
   myChart.setOption(option);
-  extraHandleByOption(option); // 获取option数据，用于其他一些额外操作
+  extraHandleByOption(option, dataArray.id); // 获取option数据，用于其他一些额外操作
   // const xAxisData = JSON.parse(JSON.stringify(echartsLinkageModel.getXAxisData()));
   dataArray.xAxisdata = echartsLinkageModel.getXAxisData() as string[];
   myChart.on('datazoom', (_params: any) => HandleGraph.datazoomEvent(dataArray.graphics, dataArray.id, (dataArray.xAxisdata as string[]), props, dataAbout));
@@ -1465,6 +1475,31 @@ const clearExtraTooltip = (id?: string, isRender = true) => {
   isRender && containerResizeFn();
 }
 
+/**
+ * @description 更新所有图表的自定义内容 --- 导出
+ * @param htmls 自定义内容数组
+ */
+const updateAllCustomContent = (htmls: string[]) => {
+  const elements = document.querySelectorAll('.main-container .custom-content');
+  htmls.forEach((item, index) => {
+    const element = elements[index];
+    if (!element) return;
+    // 元素中插入html
+    element.innerHTML = item;
+  });
+}
+
+/**
+ * @description 更新单个图表的自定义内容 --- 导出
+ * @param id 图表id
+ * @param html 自定义内容
+ */
+const updateCustomContentById = (id: string, html: string) => {
+  const element = document.querySelector(`.main-container #${id}-custom-content`);
+  if (!element) return;
+  element.innerHTML = html;
+}
+
 // echarts上的主题切换事件
 const switchEchartsTheme = async (e: any, id: string) => {
   console.log('switchEchartsTheme', id);
@@ -1577,6 +1612,8 @@ const exposedMethods: ExposedMethods = {
   addExtraTooltip,
   updateExtraTooltip,
   clearExtraTooltip,
+  updateAllCustomContent,
+  updateCustomContentById,
 };
 defineExpose(exposedMethods);
 
@@ -1664,8 +1701,19 @@ onBeforeUnmount(() => {
         padding: 2px;
         z-index: 20;
       }
+
+      .custom-content {
+        --left: 45px;
+        --offset: 10px;
+        position: absolute;
+        top: var(--drag-top);
+        left: calc(var(--left) + var(--offset));
+        width: fit-content;
+        height: fit-content;
+      }
     }
   }
+
   .clip-bg {
     background: inherit;
     clip-path: inset(0 0 0 0);

@@ -714,6 +714,8 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     ], id);
     extraTooltipFlag = false;
   }
+  // echartsLinkageRef.value!.updateAllCustomContent([`<div style="color: red;">自定义内容</div>`]);
+  echartsLinkageRef.value!.updateCustomContentById(id, `<div style="color: red;">自定义内容id</div>`);
 }
 
 // 拖拽回调事件
