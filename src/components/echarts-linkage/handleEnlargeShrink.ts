@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:14:11
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-18 11:03:45
+ * @LastEditTime: 2025-04-22 17:29:12
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleEnlargeShrink.ts
  * @Description: 处理放缩事件
  */
@@ -78,6 +78,12 @@ const handleEnlargeShrink = (element: HTMLElement, container: HTMLElement, enlar
   }
 }
 
+
+const getStatus = (element: HTMLElement) => {
+  return expandedBox === element;
+}
+
 export default {
-  handleEnlargeShrink
+  handleEnlargeShrink,
+  getStatus,
 };

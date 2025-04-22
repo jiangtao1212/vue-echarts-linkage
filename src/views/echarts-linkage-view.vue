@@ -46,6 +46,7 @@
     <div class="btn_drag">
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
       <div class="drag-rect drag-rect-line-extra" draggable="true"><span>可拖拽系列(折线-额外信息)</span></div>
+      <div class="drag-rect drag-rect-line-custom" draggable="true"><span>可拖拽系列(折线-自定义内容)</span></div>
       <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
       <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
     </div>
@@ -71,7 +72,7 @@
 
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
-  <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="2" :echarts-max-count="10"
+  <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
     :theme="theme" :is-linkage="isLinkage" :use-graphic-location="true" :is-echarts-height-change="false"
@@ -86,7 +87,7 @@ import { onMounted, ref } from "vue";
 import { RandomUtil } from "@/utils/index";
 import EchartsLinkag from "@/components/echarts-linkage/index.vue";
 import type {
-  OneDataType, SeriesTagType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, 
+  OneDataType, SeriesTagType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType,
   SeriesDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType, SeriesClassType
 } from '@/components/echarts-linkage/types/index';
 import type { DragItemType } from '@/components/drag/type/index';
@@ -97,6 +98,7 @@ const echartsLinkageRef = ref<InstanceType<typeof EchartsLinkag>>();
 let seriesType = 'line' as SeriesClassType;
 let switchFlag = false;
 let extraTooltipFlag = false;
+let customContentFlag = false;
 const theme = ref<ThemeType>('light');
 let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
 let isLinkage = ref<boolean>(true);
@@ -714,8 +716,15 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     ], id);
     extraTooltipFlag = false;
   }
-  // echartsLinkageRef.value!.updateAllCustomContent([`<div style="color: red;">自定义内容</div>`]);
-  echartsLinkageRef.value!.updateCustomContentById(id, `<div style="color: red;">自定义内容id</div>`);
+  if (customContentFlag) {
+    // 方法1
+    // echartsLinkageRef.value!.updateAllCustomContent([`<div style="font-size: .8rem; color: red;">自定义内容1</div>`]);
+    // 方法2
+    echartsLinkageRef.value!.updateAllCustomContentById([{ id, html: `<div style="font-size: .7rem; color: red;">自定义内容2</div>` },]);
+    // 方法3
+    // echartsLinkageRef.value!.updateCustomContentById({id, html: `<div style="font-size: .8rem; color: red;">自定义内容id</div>`});
+    customContentFlag = false;
+  }
 }
 
 // 拖拽回调事件
@@ -735,6 +744,7 @@ const deleteEchart = (data: DeleteEchartType) => {
 const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
   const dragRectLineExtra: HTMLElement = document.querySelector('.drag-rect-line-extra') as HTMLElement;
+  const dragRectLineCustom: HTMLElement = document.querySelector('.drag-rect-line-custom') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
   const dragSwitch: HTMLElement = document.querySelector('.drag-rect-switch') as HTMLElement;
 
@@ -750,6 +760,13 @@ const initLisener = () => {
     e.dataTransfer!.setData('text', "123");
     e.dataTransfer!.dropEffect = 'move';
     extraTooltipFlag = true;
+  });
+  dragRectLineCustom.addEventListener('dragstart', (e: DragEvent) => {
+    console.log("dragstart");
+    seriesType = 'line';
+    e.dataTransfer!.setData('text', "123");
+    e.dataTransfer!.dropEffect = 'move';
+    customContentFlag = true;
   });
   dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
     console.log("dragstart");

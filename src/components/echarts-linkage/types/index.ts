@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-03 14:08:49
+ * @LastEditTime: 2025-04-22 14:57:42
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -58,7 +58,8 @@ export interface ExposedMethods {
   updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   clearExtraTooltip: (id?: string, isRender?: boolean) => void;
   updateAllCustomContent: (htmls: string[]) => void;
-  updateCustomContentById: (id: string, html: string) => void;
+  updateAllCustomContentById: (params: CustomContentHtmlType[]) => void;
+  updateCustomContentById: (param: CustomContentHtmlType) => void;
 }
 
 /**
@@ -362,4 +363,14 @@ export type SegementType = number | {
 export type ListenerExcelViewType = {
   id: string,
   seriesLink?: SeriesLinkType,
+}
+
+/**
+ * @description: 自定义内容的参数类型
+ * @param {string} id 图表id
+ * @param {string} html 自定义内容
+ */
+export type CustomContentHtmlType = {
+  id: string,
+  html: string,
 }

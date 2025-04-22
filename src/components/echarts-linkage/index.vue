@@ -40,7 +40,7 @@ import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
-  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, SeriesLinkType
+  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, SeriesLinkType, CustomContentHtmlType
 } from './types/index';
 import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -1490,14 +1490,25 @@ const updateAllCustomContent = (htmls: string[]) => {
 }
 
 /**
+ * @description 更新所有图表的自定义内容 --- 导出
+ * @param htmls 自定义内容数组
+ */
+const updateAllCustomContentById = (params: CustomContentHtmlType[]) => {
+  params.forEach((item) => {
+    const element = document.querySelector(`.main-container #${item.id}-custom-content`);
+    if (!element) return;
+    // 元素中插入html
+    element.innerHTML = item.html;
+  });
+}
+
+/**
  * @description 更新单个图表的自定义内容 --- 导出
  * @param id 图表id
  * @param html 自定义内容
  */
-const updateCustomContentById = (id: string, html: string) => {
-  const element = document.querySelector(`.main-container #${id}-custom-content`);
-  if (!element) return;
-  element.innerHTML = html;
+const updateCustomContentById = (param: CustomContentHtmlType) => {
+  updateAllCustomContentById([param]);
 }
 
 // echarts上的主题切换事件
@@ -1523,24 +1534,27 @@ const switchEchartsTheme = async (e: any, id: string) => {
   dataAbout.isSwitchingTheme = false;
 }
 
+let scrollTop: number = 0;
 // echarts上的放缩事件
 const switchEchartsEnlargeShrink = async (e: any, id: string) => {
 
   /**
-   * @description 设置其他echarts的tooltip的显示状态
+   * @description 设置其他echarts的显示状态
    * @param id 图表id
    * @param show 显示状态
    */
-  function setOtherEchartsTooltipShow(id: string, show: boolean) {
+  function setOtherEchartsShow(id: string, show: boolean) {
     dataAbout.data.forEach((echart: SeriesIdDataType) => {
       if (echart.id === id) return;
+      // 若当前id的元素是撑满操作，则对其他echarts进行隐藏；若是恢复操作，则对其他echarts进行显示
       const element: HTMLElement = document.getElementById(echart.id) as HTMLElement;
-      const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
-      echartsInstance.setOption({
-        tooltip: {
-          show: show,
-        }
-      });
+      element.parentElement!.style.display = show ? 'block' : 'none'; 
+      // const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
+      // echartsInstance.setOption({
+      //   tooltip: {
+      //     show: show,
+      //   }
+      // });
     });
   }
 
@@ -1551,6 +1565,7 @@ const switchEchartsEnlargeShrink = async (e: any, id: string) => {
   const echart = dataAbout.data[index];
   const element = elements[index];
   if (!element) return;
+  !HandleEnlargeShrink.getStatus(element) && (scrollTop = container.scrollTop); // 当前是正常状态，记录滚动条位置
   let isNeedSetOtherEchartsTooltipShow = false; // 是否需要显示其他echarts的tooltip
   HandleEnlargeShrink.handleEnlargeShrink(element, container, () => {
     // 放大操作
@@ -1558,13 +1573,14 @@ const switchEchartsEnlargeShrink = async (e: any, id: string) => {
     isNeedSetOtherEchartsTooltipShow = false; // 不需要显示其他echarts的tooltip
   }, () => {
     // 恢复操作
-    echart.enlargeShrink = MODE_SHRINK; // 恢复原状状态
+    echart.enlargeShrink = MODE_SHRINK; // 恢复原状态
     isNeedSetOtherEchartsTooltipShow = true; // 需要显示其他echarts的tooltip
   });
   dataAbout.currentHandleChartIds = [id];
+  setOtherEchartsShow(id, isNeedSetOtherEchartsTooltipShow);
+  if (isNeedSetOtherEchartsTooltipShow) container.scrollTop = scrollTop;
   await nextTick();
-  await initEcharts();
-  setOtherEchartsTooltipShow(id, isNeedSetOtherEchartsTooltipShow);
+  initEcharts();
 }
 
 // echarts上的excel 视窗事件
@@ -1613,6 +1629,7 @@ const exposedMethods: ExposedMethods = {
   updateExtraTooltip,
   clearExtraTooltip,
   updateAllCustomContent,
+  updateAllCustomContentById,
   updateCustomContentById,
 };
 defineExpose(exposedMethods);
