@@ -136,3 +136,6 @@ const dropEchart = (data: dropEchartType) => {
 | addExtraTooltip | 新增额外的提示框tooltip数据，如果id存在，则添加单个图表，否则添加所有图表；isRender：是否重新渲染echarts，默认true不重新渲染 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender: boolean = false) => void` |
 | updateExtraTooltip | 更新额外的提示框tooltip数据，如果id存在，则更新单个图表，否则更新所有图表；isRender：是否重新渲染echarts，默认true不重新渲染 | `(extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender: boolean = false) => void` |
 | clearExtraTooltip | 清除额外的提示框tooltip数据，如果id存在，则清除单个图表，否则清除所有图表；isRender：是否重新渲染echarts，默认true重新渲染 | `(id?: string, isRender: boolean = true) => void` |
+| updateAllCustomContent | 更新所有图表的自定义容器内容 | `(htmls: string[]) => void` |
+| updateAllCustomContentById | 更新所有图表的自定义容器内容，通过id更新 | `(params: CustomContentHtmlType[]) => void` |
+| updateCustomContentById | 更新单个图表的自定义容器内容，通过id更新 | `(param: CustomContentHtmlType) => void` |

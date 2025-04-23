@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-23 13:28:32
+ * @LastEditTime: 2025-04-23 15:08:42
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -33,6 +33,9 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} addExtraTooltip 新增额外的tooltip数据，默认值为false，不重新渲染echarts
  * @param {Function} updateExtraTooltip 更新额外的tooltip数据，默认值为false，不重新渲染echarts
  * @param {Function} clearExtraTooltip 清除额外的tooltip数据，默认值为true，重新渲染echarts
+ * @param {Function} updateAllCustomContent 更新所有图表的自定义容器内容
+ * @param {Function} updateAllCustomContentById 更新所有图表的自定义容器内容，通过id更新
+ * @param {Function} updateCustomContentById 更新单个图表的自定义容器内容，通过id更新
  */
 export interface ExposedMethods {
   initEcharts: () => Promise<void>;
