@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:52:44
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-22 11:07:56
+ * @LastEditTime: 2025-04-23 09:27:40
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleExcel.ts
  * @Description: 处理excel视图
  */
@@ -45,7 +45,8 @@ function packageExcelViewBody(head: SheetHeadType[], data: SeriesIdDataType, cal
   });
   body.forEach((item: any, index: number) => {
     series.forEach((item1: any) => {
-      item[item1.prop] = item1.value[index][1];
+      // 添加点值判断，可能不存在
+      item[item1.prop] = item1.value[index] ? item1.value[index][1] : '';
     });
   });
   return { head, body };

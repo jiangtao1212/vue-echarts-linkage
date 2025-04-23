@@ -1535,7 +1535,11 @@ const switchEchartsTheme = async (e: any, id: string) => {
 }
 
 let scrollTop: number = 0;
-// echarts上的放缩事件
+/**
+ * @description 切换echarts的放大缩小
+ * @param e 
+ * @param id echarts图表id
+ */
 const switchEchartsEnlargeShrink = async (e: any, id: string) => {
 
   /**
@@ -1546,15 +1550,8 @@ const switchEchartsEnlargeShrink = async (e: any, id: string) => {
   function setOtherEchartsShow(id: string, show: boolean) {
     dataAbout.data.forEach((echart: SeriesIdDataType) => {
       if (echart.id === id) return;
-      // 若当前id的元素是撑满操作，则对其他echarts进行隐藏；若是恢复操作，则对其他echarts进行显示
       const element: HTMLElement = document.getElementById(echart.id) as HTMLElement;
-      element.parentElement!.style.display = show ? 'block' : 'none'; 
-      // const echartsInstance = echarts.getInstanceByDom(element) as echarts.ECharts;
-      // echartsInstance.setOption({
-      //   tooltip: {
-      //     show: show,
-      //   }
-      // });
+      element.parentElement!.style.display = show ? 'block' : 'none';
     });
   }
 
@@ -1565,20 +1562,23 @@ const switchEchartsEnlargeShrink = async (e: any, id: string) => {
   const echart = dataAbout.data[index];
   const element = elements[index];
   if (!element) return;
-  !HandleEnlargeShrink.getStatus(element) && (scrollTop = container.scrollTop); // 当前是正常状态，记录滚动条位置
-  let isNeedSetOtherEchartsTooltipShow = false; // 是否需要显示其他echarts的tooltip
+  if (!HandleEnlargeShrink.getStatus(element)) {
+    // 当前是正常状态，记录滚动条位置
+    scrollTop = container.scrollTop;
+  }
+  let isNeedSetOtherEchartsShow = false; // 是否需要显示其他echarts
   HandleEnlargeShrink.handleEnlargeShrink(element, container, () => {
     // 放大操作
     echart.enlargeShrink = MODE_ENLARGE; // 撑满状态
-    isNeedSetOtherEchartsTooltipShow = false; // 不需要显示其他echarts的tooltip
+    isNeedSetOtherEchartsShow = false; // 不需要显示其他echarts
   }, () => {
     // 恢复操作
     echart.enlargeShrink = MODE_SHRINK; // 恢复原状态
-    isNeedSetOtherEchartsTooltipShow = true; // 需要显示其他echarts的tooltip
+    isNeedSetOtherEchartsShow = true; // 需要显示其他echarts
   });
   dataAbout.currentHandleChartIds = [id];
-  setOtherEchartsShow(id, isNeedSetOtherEchartsTooltipShow);
-  if (isNeedSetOtherEchartsTooltipShow) container.scrollTop = scrollTop;
+  setOtherEchartsShow(id, isNeedSetOtherEchartsShow);
+  if (isNeedSetOtherEchartsShow) container.scrollTop = scrollTop;
   await nextTick();
   initEcharts();
 }
