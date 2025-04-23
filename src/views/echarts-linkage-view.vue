@@ -804,6 +804,9 @@ const listenerExcelView = (data: ListenerExcelViewType, callback: (excelView: ex
         { name: '宽度', value: [1000, 1500] },
         { name: '厚度', value: [0.35, 0.40] },
       ] as excelViewHeadType[],
+      postAdd: [
+        { name: '备注', value: '备注信息' }
+      ] as excelViewHeadType[],
     }
   } else {
     extraData = { // 单卷

@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-04-17 09:52:44
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-23 09:27:40
+ * @LastEditTime: 2025-04-23 14:16:04
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleExcel.ts
  * @Description: 处理excel视图
  */
@@ -11,9 +11,9 @@ import { type SheetHeadType } from '@/components/sheet/type/index';
 import Extension from './extension';
 
 // 属性添加前缀
-const PREFIX = 'preAdd';
+const PREFIX = 'PREPROP';
 // 属性添加后缀
-const SUFFIX = 'postAdd';
+const SUFFIX = 'POSTPROP';
 /**
  * @description 给body添加前缀或后缀，并且添加值
  * @param body 表体
@@ -66,11 +66,11 @@ function noSeriesLinkHandleExcel(data: SeriesIdDataType, head: SheetHeadType[], 
   head.unshift(...[{ 'label': headXname, 'prop': 'xProp' }]); // 表头前面增加X轴列
   const res = packageExcelViewBody(head, data, (item: string) => ({ [primaryKey]: item }));
   if (preAdd && preAdd!.length > 0) {
-    res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'preAdd' + index }))); // 表头前面增加自定义列
+    res.head.unshift(...preAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': PREFIX + index }))); // 表头前面增加自定义列
     res.body = addPreOrPostFix(res.body, preAdd, PREFIX);
   }
   if (postAdd && postAdd!.length > 0) {
-    res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': 'postAdd' + index }))); // 表头后面增加自定义列
+    res.head.push(...postAdd.map((item: excelViewHeadType, index: number) => ({ 'label': item.name, 'prop': SUFFIX + index }))); // 表头后面增加自定义列
     res.body = addPreOrPostFix(res.body, postAdd, SUFFIX);
   }
   return res;
@@ -94,57 +94,80 @@ function seriesLinkHandleExcel(data: SeriesIdDataType, head: SheetHeadType[], he
   // 2.第一次组装body数据
   const res = packageExcelViewBody(head, data, (item: string) => ({ [primaryKey]: item, 'auto': item.split('--')[0], 'xProp': item.split('--')[1] }))
   // 3.处理传入的前置数据
+  let mainDataArray: (string | number)[] = []; // 主数据数组
+  const preDataArray: Array<{ value: any, prop: string }> = []; // 前置数据数组
   if (preAdd && preAdd!.length > 0) {
     // 3.1 提取前置数据，并且加入到表头数据中
     const preAddHead = preAdd.map((item: excelViewHeadType, index: number) => {
       if (item.isPrimaryKey) {
         return { 'label': item.name, 'prop': mainProp }
       } else {
-        return { 'label': item.name, 'prop': 'preAdd' + index }
+        return { 'label': item.name, 'prop': PREFIX + index }
       }
     });
     res.head.shift(); // 先删除第一列, 是为了保持和传入的顺序一致，这样外部就可以自定义列的顺序了
     res.head.unshift(...preAddHead); // 表头前面增加自定义列
-    // 3.2 提取主数据数组和其他数据数组
-    let mainDataArray: (string | number)[] = []; // 主数据数组
-    const otherDataArray: Array<{ value: any, prop: string }> = []; // 其他数据数组
+    // 3.2 提取主数据数组和前置数据数组
     preAdd.forEach((item: excelViewHeadType, index: number) => {
       if (Array.isArray(item.value)) {
         if (item.isPrimaryKey) {
           mainDataArray = item.value;
         } else {
-          otherDataArray.push({ value: item.value, 'prop': 'preAdd' + index })
+          preDataArray.push({ value: item.value, 'prop': PREFIX + index })
         }
       } else {
         if (item.isPrimaryKey) {
           mainDataArray.push(item.value);
         } else {
-          otherDataArray.push({ value: [item.value], 'prop': 'preAdd' + index })
-        }
-      }
-    });
-    // 3.3 组装数据，用于后续给body添加属性数据 { main1: { other1: value, other2: value }, main2: { other1: value, other2: value }
-    const packageData: { [key: string]: { [prop: string]: any } } = {};
-    mainDataArray.forEach((item: any, index: number) => {
-      const key = item + ''; // 防止key为数字时报错
-      packageData[key] = {} as any;
-      otherDataArray.forEach((item1: any) => {
-        packageData[key][item1.prop] = item1.value[index];
-      });
-    });
-    // console.log('packageData', packageData);
-    // 3.4 遍历body，给对象添加其他属性数据
-    res.body.forEach((item: any) => {
-      const mainKey = item[mainProp];
-      const addDataObj = packageData[mainKey];
-      if (!addDataObj) return;
-      for (const key in addDataObj) {
-        if (Object.prototype.hasOwnProperty.call(addDataObj, key)) {
-          item[key] = addDataObj[key];
+          preDataArray.push({ value: [item.value], 'prop': PREFIX + index });
         }
       }
     });
   }
+  // 4.处理传入的后置数据
+  const postDataArray: Array<{ value: any, prop: string }> = [];
+  if (postAdd && postAdd!.length > 0) {
+    // 4.1 提取前置数据，并且加入到表头数据中
+    const postAddHead = postAdd.map((item: excelViewHeadType, index: number) => {
+      // 后置不考虑主数据
+      return { 'label': item.name, 'prop': SUFFIX + index }
+    });
+    res.head.push(...postAddHead);
+    // 4.2 提取后置数据数组
+    postAdd.forEach((item: excelViewHeadType, index: number) => {
+      if (Array.isArray(item.value)) {
+        postDataArray.push({ value: item.value, 'prop': SUFFIX + index });
+      } else {
+        postDataArray.push({ value: [item.value], 'prop': SUFFIX + index });
+      }
+    });
+  }
+  // 5 组装数据，用于后续给body添加属性数据 { main1: { other1: value, other2: value }, main2: { other1: value, other2: value }
+  const packageData: { [key: string]: { [prop: string]: any } } = {};
+  mainDataArray.forEach((item: any, index: number) => {
+    const key = item + ''; // 防止key为数字时报错
+    packageData[key] = {} as any;
+    // 组装前置数据
+    preDataArray.forEach((preData: any) => {
+      packageData[key][preData.prop] = preData.value[index];
+    });
+    // 组装后置数据
+    postDataArray.forEach((postData: any) => {
+      packageData[key][postData.prop] = postData.value[index];
+    });
+  });
+  console.log('packageData', packageData);
+  // 6 遍历body，给对象添加其他属性数据
+  res.body.forEach((item: any) => {
+    const mainKey = item[mainProp];
+    const addDataObj = packageData[mainKey];
+    if (!addDataObj) return;
+    for (const key in addDataObj) {
+      if (Object.prototype.hasOwnProperty.call(addDataObj, key)) {
+        item[key] = addDataObj[key];
+      }
+    }
+  });
   return res;
 }
 

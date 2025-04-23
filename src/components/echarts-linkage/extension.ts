@@ -178,7 +178,7 @@ function isAutoPropertyTypeConsistent(arr: Array<any>, prop: string) {
   // 检查每个对象的prop属性类型是否与第一个一致
   const isConsistent = arr.every(item => typeof item[prop] === firstType);
   if (!isConsistent) {
-    throw new Error(`数据视图的${prop}属性类型不一致，请保持一致!`);
+    throw new Error(`数据视图中传入的${prop}属性类型不一致，请保持一致!`);
   }
 }
 

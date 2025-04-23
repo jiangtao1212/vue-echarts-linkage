@@ -39,8 +39,8 @@ import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
-  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
-  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, SeriesLinkType, CustomContentHtmlType
+  SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, ThemeType,
+  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType
 } from './types/index';
 import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";

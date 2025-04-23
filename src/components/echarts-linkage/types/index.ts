@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-22 14:57:42
+ * @LastEditTime: 2025-04-23 13:28:32
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -190,6 +190,7 @@ export type VisualMapSeriesType = {
  * @description: 数据视图中新增列的数据类型
  * @param {string} name 新增列的名称
  * @param {string | number | Array<string | number>} value 新增列的值，可以是字符串、数字、数组，数组情况是用于多卷关联
+ * @param {boolean} isPrimaryKey 是否是主键，默认false
  * @example
  * 1. 新增字符串：{ name: '卷号', value: 'P20210101', isPrimaryKey: true }
  * 2. 新增数字：{ name: '宽度', value: 1000 }
