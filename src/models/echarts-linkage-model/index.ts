@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-22 13:44:46
+ * @LastEditTime: 2025-04-23 14:44:10
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -840,7 +840,10 @@ export class EchartsLinkageModel {
     feature.dataZoom.title = { zoom: lang === 'zh-cn' ? '区域缩放' : 'Zoom', back: lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset' };
     feature.restore.title = lang === 'zh-cn' ? '还原' : 'Restore';
     feature.myThemeButton.title = lang === 'zh-cn' ? '切换到' + (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : 'switch to ' + (this.swichThemeIcon === THEME_DARK ? 'dark' : 'light');
+    feature.myEnlargeShrinkButton.title = lang === 'zh-cn' ? (this.enlargeShrink === MODE_ENLARGE ? '缩小' : '放大') : (this.enlargeShrink === MODE_ENLARGE ? 'Shrink' : 'Enlarge');
+    feature.myExcelView.title = lang === 'zh-cn' ? '数据视图' : 'Data View';
     feature.myDeleteButton.title = lang === 'zh-cn' ? '删除' : 'Delete';
+    feature.mySaveAsImage.title = lang === 'zh-cn' ? '' : ''; // 这里不写按钮名称，否则保存的图片上会显示按钮名称
     return this;
   }
 
