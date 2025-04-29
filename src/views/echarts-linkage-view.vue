@@ -99,7 +99,7 @@ let seriesType = 'line' as SeriesClassType;
 let switchFlag = false;
 let extraTooltipFlag = false;
 let customContentFlag = false;
-const theme = ref<ThemeType>('dark');
+const theme = ref<ThemeType>('light');
 let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
 let isLinkage = ref<boolean>(true);
 
