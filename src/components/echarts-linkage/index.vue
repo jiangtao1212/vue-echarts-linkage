@@ -154,21 +154,22 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
       dark_bg = props.background;
     }
   }
-  // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
-  if (dataAbout.isSwitchingTheme) {
-    // 切换主题时，优先级最高
-    if (echartsTheme === THEME_DARK) {
-      res = THEME.DARK.BACKGROUND_COLOR;
-    } else {
-      res = THEME.LIGHT.BACKGROUND_COLOR;
-    }
-  } else {
-    if (echartsTheme === THEME_DARK) {
-      res = dark_bg;
-    } else {
-      res = light_bg;
-    }
-  }
+  // // 如果是联动状态，切换主题时，需要同时切换所有图表的主题
+  // if (dataAbout.isSwitchingTheme) {
+  //   // 切换主题时，优先级最高
+  //   if (echartsTheme === THEME_DARK) {
+  //     res = dark_bg;
+  //   } else {
+  //     res = light_bg;
+  //   }
+  // } else {
+  //   if (echartsTheme === THEME_DARK) {
+  //     res = dark_bg;
+  //   } else {
+  //     res = light_bg;
+  //   }
+  // }
+  res = echartsTheme === THEME_DARK ? dark_bg : light_bg;
   return res;
 };
 

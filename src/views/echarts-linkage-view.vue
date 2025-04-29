@@ -73,7 +73,7 @@
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
-    :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }"
+    :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }" background="rgba(255, 0, 0, 0.5)"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
     :theme="theme" :is-linkage="isLinkage" :use-graphic-location="true" :is-echarts-height-change="false"
     :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
@@ -99,7 +99,7 @@ let seriesType = 'line' as SeriesClassType;
 let switchFlag = false;
 let extraTooltipFlag = false;
 let customContentFlag = false;
-const theme = ref<ThemeType>('light');
+const theme = ref<ThemeType>('dark');
 let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
 let isLinkage = ref<boolean>(true);
 
