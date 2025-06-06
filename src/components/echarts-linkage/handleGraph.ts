@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-18 10:00:20
+ * @LastEditTime: 2025-06-06 16:40:34
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -51,7 +51,7 @@ const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, c
       const myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
       setOptionGraphic(myChart, datazoomGraphic);
     });
-    emitGraphicLocation(dataAbout);
+    emitGraphicLocation(dataAbout, currentEchartsId);
     animating = false;
   });
 }
@@ -86,7 +86,7 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
       });
       setOptionGraphic(myChart, [graphicLocation, notDragGraphic]);
     });
-    emitGraphicLocation(dataAbout);
+    emitGraphicLocation(dataAbout, currentEchartsId);
     animating = false;
   });
 };
@@ -128,10 +128,14 @@ const setOptionGraphic = (myChart: echarts.ECharts, graphics: GraphicLocationInf
 }
 
 // 组装所有图形数据，发送给父组件（1.初始化时调用，2.移动图形时调用）
-const emitGraphicLocation = (dataAbout: DataAboutType) => {
+const emitGraphicLocation = (dataAbout: DataAboutType, currentEchartsId: string = '') => {
   const graphicLocation: ListenerGrapicLocationType = [];
   dataAbout.data.forEach((item: SeriesIdDataType) => {
-    graphicLocation.push({ id: item.id, graphics: item.graphics ? JSON.parse(JSON.stringify(item.graphics)) : [] });
+    let isCurrentHandleEcharts = false;
+    if (item.id === currentEchartsId) {
+      isCurrentHandleEcharts = true;
+    }
+    graphicLocation.push({ id: item.id, graphics: item.graphics ? JSON.parse(JSON.stringify(item.graphics)) : [], isCurrentHandleEcharts });
   });
   emit(LISTENER_GRAPHIC_LOCATION, graphicLocation);
 }

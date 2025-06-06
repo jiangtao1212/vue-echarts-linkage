@@ -53,6 +53,7 @@ import HandleGraph from './handleGraph';
 import HandleEnlargeShrink from './handleEnlargeShrink';
 import HandleExcel from './handleExcel';
 
+const USE_GRAPHIC_GROUP_DEFAULT = 'all' as const;
 /**
  * @description 组件props类型
  * @property {number} [cols=1] - 列数
@@ -67,6 +68,7 @@ import HandleExcel from './handleExcel';
  * @property {boolean} [isLinkage=true] - 是否联动, 默认为true
  * @property {boolean} [useMergedLegend=true] - 是否使用合并图例
  * @property {boolean} [useGraphicLocation=true] - 是否使用图形定位
+ * @property {'all' | Array<number>} [useGraphicGroup='all'] - 在useGraphicLocation为true使用图形的基础下，确定哪些图表显示图形，all代表所有图表都使用图形；数组表示指定序号的图表显示图形（序号从1开始）
  * @property {boolean} [isEchartsHeightChange=true] - 是否根据数量，改变echarts的高度，默认true改变
  * @property {number} [echartsHeightFixedCount=3] - echarts高度固定数量，默认为3
  * @property {object} [extraOption] - 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并；合并默认option，该优先级更高, 相同属性值进行合并, 不同属性值直接赋值
@@ -85,6 +87,7 @@ export type PropsType = {
   isLinkage?: boolean, // 是否联动
   useMergedLegend?: boolean, // 是否使用合并图例
   useGraphicLocation?: boolean, // 是否使用图形定位
+  useGraphicGroup?: typeof USE_GRAPHIC_GROUP_DEFAULT | Array<number>, // 确定哪些图表显示图形，all代表所有图表都使用图形
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
   extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
@@ -101,6 +104,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
   useGraphicLocation: false, // 默认不使用图形定位
+  useGraphicGroup: USE_GRAPHIC_GROUP_DEFAULT, // 默认所有图表都使用图形
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
 });
@@ -675,7 +679,7 @@ const containerResizeFn = useDebounceFn(() => {
  * @param dataArray 数据数组
  * @returns EChartsType
  */
-const initOneEcharts = (dataArray: SeriesIdDataType) => {
+const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
   console.groupCollapsed('initOneEcharts', dataArray.id);
   const { myChart, needHandle } = judgeEchartInstance(dataArray);
   if (!needHandle) { // 不需要操作
@@ -728,6 +732,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType) => {
   myChart.resize();
   // 图形设置，必须在myChart.resize()之后，否则会导致图形位置不正确
   props.useGraphicLocation
+    && (props.useGraphicGroup === 'all' || props.useGraphicGroup.includes(echartsIndex + 1))
     && dataArray.data[0].seriesData.length > 0
     && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)));
   console.groupEnd();
@@ -778,7 +783,7 @@ const initEcharts = async () => {
   // disposeEcharts(); // 清除之前的分组实例
   dataAbout.usedGroupNames = []; // 已使用的组名
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
-    const myChart = initOneEcharts(item);
+    const myChart = initOneEcharts(item, index);
     // 给echarts实例分组，并且记录已使用的组名
     const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName);
     myChart.group = groupName;
@@ -821,6 +826,14 @@ const changeLinkageOrGroups = () => {
     initGroupData();
   }
   initEcharts();
+}
+
+/**
+ * @author jiangtao
+ * @param useGraphicLocation 是否使用图形位置
+ */
+const changeUseGraphicLocation = (useGraphicLocation: boolean) => {
+  allUpdateHandleCommon();
 }
 
 // 清除echarts分组实例
@@ -1655,6 +1668,10 @@ watch(() => props.groups, (groups) => {
 watch(() => props.isLinkage, (isLinkage) => {
   console.log("isLinkage", isLinkage);
   changeLinkageOrGroups();
+});
+
+watch(() => props.useGraphicLocation, (useGraphicLocation) => {
+  changeUseGraphicLocation(useGraphicLocation);
 });
 
 onBeforeMount(() => {

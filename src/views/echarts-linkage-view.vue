@@ -67,15 +67,20 @@
         <el-button type="primary" size="small" @click="() => isLinkage = true">联动（开启）</el-button>
         <el-button type="primary" size="small" @click="() => isLinkage = false">联动（关闭）</el-button>
       </el-button-group>
+      <span>--</span>
+      <div class="btn_click">
+        <span>图形启用：</span>
+        <el-switch v-model="useGraphic" inline-prompt active-text="是" inactive-text="否" />
+      </div>
     </div>
   </div>
 
   <!-- 可自定义配置显示列数(cols) | 最大图表数(echarts-max-count) | 空白图表数(empty-echart-count) -->
   <!-- <div class="h-80vh overflow-y-auto"> class="h-100vh !w-98%" -->
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
-    :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }" background="rgba(255, 0, 0, 0.5)"
+    :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }" background="#fff"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
-    :theme="theme" :is-linkage="isLinkage" :use-graphic-location="true" :is-echarts-height-change="false"
+    :theme="theme" :is-linkage="isLinkage" :use-graphic-location="useGraphic" :use-graphic-group="[1]" :is-echarts-height-change="false"
     :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
@@ -102,6 +107,7 @@ let customContentFlag = false;
 const theme = ref<ThemeType>('light');
 let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
 let isLinkage = ref<boolean>(true);
+const useGraphic = ref(true);
 
 // 额外的配置项
 const extraOption = {
@@ -822,7 +828,9 @@ const listenerExcelView = (data: ListenerExcelViewType, callback: (excelView: ex
 const init = () => {
   initLisener();
   // addLotEmptyLinkageBtnClick();
+  addLinkageBtnClick();
   // testInitAllReplace();
+
 }
 
 // 初始化时测试all-replace
@@ -857,6 +865,8 @@ onMounted(() => {
   .btn_theme {
     display: flex;
     gap: 5px;
+    height: 1.5rem;
+    line-height: 1.5rem;
   }
 
   .btn_drag {

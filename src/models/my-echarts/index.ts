@@ -30,5 +30,6 @@ export type {
   GridComponentOption,
   TooltipComponentOption,
   YAXisComponentOption,
+  GraphicComponentOption,
   MarkLineComponentOption
 } from "echarts";

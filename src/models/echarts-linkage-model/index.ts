@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-23 14:44:10
+ * @LastEditTime: 2025-06-06 14:11:44
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -17,6 +17,7 @@ import type {
   GridComponentOption,
   TooltipComponentOption,
   YAXisComponentOption,
+  GraphicComponentOption,
   MarkLineComponentOption
 } from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "./staticTemplates"
@@ -882,6 +883,7 @@ export class EchartsLinkageModel {
     const GRAPHIC_RECT2_ID = 'rect2'; // 矩形图形元素2的id
     console.log('graphics', graphics);
     const xAxisSeq1 = (graphics && graphics[0].xAxisSeq) || Math.floor(this.xAxisData.length / 3);
+    // const xAxisSeq1 = (graphics && graphics[0].xAxisSeq) || 0;
     const xAxisSeq2 = (graphics && graphics[1].xAxisSeq) || Math.floor(this.xAxisData.length / 3) * 2;
     const xAxisX1 = this.xAxisData[xAxisSeq1];
     const xAxisX2 = this.xAxisData[xAxisSeq2];
@@ -891,12 +893,12 @@ export class EchartsLinkageModel {
         {
           ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT1_ID, xAxisSeq1, xAxisX1),
           ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT1_ID)),
-          // ondragend: (e: any) => onPointDragendx1(e, GRAPHIC_RECT1_Id),// 此长方形的拖拽的响应事件，在拖拽过程中会不断被触发。
+          // draggable: false, // 禁止拖拽
         },
         {
           ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT2_ID, xAxisSeq2, xAxisX2),
           ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT2_ID)),
-          // ondragend: (e: any) => onPointDragendx2(e, GRAPHIC_RECT2_ID)
+          // draggable: false, // 禁止拖拽
         }
       ],
     });
@@ -904,6 +906,32 @@ export class EchartsLinkageModel {
       { graphicId: GRAPHIC_RECT1_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq1), xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
       { graphicId: GRAPHIC_RECT2_ID, positionX: myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq2), xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
     ]
+  }
+
+  setMyGraphic = (myChart: any, xAxisSeq: number, option: GraphicComponentOption) => {
+    const GRAPHIC_RECT1_ID = 'rect1'; // 矩形图形元素1的id
+    const xAxisX = this.xAxisData[xAxisSeq];
+    const positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisSeq); // 图形元素的X轴坐标转为像素值
+    myChart.setOption({
+      // 绘制markLine的graphic line
+      graphic: [
+        {
+          ...this.getGraphicRectTemplate_1(myChart, xAxisSeq),
+          // ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT1_ID)),
+          id: GRAPHIC_RECT1_ID,
+          position: [positionX, 0],
+          info: xAxisX,
+          textContent: {
+            style: {
+              text: xAxisX,
+            }
+          },
+          draggable: false, // 禁止拖拽
+          ...option
+        }
+      ],
+    });
+
   }
 
   /**
@@ -965,6 +993,65 @@ export class EchartsLinkageModel {
         type: 'text',
         style: {
           text: graphicXAxisX,
+          font: fontSize + 'px "Microsoft YaHei", sans-serif'
+        }
+      },
+      textConfig: {
+        position: 'top',
+        offset: [15, TEXT_OFFSET_TOP]
+      },
+      style: {
+        fill: 'red',
+        stroke: 'red',
+        lineWidth: 1
+      },
+      //鼠标悬浮时在图形元素上时鼠标的样式是什么。同 CSS 的 cursor
+      // 'move'	光标指示某对象可被移动。
+      // 'pointer'	光标呈现为指示链接的指针（一只手）
+      cursor: 'pointer',
+    }
+  }
+
+  //todo: 待实现 
+  getGraphicRectTemplate_1 = (myChart: any, xAxisSeq: number) => {
+    console.log('this.usedStandards', this.usedStandards);
+    let TOP = 40; // 图形元素距离顶部的偏移量
+    let TEXT_OFFSET_TOP = 20; // 文本距离顶部的偏移量
+    let height = myChart.getHeight() * 0.9 - TOP; // 图形元素的高度
+    let fontSize = 12; // 图形元素的字体大小
+    if (Object.keys(this.usedStandards).length !== 0) {
+      // 自适应
+      const usedStandards: any = this.usedStandards;
+      const top = usedStandards.grid.top;
+      const bottom = usedStandards.grid.bottom;
+      TOP = top / 2;
+      height = usedStandards.echartsHeight - top - bottom + TOP;
+      fontSize = usedStandards.fontSize;
+      TEXT_OFFSET_TOP = (top - TOP) / 2 + fontSize;
+    }
+    return {
+      id: '',
+      type: 'rect',	//'rect' 表示这个 graphic element 的类型是长方形。
+      top: TOP,
+      // left: myChart.convertToPixel({ xAxisId: XAXIS_ID }, 120),
+      z: 101,	// 这个属性让长方形可以被拖拽。
+      //设置长方形的形状
+      shape: {
+        width: 1,
+        height: height,
+        // r: 10
+      },
+      // 用 transform 的方式对长方形进行定位。position: [x, y] 表示将长方形平移到 [x, y] 位置。
+      // 这里使用了 convertToPixel 这个 API 来得到长方形的位置
+      position: [0, 0],
+      draggable: 'horizontal',// 这个属性让圆点可以被拖拽。
+      //设置长方形的样式，透明度设置为0时，该长方形不可见
+      //  invisible: true,// 这个属性让长方形不可见（但是不影响他响应鼠标事件）。
+      info: '',
+      textContent: {
+        type: 'text',
+        style: {
+          text: '',
           font: fontSize + 'px "Microsoft YaHei", sans-serif'
         }
       },

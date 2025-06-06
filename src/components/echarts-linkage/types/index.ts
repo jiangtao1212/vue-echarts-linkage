@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-23 15:08:42
+ * @LastEditTime: 2025-06-06 16:37:26
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -341,8 +341,11 @@ export type DeleteEchartType = {
  * @description: 接收listener-graphic-location事件的参数类型
  * @param {string} id 接收grapicLocation事件的图表id
  * @param {Array<GraphicLocationInfoType>} graphics 图形位置信息
+ * @param {boolean} isCurrentHandleEcharts 是否为当前操作的echarts
  */
-export type ListenerGrapicLocationType = Array<Pick<SeriesIdDataType, 'id' | 'graphics'>>;
+export type ListenerGrapicLocationType = Array<Pick<SeriesIdDataType, 'id' | 'graphics'> & {
+  isCurrentHandleEcharts: boolean;
+}>;
 
 /**
  * @description 定义标线分段数
