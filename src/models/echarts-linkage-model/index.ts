@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-06 14:11:44
+ * @LastEditTime: 2025-06-09 14:26:58
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -892,12 +892,12 @@ export class EchartsLinkageModel {
       graphic: [
         {
           ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT1_ID, xAxisSeq1, xAxisX1),
-          ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT1_ID)),
+          ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e.target.x, myChart, GRAPHIC_RECT1_ID)),
           // draggable: false, // 禁止拖拽
         },
         {
           ...this.getGraphicRectTemplate(myChart, GRAPHIC_RECT2_ID, xAxisSeq2, xAxisX2),
-          ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT2_ID)),
+          ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e.target.x, myChart, GRAPHIC_RECT2_ID)),
           // draggable: false, // 禁止拖拽
         }
       ],
@@ -917,7 +917,7 @@ export class EchartsLinkageModel {
       graphic: [
         {
           ...this.getGraphicRectTemplate_1(myChart, xAxisSeq),
-          // ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e, myChart, GRAPHIC_RECT1_ID)),
+          // ondrag: (e: any) => onPointDragging(this.computedTwoGraphicRect(e.target.x, myChart, GRAPHIC_RECT1_ID)),
           id: GRAPHIC_RECT1_ID,
           position: [positionX, 0],
           info: xAxisX,
@@ -1073,19 +1073,18 @@ export class EchartsLinkageModel {
 
   /**
    * @description 计算两个graphic矩形的坐标信息: 当前拖拽的图形的左侧位置和在X轴上的坐标值、未拖动的图形的左侧位置和在X轴上的坐标值
-   * @param e 鼠标事件对象 
+   * @param positionX 当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
    * @param myChart echarts实例 
    * @param currentDragGraphicId 当前拖拽的图形的id 
    * @param notDragGraphicId 未拖动的图形的id 
    * @returns
    */
-  computedTwoGraphicRect = (e: any, myChart: any, currentDragGraphicId: string): GraphicLocationInfoType => {
-    const currentDragGraphicPositionX: number = e.target.x; // 获取当前拖拽线条的X值,距离echarts左侧边框距离（包含grid）
-    const xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, currentDragGraphicPositionX); // 图形元素x轴坐标序号：从0开始
+  computedTwoGraphicRect = (positionX: number, myChart: any, currentDragGraphicId: string): GraphicLocationInfoType => {
+    const xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX); // 图形元素x轴坐标序号：从0开始
     const currentDragGraphicXAxisX: string = this.xAxisData[xAxisSeq];
     return {
       graphicId: currentDragGraphicId,
-      positionX: currentDragGraphicPositionX,
+      positionX,
       xAxisSeq,
       xAxisX: currentDragGraphicXAxisX
     };

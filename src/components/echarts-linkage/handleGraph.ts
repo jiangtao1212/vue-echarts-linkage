@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-06 16:40:34
+ * @LastEditTime: 2025-06-09 14:30:36
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -42,7 +42,7 @@ const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, c
     // 联动模式下，datazoom事件会在所有图表中触发，所以这里只计算第一个实例的图形，然后赋值给其他实例
     const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
     const myChart: echarts.ECharts | undefined = echarts.getInstanceByDom(element);
-    const datazoomGraphic = Extension.computerDatazoomGraphic(myChart, graphicLocation, xAxisData);
+    const datazoomGraphic = props.isGraphicZoom ? Extension.computerDatazoomGraphicByZoom(myChart, graphicLocation, xAxisData) : Extension.computerDatazoomGraphicNotByZoom(myChart, graphicLocation, xAxisData);
     // 赋值给所有实例，并且触发更新
     dataAbout.data.forEach((item: SeriesIdDataType) => {
       if (!isNeedUpdateGraphic(item, currentEchartsId, props)) return; // 不更新图形
@@ -77,11 +77,13 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
           graphic.positionX = graphicLocation.positionX;
           graphic.xAxisSeq = graphicLocation.xAxisSeq;
           graphic.xAxisX = graphicLocation.xAxisX;
+          graphic = handleGraphicOutOfRange(graphicLocation, myChart, item.xAxisdata as string[]);
         } else {
           notDragGraphic = graphic;
           notDragGraphic.xAxisSeq = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, notDragGraphic.positionX);
           const seq = notDragGraphic.xAxisSeq;
-          notDragGraphic.xAxisX = item.data[0].seriesData[seq][0].toString();
+          notDragGraphic.xAxisX = (item.xAxisdata && item.xAxisdata[seq]) ? item.xAxisdata[seq].toString() : '';
+          notDragGraphic = handleGraphicOutOfRange(notDragGraphic, myChart, item.xAxisdata as string[]);
         }
       });
       setOptionGraphic(myChart, [graphicLocation, notDragGraphic]);
@@ -90,6 +92,22 @@ const graphicDragLinkage = (graphicLocation: GraphicLocationInfoType, currentEch
     animating = false;
   });
 };
+
+// 处理超出x轴范围的图形
+const handleGraphicOutOfRange = (graphicLocation: GraphicLocationInfoType, myChart: echarts.ECharts, xAxisData: string[]) => {
+  // console.log('handleGraphicOutOfRange', graphicLocation);
+  const xAxisSeq = graphicLocation.xAxisSeq;
+  if (xAxisSeq < 0) {
+    graphicLocation.xAxisSeq = 0;
+    graphicLocation.positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, graphicLocation.xAxisSeq);
+    graphicLocation.xAxisX = xAxisData[graphicLocation.xAxisSeq];
+  } else if (xAxisSeq >= xAxisData.length) {
+    graphicLocation.xAxisSeq = xAxisData.length - 1;
+    graphicLocation.positionX = myChart.convertToPixel({ xAxisId: XAXIS_ID }, graphicLocation.xAxisSeq);
+    graphicLocation.xAxisX = xAxisData[graphicLocation.xAxisSeq];
+  }
+  return graphicLocation;
+}
 
 /**
  * @description 渲染图形

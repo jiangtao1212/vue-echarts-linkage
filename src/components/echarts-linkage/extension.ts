@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-01-20 16:02:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-18 10:09:05
+ * @LastEditTime: 2025-06-09 10:40:52
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\extension.ts
  * @Description: 延伸的逻辑
  */
@@ -152,18 +152,41 @@ const getGroupNameByChartSeq = (chartSeq: number, groups: number[][] | undefined
 }
 
 /**
- * @description 根据position实时计算graphic的坐标信息
+ * @description 根据position实时计算graphic的坐标信息，跟随echarts缩放, 则位置positionX不变，计算xAxisSeq的值
  * @param myChart echarts实例
  * @param graphics 图形元素数组  
- * @returns 
+ * @param xAxisData x轴数据
+ * @returns Array<GraphicLocationInfoType>
  */
-const computerDatazoomGraphic = (myChart: any, graphics: Array<GraphicLocationInfoType>, xAxisData: string[]): Array<GraphicLocationInfoType> => {
+const computerDatazoomGraphicByZoom = (myChart: any, graphics: Array<GraphicLocationInfoType>, xAxisData: string[]): Array<GraphicLocationInfoType> => {
   const positionX1 = graphics[0].positionX;
   const positionX2 = graphics[1].positionX;
   const xAxisSeq1 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX1);
   const xAxisSeq2 = myChart.convertFromPixel({ xAxisId: XAXIS_ID }, positionX2);
   const xAxisX1 = xAxisData[xAxisSeq1];
   const xAxisX2 = xAxisData[xAxisSeq2];
+  return [
+    { graphicId: graphics[0].graphicId, positionX: positionX1, xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
+    { graphicId: graphics[1].graphicId, positionX: positionX2, xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
+  ]
+}
+
+/**
+ * @description 根据position实时计算graphic的坐标信息，不跟随echarts缩放, 则x轴数据不变，计算positionX的值
+ * @param myChart echarts实例
+ * @param graphics 图形元素数组  
+ * @param xAxisData x轴数据
+ * @param isGraphicZoom 图形是否跟随echarts缩放
+ * @returns 
+ */
+const computerDatazoomGraphicNotByZoom = (myChart: any, graphics: Array<GraphicLocationInfoType>, xAxisData: string[]): Array<GraphicLocationInfoType> => {
+  // 图形跟随echarts缩放，则x轴数据不变，计算positionX的值
+  const xAxisSeq1 = graphics[0].xAxisSeq;
+  const xAxisSeq2 = graphics[1].xAxisSeq;
+  const xAxisX1 = xAxisData[xAxisSeq1];
+  const xAxisX2 = xAxisData[xAxisSeq2];
+  const positionX1 = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisX1);
+  const positionX2 = myChart.convertToPixel({ xAxisId: XAXIS_ID }, xAxisX2);
   return [
     { graphicId: graphics[0].graphicId, positionX: positionX1, xAxisSeq: xAxisSeq1, xAxisX: xAxisX1 },
     { graphicId: graphics[1].graphicId, positionX: positionX2, xAxisSeq: xAxisSeq2, xAxisX: xAxisX2 }
@@ -183,15 +206,16 @@ function isAutoPropertyTypeConsistent(arr: Array<any>, prop: string) {
 }
 
 
-export default { 
-  computedFixedRows, 
-  setStyleProperty, 
-  GAP, GROUP_DEFAULT, 
-  computerEchartsHeight, 
+export default {
+  computedFixedRows,
+  setStyleProperty,
+  GAP, GROUP_DEFAULT,
+  computerEchartsHeight,
   computerEchartsHeightByEnlarge,
-  setDragPosition, 
-  initGroupData, 
+  setDragPosition,
+  initGroupData,
   getGroupNameByChartSeq,
-  computerDatazoomGraphic,
+  computerDatazoomGraphicByZoom,
+  computerDatazoomGraphicNotByZoom,
   isAutoPropertyTypeConsistent,
 };

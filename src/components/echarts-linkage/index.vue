@@ -88,6 +88,7 @@ export type PropsType = {
   useMergedLegend?: boolean, // 是否使用合并图例
   useGraphicLocation?: boolean, // 是否使用图形定位
   useGraphicGroup?: typeof USE_GRAPHIC_GROUP_DEFAULT | Array<number>, // 确定哪些图表显示图形，all代表所有图表都使用图形
+  isGraphicZoom?: boolean, // 图形跟随echarts缩放，默认是false，为true时，效果是echarts缩放后，图形定位的横坐标值也跟着缩放修改
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
   extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
@@ -105,6 +106,7 @@ const props = withDefaults(defineProps<PropsType>(), {
   useMergedLegend: true, // 默认使用合并图例
   useGraphicLocation: false, // 默认不使用图形定位
   useGraphicGroup: USE_GRAPHIC_GROUP_DEFAULT, // 默认所有图表都使用图形
+  isGraphicZoom: false, // 默认图形不跟随echarts缩放从而修改横坐标值
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
 });
@@ -734,7 +736,9 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
   props.useGraphicLocation
     && (props.useGraphicGroup === 'all' || props.useGraphicGroup.includes(echartsIndex + 1))
     && dataArray.data[0].seriesData.length > 0
-    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)));
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, 
+    (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)
+  ));
   console.groupEnd();
   return myChart;
 }

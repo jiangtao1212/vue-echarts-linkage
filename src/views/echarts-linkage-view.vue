@@ -80,8 +80,9 @@
   <EchartsLinkag ref="echartsLinkageRef" id="echarts-linkage-view" :cols="1" :echarts-max-count="10"
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }" background="#fff"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
-    :theme="theme" :is-linkage="isLinkage" :use-graphic-location="useGraphic" :use-graphic-group="[1]" :is-echarts-height-change="false"
-    :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
+    :theme="theme" :is-linkage="isLinkage" :use-graphic-location="useGraphic" :use-graphic-group="[1]"
+    :is-echarts-height-change="false" :echarts-height-fixed-count="4"
+    :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
     @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
