@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-09 14:30:36
+ * @LastEditTime: 2025-06-11 09:42:17
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -53,6 +53,30 @@ const datazoomEvent = (graphicLocation: GraphicLocationInfoType[] | undefined, c
     });
     emitGraphicLocation(dataAbout, currentEchartsId);
     animating = false;
+  });
+}
+
+/**
+ * @description 更新图形, 这里只更新当前实例的图形：positionX不变，xAxisSeq和xAxisX根据positionX计算后更新
+ * @param graphicLocation 图形位置信息
+ * @param currentEchartsId 当前实例id
+ * @param xAxisData x轴数组数据
+ * @param dataAbout 数据对象
+ */
+const updateGraphic = (graphicLocation: GraphicLocationInfoType[] | undefined, currentEchartsId: string, xAxisData: string[], dataAbout: DataAboutType) => {
+  if (!graphicLocation) return;
+  requestAnimationFrame(() => {
+    const element: HTMLElement = document.getElementById(currentEchartsId) as HTMLElement;
+    const myChart: echarts.ECharts | undefined = echarts.getInstanceByDom(element);
+    const datazoomGraphic = Extension.computerDatazoomGraphicByZoom(myChart, graphicLocation, xAxisData);
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (item.id !== currentEchartsId) return; // 不是当前实例，不更新图形
+      item.graphics = datazoomGraphic;
+      const element: HTMLElement = document.getElementById(item.id) as HTMLElement;
+      const myChart: echarts.ECharts = echarts.getInstanceByDom(element) as echarts.ECharts;
+      setOptionGraphic(myChart, datazoomGraphic);
+    });
+    emitGraphicLocation(dataAbout, currentEchartsId);
   });
 }
 
@@ -166,6 +190,7 @@ const setEmit = (_emit: any) => {
 export default {
   datazoomEvent,
   graphicDragLinkage,
+  updateGraphic,
   setEmit,
   emitGraphicLocation,
   LISTENER_GRAPHIC_LOCATION

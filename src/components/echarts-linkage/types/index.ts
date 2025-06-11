@@ -34,8 +34,9 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} updateExtraTooltip 更新额外的tooltip数据，默认值为false，不重新渲染echarts
  * @param {Function} clearExtraTooltip 清除额外的tooltip数据，默认值为true，重新渲染echarts
  * @param {Function} updateAllCustomContent 更新所有图表的自定义容器内容
- * @param {Function} updateAllCustomContentById 更新所有图表的自定义容器内容，通过id更新
- * @param {Function} updateCustomContentById 更新单个图表的自定义容器内容，通过id更新
+ * @param {Function} updateCustomContentById 更新单个或多个图表的自定义容器内容，通过id更新
+ * @param {Function} clearAllCustomContent 清除所有图表的自定义容器内容
+ * @param {Function} clearCustomContentById 清除单个或多个图表的自定义容器内容，通过id更新
  */
 export interface ExposedMethods {
   initEcharts: () => Promise<void>;
@@ -61,8 +62,9 @@ export interface ExposedMethods {
   updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   clearExtraTooltip: (id?: string, isRender?: boolean) => void;
   updateAllCustomContent: (htmls: string[]) => void;
-  updateAllCustomContentById: (params: CustomContentHtmlType[]) => void;
-  updateCustomContentById: (param: CustomContentHtmlType) => void;
+  updateCustomContentById: (params: CustomContentHtmlType[] | CustomContentHtmlType) => void;
+  clearAllCustomContent: () => void;
+  clearCustomContentById: (ids: string[] | string) => void;
 }
 
 /**

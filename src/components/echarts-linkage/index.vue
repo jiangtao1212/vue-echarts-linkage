@@ -736,9 +736,9 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
   props.useGraphicLocation
     && (props.useGraphicGroup === 'all' || props.useGraphicGroup.includes(echartsIndex + 1))
     && dataArray.data[0].seriesData.length > 0
-    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics, 
-    (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)
-  ));
+    && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics,
+      (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)
+    ));
   console.groupEnd();
   return myChart;
 }
@@ -1241,6 +1241,8 @@ const updateSimpleEcharts = async (newAllSeriesdata: Array<SeriesTagType>) => {
         series: seriesData,
       });
       updateCount++;
+      // 当状态为使用图形时，则进行更新图形，否则不更新图形
+      props.useGraphicLocation && HandleGraph.updateGraphic(echart.graphics, echart.id, xAxisData, dataAbout);
     });
     console.log('updateSimpleEcharts数量：', updateCount);
     return true;
@@ -1508,25 +1510,56 @@ const updateAllCustomContent = (htmls: string[]) => {
 }
 
 /**
- * @description 更新所有图表的自定义内容 --- 导出
- * @param htmls 自定义内容数组
+ * @author jiangtao
+ * @description 更新单个或多个图表的自定义内容 --- 导出
+ * @param params 自定义内容数组 或 单个自定义内容
  */
-const updateAllCustomContentById = (params: CustomContentHtmlType[]) => {
-  params.forEach((item) => {
-    const element = document.querySelector(`.main-container #${item.id}-custom-content`);
+const updateCustomContentById = (params: CustomContentHtmlType[] | CustomContentHtmlType) => {
+  if (Array.isArray(params)) {
+    // 更新多个图表的自定义内容
+    params.forEach((item) => {
+      const element = document.querySelector(`.main-container #${item.id}-custom-content`);
+      if (!element) return;
+      // 元素中插入html
+      element.innerHTML = item.html;
+    });
+  } else {
+    // 更新单个图表的自定义内容
+    const element = document.querySelector(`.main-container #${params.id}-custom-content`);
     if (!element) return;
-    // 元素中插入html
-    element.innerHTML = item.html;
+    element.innerHTML = params.html;
+  }
+}
+
+/**
+ * @description 清除所有图表的自定义内容 --- 导出
+ */
+const clearAllCustomContent = () => {
+  const elements = document.querySelectorAll('.main-container .custom-content');
+  elements.forEach((element) => {
+    if (!element) return;
+    element.innerHTML = '';
   });
 }
 
 /**
- * @description 更新单个图表的自定义内容 --- 导出
- * @param id 图表id
- * @param html 自定义内容
+ * @description 清除单个或多个图表的自定义内容 --- 导出
+ * @param ids 图表id
  */
-const updateCustomContentById = (param: CustomContentHtmlType) => {
-  updateAllCustomContentById([param]);
+const clearCustomContentById = (ids: string[] | string) => {
+  if (Array.isArray(ids)) {
+    // 清除多个图表的自定义内容
+    ids.forEach((id) => {
+      const element = document.querySelector(`.main-container #${id}-custom-content`);
+      if (!element) return;
+      element.innerHTML = '';
+    });
+  } else {
+    // 清除单个图表的自定义内容
+    const element = document.querySelector(`.main-container #${ids}-custom-content`);
+    if (!element) return;
+    element.innerHTML = '';
+  }
 }
 
 // echarts上的主题切换事件
@@ -1647,8 +1680,9 @@ const exposedMethods: ExposedMethods = {
   updateExtraTooltip,
   clearExtraTooltip,
   updateAllCustomContent,
-  updateAllCustomContentById,
   updateCustomContentById,
+  clearAllCustomContent,
+  clearCustomContentById,
 };
 defineExpose(exposedMethods);
 

@@ -727,7 +727,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     // 方法1
     // echartsLinkageRef.value!.updateAllCustomContent([`<div style="font-size: .8rem; color: red;">自定义内容1</div>`]);
     // 方法2
-    echartsLinkageRef.value!.updateAllCustomContentById([{ id, html: `<div style="font-size: .7rem; color: red;">自定义内容2</div>` },]);
+    echartsLinkageRef.value!.updateCustomContentById([{ id, html: `<div style="font-size: .7rem; color: red;">自定义内容2</div>` },]);
     // 方法3
     // echartsLinkageRef.value!.updateCustomContentById({id, html: `<div style="font-size: .8rem; color: red;">自定义内容id</div>`});
     customContentFlag = false;
