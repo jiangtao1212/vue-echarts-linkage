@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-11 09:42:17
+ * @LastEditTime: 2025-06-11 13:30:22
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -77,6 +77,16 @@ const updateGraphic = (graphicLocation: GraphicLocationInfoType[] | undefined, c
       setOptionGraphic(myChart, datazoomGraphic);
     });
     emitGraphicLocation(dataAbout, currentEchartsId);
+  });
+}
+
+/**
+ * @description 清除所有图表的图形数据
+ * @param dataAbout 数据对象
+ */
+const clearAllGraphicData = (dataAbout: DataAboutType) => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
+    item.graphics = [];
   });
 }
 
@@ -191,6 +201,7 @@ export default {
   datazoomEvent,
   graphicDragLinkage,
   updateGraphic,
+  clearAllGraphicData,
   setEmit,
   emitGraphicLocation,
   LISTENER_GRAPHIC_LOCATION

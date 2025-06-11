@@ -14,8 +14,8 @@
           @delete-item="(data, number) => deleteItem(data, number, index)"
           @delete-item-column="(data, numbers) => deleteItemColumn(data, numbers, index)"
           @delete-items-all="deleteItemsAll(index)" />
-        <!-- 自定义内容 -->
-        <div class="custom-content" :id="item.id + '-custom-content'"></div>
+        <!-- 自定义内容，不允许拖拽 -->
+        <div class="custom-content" draggable="false" :id="item.id + '-custom-content'"></div>
       </div>
     </div>
 
@@ -1043,7 +1043,9 @@ const replaceAllEchartsData = async (newDataArray: Array<OneDataType[]>) => {
   const newCount = newDataArray.length;
   // 3.处理echarts实例数量变化
   await handle(oldCount, newCount);
-  // 4.各个Echarts实例添加新的series
+  // 4.清除所有echarts中的graphic数据，防止影响下一次的图形计算
+  HandleGraph.clearAllGraphicData(dataAbout);
+  // 5.各个Echarts实例添加新的series
   console.log('开始添加新的series');
   newDataArray.forEach(async (item: OneDataType[], index: number) => {
     const id = dataAbout.data[index].id;
