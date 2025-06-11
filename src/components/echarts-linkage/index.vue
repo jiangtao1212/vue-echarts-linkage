@@ -325,13 +325,18 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
 
 /**
  * @description 删除所有数据项
+ * 1. data数据清空
+ * 2. 状态置为删除状态
+ * 3. 清除图形数据
+ * 4. 重新初始化echarts
+ * 5. 状态置为正常状态
  * @param echartsIndex echarts索引，从0开始 
  */
 const deleteItemsAll = async (echartsIndex: number) => {
   console.groupCollapsed('deleteItemsAll', echartsIndex);
   dataAbout.data[echartsIndex].data = [];
-  dataAbout.data[echartsIndex].graphics = [];
   dataAbout.data[echartsIndex].isDeleteItem = true;
+  HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id);
   initEcharts();
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;

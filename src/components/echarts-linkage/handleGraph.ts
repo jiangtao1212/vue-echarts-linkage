@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-11 13:40:05
+ * @LastEditTime: 2025-06-11 13:49:00
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -86,6 +86,18 @@ const updateGraphic = (graphicLocation: GraphicLocationInfoType[] | undefined, c
  */
 const clearAllGraphicData = (dataAbout: DataAboutType) => {
   dataAbout.data.forEach((item: SeriesIdDataType) => {
+    item.graphics = undefined;
+  });
+}
+
+/**
+ * @description 清除单个图表的图形数据
+ * @param dataAbout 数据对象
+ * @param currentEchartsId 当前实例id
+ */
+const clearGraphicData = (dataAbout: DataAboutType, currentEchartsId: string) => {
+  dataAbout.data.forEach((item: SeriesIdDataType) => {
+    if (item.id !== currentEchartsId) return; // 不是当前实例，不更新图形
     item.graphics = undefined;
   });
 }
@@ -202,6 +214,7 @@ export default {
   graphicDragLinkage,
   updateGraphic,
   clearAllGraphicData,
+  clearGraphicData,
   setEmit,
   emitGraphicLocation,
   LISTENER_GRAPHIC_LOCATION
