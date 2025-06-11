@@ -299,6 +299,7 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
   setDragItemOption(data, echartsIndex);
   dataAbout.data[echartsIndex].data.splice(deleteItemsIndex, 1);
   dataAbout.data[echartsIndex].isDeleteItem = true;
+  dataAbout.data[echartsIndex].data.length === 0 && HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id); // 如果删除后数据为空，则清除图形数据
   dragUpdateHandle(data, echartsIndex);
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
@@ -317,6 +318,7 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
   dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
   console.log('dataAbout.data', dataAbout.data[echartsIndex]);
   dataAbout.data[echartsIndex].isDeleteItem = true;
+  dataAbout.data[echartsIndex].data.length === 0 && HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id); // 如果删除后数据为空，则清除图形数据
   dragUpdateHandle(data, echartsIndex);
   await nextTick();
   dataAbout.data[echartsIndex].isDeleteItem = false;
