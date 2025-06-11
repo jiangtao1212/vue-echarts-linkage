@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2025-03-25 14:25:12
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-11 13:30:22
+ * @LastEditTime: 2025-06-11 13:40:05
  * @FilePath: \vue-echarts-linkage\src\components\echarts-linkage\handleGraph.ts
  * @Description: 处理图形
  */
@@ -86,7 +86,7 @@ const updateGraphic = (graphicLocation: GraphicLocationInfoType[] | undefined, c
  */
 const clearAllGraphicData = (dataAbout: DataAboutType) => {
   dataAbout.data.forEach((item: SeriesIdDataType) => {
-    item.graphics = [];
+    item.graphics = undefined;
   });
 }
 
