@@ -793,6 +793,11 @@ const initLisener = () => {
 // 监听图形位置变化事件
 const listenerGraphicLocation = (data: ListenerGrapicLocationType) => {
   console.log("listenerGraphicLocation", data);
+  data.forEach((item: any) => {
+    const { id, graphics, isCurrentHandleEcharts } = item;
+    if (!isCurrentHandleEcharts && graphics.length === 0) return;
+    echartsLinkageRef.value?.updateCustomContentById([{ id, html: `<div style="font-size: .7rem; color: red;">自定义内容</div>` },]);
+  });
 }
 
 // 监听excel数据视图按钮点击事件

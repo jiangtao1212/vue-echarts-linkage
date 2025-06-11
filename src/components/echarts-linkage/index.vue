@@ -746,6 +746,8 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
     && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics,
       (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)
     ));
+  // 清除自定义内容
+  clearCustomContentById(dataArray.id);
   console.groupEnd();
   return myChart;
 }
