@@ -1,61 +1,64 @@
 <template>
   <div class="drag-container">
     <div class="main" :class="id">
-      <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
-        class="flex flex-col items-start gap-1 drag-column" :data-info="data.value.length > 0 ? data.value[0].name : ''"
-        :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
-        v-model="dataAbout.list[index].value" :animation="150" :sort="false" ghostClass="ghost"
-        :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
-        @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
-        <div v-for="item in dataAbout.list[index].value" :key="item.id" :data-id="item.id"
-          class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center"
-          :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
-          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)" @click="handleItemClick(item.name, item.id)">
-          <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
-            :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
-            trigger="contextmenu">
-            <template #reference>
-              <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
-                :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
-                <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
-                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">
-                  {{ item.name }}
-                </span>
+      <TransitionGroup name="drag-list" tag="div" class="flex justify-center items-start flex-wrap gap-5px">
+        <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
+          class="flex flex-col items-start gap-1 drag-column"
+          :data-info="data.value.length > 0 ? data.value[0].name : ''"
+          :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
+          v-model="dataAbout.list[index].value" :animation="isDragging ? 0 : 150" :sort="false" ghostClass="ghost"
+          :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
+          @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
+          <div v-for="item in dataAbout.list[index].value" :key="item.id" :data-id="item.id"
+            class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center drag-item"
+            :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
+            @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)"
+            @click="handleItemClick(item.name, item.id)">
+            <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
+              :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
+              trigger="contextmenu">
+              <template #reference>
+                <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
+                  :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
+                  <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
+                  <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">
+                    {{ item.name }}
+                  </span>
+                </div>
+              </template>
+              <div class="flex flex-col justify-center items-start gap-1">
+                <div class="flex justify-start items-center gap-1">
+                  <span>重置：</span>
+                  <!-- 重置(列) -->
+                  <el-button type="primary" size="small" class="!ml-0"
+                    @click="popoverClickObj.resetItemDefault(item.id)">
+                    重置
+                  </el-button>
+                  <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.resetAllItemsDefault">
+                    全部
+                  </el-button>
+                </div>
+                <el-divider border-style="dashed" />
+                <div class="flex justify-start items-center gap-1">
+                  <span>移除：</span>
+                  <el-button type="primary" size="small" class="!ml-0"
+                    @click="popoverClickObj.deleteItemDefault(item.id)">
+                    自身
+                  </el-button>
+                  <el-button type="primary" size="small" class="!ml-0"
+                    @click="popoverClickObj.deleteItemColumnDefault(item.id)">
+                    本列
+                  </el-button>
+                  <el-button type="primary" size="small" class="!ml-0"
+                    @click="popoverClickObj.deleteItemsAllDefault(item.id)">
+                    全部
+                  </el-button>
+                </div>
               </div>
-            </template>
-            <div class="flex flex-col justify-center items-start gap-1">
-              <div class="flex justify-start items-center gap-1">
-                <span>重置：</span>
-                <!-- 重置(列) -->
-                <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.resetItemDefault(item.id)">
-                  重置
-                </el-button>
-                <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.resetAllItemsDefault">
-                  全部
-                </el-button>
-              </div>
-              <el-divider border-style="dashed" />
-              <div class="flex justify-start items-center gap-1">
-                <span>移除：</span>
-                <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.deleteItemDefault(item.id)">
-                  自身
-                </el-button>
-                <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.deleteItemColumnDefault(item.id)">
-                  本列
-                </el-button>
-                <el-button type="primary" size="small" class="!ml-0"
-                  @click="popoverClickObj.deleteItemsAllDefault(item.id)">
-                  全部
-                </el-button>
-              </div>
-            </div>
-          </el-popover>
-        </div>
-      </VueDraggable>
+            </el-popover>
+          </div>
+        </VueDraggable>
+      </TransitionGroup>
     </div>
   </div>
 </template>
@@ -65,6 +68,7 @@ import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType } from "./type/index";
+import { deepClone } from '@/utils/cloneUtils';
 
 const emit = defineEmits(['isDragging', 'update', 'deleteItem', 'deleteItemColumn', 'deleteItemsAll']);
 
@@ -114,8 +118,11 @@ const dataAbout = reactive({
 // 数据，非响应式
 const dataConst = {
   dropEffect: 'move', // 拖动的实时效果
-  dataCache: [], // 缓存数据
+  dataCache: [] as Array<DragListDataType>, // 缓存数据
 }
+ 
+// 是否在拖动
+const isDragging = ref(false);
 
 // 点击相关的对象
 const popoverClickObj: { [key: string]: Function } = {};
@@ -143,11 +150,11 @@ const initPopoverClickObjFun = () => {
       }
     }
     // 2.重置当前子项数据
-    dataAbout.list = resetDefaultCommon(JSON.parse(JSON.stringify(resData)));
+    dataAbout.list = resetDefaultCommon(deepClone(resData));
     // 3.右键菜单关闭
     dataAbout.visible = "";
     // 4.发送更新数据事件
-    emit('update', JSON.parse(JSON.stringify(dataAbout.list)));
+    emit('update', deepClone(dataAbout.list));
   }
 
   // 重置全部子项默认状态 --- 单列唯一
@@ -155,7 +162,7 @@ const initPopoverClickObjFun = () => {
     // 1.新建空列表
     const resetData: Array<DragListDataType> = new Array(dataAbout.list.length);
     for (let i = 0; i < dataAbout.list.length; i++) {
-      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+      resetData[i] = deepClone({ key: (i + 1).toString(), value: [] });
     }
     // 2.填充对应数据
     dataAbout.list.forEach((item: DragListDataType) => {
@@ -170,15 +177,15 @@ const initPopoverClickObjFun = () => {
     // 3.右键菜单关闭
     dataAbout.visible = "";
     // 4.发送更新数据事件
-    emit('update', JSON.parse(JSON.stringify(dataAbout.list)));
+    emit('update', deepClone(dataAbout.list));
   }
 
   // 移除当前子项，并且调整各个子项id，使其保持连续
   popoverClickObj.deleteItemDefault = async function (itemId: string) {
     console.group('移除当前子项');
     console.log('itemId', itemId);
-    console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
-    let dataOrigin: Array<DragListDataType> = JSON.parse(JSON.stringify(dataAbout.list));
+    console.log('dataAbout.list', deepClone(dataAbout.list));
+    let dataOrigin: Array<DragListDataType> = deepClone(dataAbout.list);
     // 1.删除当前子项
     dataOrigin.forEach((item: DragListDataType) => item.value = item.value.filter((value: DragItemType) => value.id !== itemId));
     // 2.调整各个子项id，大于当前子项的id减1，使其保持连续
@@ -193,7 +200,7 @@ const initPopoverClickObjFun = () => {
     // 3.新建空列表，填充对应数据
     const resetData: Array<DragListDataType> = new Array(count);
     for (let i = 0; i < count; i++) {
-      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+      resetData[i] = deepClone({ key: (i + 1).toString(), value: [] });
     }
     resetData.forEach((item1: DragListDataType) => {
       const key = item1.key;
@@ -205,7 +212,7 @@ const initPopoverClickObjFun = () => {
     });
     console.log('resetData', resetData);
     console.groupEnd();
-    dataAbout.list = JSON.parse(JSON.stringify(resetData));
+    dataAbout.list = deepClone(resetData);
     // 4.右键菜单关闭
     dataAbout.visible = "";
     // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的子项索引(从0开始)
@@ -220,11 +227,11 @@ const initPopoverClickObjFun = () => {
   popoverClickObj.deleteItemColumnDefault = async function (itemId: string) {
     console.group('移除当前子项所在的列');
     console.log('itemId', itemId);
-    console.log('dataAbout.list', JSON.parse(JSON.stringify(dataAbout.list)));
-    let dataOrigin: Array<DragListDataType> = JSON.parse(JSON.stringify(dataAbout.list));
+    console.log('dataAbout.list', deepClone(dataAbout.list));
+    let dataOrigin: Array<DragListDataType> = deepClone(dataAbout.list);
     // 1.先筛选出要删除的列数据，再删除当前子项所在的列，并且将空的列也删除
     let deleteColumn: Array<DragItemType> = []; // 要删除的列数据
-    dataOrigin.forEach((item: DragListDataType) => item.value.some((value: DragItemType) => value.id === itemId) && (deleteColumn = JSON.parse(JSON.stringify(item.value))));
+    dataOrigin.forEach((item: DragListDataType) => item.value.some((value: DragItemType) => value.id === itemId) && (deleteColumn = deepClone(item.value)));
     dataOrigin = dataOrigin.filter((item: DragListDataType) => item.value.length > 0 && !item.value.some((value: DragItemType) => value.id === itemId))
     // 2.先提取所有id进行排序，然后再调整各个子项id，重新从1开始排序，使其保持连续
     const idArr: Array<string> = [];
@@ -241,7 +248,7 @@ const initPopoverClickObjFun = () => {
     // 3.新建空列表，填充对应数据
     const resetData: Array<DragListDataType> = new Array(idArr.length);
     for (let i = 0; i < idArr.length; i++) {
-      resetData[i] = JSON.parse(JSON.stringify({ key: (i + 1).toString(), value: [] }));
+      resetData[i] = deepClone({ key: (i + 1).toString(), value: [] });
     }
     resetData.forEach((item1: DragListDataType) => {
       const key = item1.key;
@@ -253,7 +260,7 @@ const initPopoverClickObjFun = () => {
     });
     console.log('resetData', resetData);
     console.groupEnd();
-    dataAbout.list = JSON.parse(JSON.stringify(resetData));
+    dataAbout.list = deepClone(resetData);
     // 4.右键菜单关闭
     dataAbout.visible = "";
     // 5.发送删除数据事件，参数为：删除的子项所在的列表数据，删除的所有子项索引数组
@@ -316,7 +323,8 @@ function remove() {
 // 开始拖动时，缓存数据，为了在拖动结束时还原数据做准备
 const onStart = (e: any) => {
   // console.log('start');
-  dataConst.dataCache = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
+  isDragging.value = true;
+  dataConst.dataCache = deepClone(dataAbout.list); // 深拷贝
   emit('isDragging', true);
 }
 
@@ -341,12 +349,13 @@ const onEnd = async (e: any) => {
   // console.group('end');
   emit('isDragging', false); // 发送拖动结束事件
   await delay(100); // 停顿100ms，注：这里必须进行停顿，因为此时监听的drag事件中的数据由于使用了防抖函数，可能还未更新到最新数据。（测试下来，这里快了50ms左右，所以这里设置100ms停顿）
-  // console.log(e)
+  // 设置拖拽状态，确保过渡效果正常
+  isDragging.value = false;
   if (dataConst.dropEffect === 'none') {
     // 1.若拖动到非可放置区域，则还原数据
     // 2.非拖动状态（pullMode为undefined），则还原数据 --- 暂不开放，这里有个问题，在本列中移动(pullMode为undefined)会出问题
     console.log('拖动到非可放置区域，则还原数据');
-    dataAbout.list = JSON.parse(JSON.stringify(dataConst.dataCache));
+    dataAbout.list = deepClone(dataConst.dataCache);
     return;
   }
   if (!e.pullMode && e.originalEvent.toElement.nodeName.toLowerCase() === 'canvas') {
@@ -360,7 +369,7 @@ const onEnd = async (e: any) => {
   adjustOrder();
   // console.log('dataAbout.list', dataAbout.list);
   // console.groupEnd();
-  emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
+  emit('update', deepClone(dataAbout.list)); // 发送更新数据事件
 }
 
 /**
@@ -372,7 +381,7 @@ const onEnd = async (e: any) => {
  */
 const sortEnd = (e: any) => {
   // console.group('sortEnd');
-  const listData: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
+  const listData: Array<any> = deepClone(dataAbout.list); // 深拷贝
   // console.log('JSON.stringify(dataAbout.list)', JSON.stringify(dataAbout.list));
   // console.log('sortEnd', listData);
   // console.log('e', e);
@@ -405,8 +414,8 @@ const adjustOrder = () => {
   // 注意：这里需要拷贝两次，然后整理最终的数据，再赋值给dataAbout.list，
   //（先循环清空响应式数据，再循环赋值会导致顺序出现问题，原因是两个for循环同时执行，响应式数据渲染出现问题）
   // 猜测v-if可能会解决这个问题，没有尝试，因为在这里v-if和v-for在一起使用会有问题，同时频繁的v-if切换会影响性能
-  const copyData1: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
-  const copyData2: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷贝
+  const copyData1: Array<any> = deepClone(dataAbout.list); // 深拷贝
+  const copyData2: Array<any> = deepClone(dataAbout.list); // 深拷贝
   // console.log(dataAbout.list);
   // console.log('JSON.stringify(copyData1)', JSON.stringify(copyData1));
   copyData1.forEach(item => item.value.length = 0); // 模拟清空
@@ -427,7 +436,7 @@ const adjustOrder = () => {
  * @returns 处理后的列表数据
  */
 const resetDefaultCommon = (dragData: any) => {
-  const listData: Array<any> = JSON.parse(JSON.stringify(dataAbout.list)); // 深拷
+  const listData: Array<any> = deepClone(dataAbout.list); // 深拷
   console.groupCollapsed('dragData', dragData);
   // 处理数据
   let originIndex = 0; // 源列表索引，从0开始
@@ -439,7 +448,7 @@ const resetDefaultCommon = (dragData: any) => {
     let itemArray = listData[i].value;
     for (let j = 0; j < itemArray.length; j++) {
       if (JSON.stringify(dragData) === JSON.stringify(itemArray[j]) && itemArray.length > 1) { // 源列表中最少有两个元素
-        const itemArrayCache = JSON.parse(JSON.stringify(itemArray));
+        const itemArrayCache = deepClone(itemArray);
         if (j === 0) { // 若拖动的是第一个元素，则将源列表中第二个直至最后一个元素都添加到第二个元素所在的默认列表中
           dragItemNextId = itemArrayCache[1].id;
           originIndex = i;
@@ -511,7 +520,7 @@ const handleItemShowHide = (data: Array<DragListDataType>, id: string) => {
       }
     }
   }
-  return JSON.parse(JSON.stringify(dataOrigin));
+  return deepClone(dataOrigin);
 }
 // 处理子项点击逻辑 -- 点击切换显示隐藏legend效果，通过改变series系列的show属性实现
 const handleItemClick = (text: string, id: string) => {
@@ -542,7 +551,7 @@ const packageItem = (name: string, id: string, isShow: boolean = true, isDrag: b
 
 // 获取所有数据 --- 导出方法
 const getAllData = (): Array<DragListDataType> => {
-  return JSON.parse(JSON.stringify(dataAbout.list));
+  return deepClone(dataAbout.list);
 }
 
 // 子组件暴露变量和方法
@@ -586,7 +595,7 @@ watch(() => props.data, (newVal, oldVal) => {
     if (oldVal?.length === 0) {
       nextTick(() => {
         // 初始化完毕，才会发送更新数据事件
-        emit('update', JSON.parse(JSON.stringify(dataAbout.list))); // 发送更新数据事件
+        emit('update', deepClone(dataAbout.list)); // 发送更新数据事件
       });
     }
   }
@@ -701,5 +710,65 @@ onBeforeUnmount(() => {
 <style scoped lang="less">
 :deep(.el-divider--horizontal) {
   margin: 1px 0;
+}
+</style>
+
+<style scoped lang="less">
+/* 列级过渡效果 */
+.drag-list-enter-active,
+.drag-list-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drag-list-enter-from {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+}
+
+.drag-list-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+}
+
+.drag-list-move {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drag-list-leave-active {
+  position: absolute;
+}
+
+/* 拖拽项过渡效果 */
+.drag-item {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateX(2px);
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+
+  &.ghost {
+    opacity: 0.7;
+    background: rgba(0, 123, 255, 0.05);
+    border: 1px dashed #007bff;
+    border-style: dashed;
+    border-width: 1px;
+  }
+}
+
+/* 拖拽状态下的列样式 */
+.drag-column {
+  transition: all 0.5s ease;
+}
+
+/* 拖拽时的整体容器效果 */
+.drag-container {
+  transition: all 0.3s ease;
+
+  &.dragging {
+    .drag-column {
+      opacity: 0.8;
+    }
+  }
 }
 </style>

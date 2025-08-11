@@ -52,6 +52,8 @@ import Extension from './extension';
 import HandleGraph from './handleGraph';
 import HandleEnlargeShrink from './handleEnlargeShrink';
 import HandleExcel from './handleExcel';
+import { ChartUtils } from '@/utils/chartUtils';
+import { deepClone, shallowClone } from '@/utils/cloneUtils';
 
 const USE_GRAPHIC_GROUP_DEFAULT = 'all' as const;
 /**
@@ -189,7 +191,7 @@ const dragDataComputed = (number: number) => {
     // switch开关类型不可以拖拽
     if (item.dragItemOption) {
       item.dragItemOption.isDrag = item.dataType === 'switch' ? false : true;
-      res.push(JSON.parse(JSON.stringify(item.dragItemOption)));
+      res.push(shallowClone(item.dragItemOption));
     } else {
       res.push({
         name: item.name,
@@ -227,45 +229,13 @@ const setDragItemOption = (dragListData: DragListDataType[], echartsIndex: numbe
  * @param echartsIndex echarts索引，从0开始 
  */
 const dragUpdateHandle = async (data: Array<any>, echartsIndex: number) => {
-
-  // 组装yAxisShowData --- 各个Y轴的显示状态
-  function packageYAxisShowData(data: Array<any>): boolean[] {
-    const yAxisShowData = data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true)); // 只有当有数据时，并且有一个数据项的isShow为true时才显示图例
-    console.log('yAxisShowData', yAxisShowData);
-    return yAxisShowData;
-  }
-
-  // 组装seriesOpacityData --- 各个series的透明度
-  function packageSeriesOpacityData(data: Array<any>): boolean[] {
-    const seriesOpacityData = new Array(data.length).fill(0);
-    data.forEach((item) => {
-      item.value.forEach((subItem: any) => {
-        seriesOpacityData[+subItem.id - 1] = subItem.isShow;
-      });
-    });
-    console.log('seriesOpacityData', seriesOpacityData);
-    return seriesOpacityData;
-  }
-
-  // 组装seriesyAxisIndexData --- 各个series的yAxisIndex，用于关联Y轴
-  function packageSeriesyAxisIndexData(data: Array<any>): number[] {
-    const seriesyAxisIndexData = new Array(data.length).fill(0);
-    data.forEach((item, index) => {
-      item.value.forEach((subItem: any) => {
-        seriesyAxisIndexData[+subItem.id - 1] = index;
-      });
-    });
-    console.log('seriesyAxisIndexData', seriesyAxisIndexData);
-    return seriesyAxisIndexData;
-  }
-
   console.groupCollapsed('update');
   console.log('data', data);
   setDragItemOption(data, echartsIndex);
   // const max = Math.max(...data.map(item => item.value.length));
-  const yAxisShowData = packageYAxisShowData(data);
-  const seriesOpacityData = packageSeriesOpacityData(data);
-  const seriesyAxisIndexData = packageSeriesyAxisIndexData(data);
+  const yAxisShowData = ChartUtils.packageYAxisShowData(data);
+  const seriesOpacityData = ChartUtils.packageSeriesOpacityData(data);
+  const seriesyAxisIndexData = ChartUtils.packageSeriesyAxisIndexData(data);
   dataAbout.currentHandleChartIds = [dataAbout.data[echartsIndex].id];
   dataAbout.data[echartsIndex].data.forEach((item: OneDataType, index: number) => {
     item.yAxisShow = yAxisShowData[index];
@@ -934,7 +904,7 @@ const getAllDistinctSeriesTagInfo = (): Array<SeriesTagType> => {
         type: series.type,
         customData: series.customData,
         dataType: series.dataType,
-        seriesData: JSON.parse(JSON.stringify(series.seriesData)), // 暴露缓存数据，原因是外部可能还会使用缓存数据进行渲染
+        seriesData: deepClone(series.seriesData), // 暴露缓存数据，原因是外部可能还会使用缓存数据进行渲染
       })
     });
   });
@@ -953,7 +923,7 @@ const getAllSeriesTagInfo = (echartsId: string = 'all'): Array<AppointEchartsTag
         type: series.type,
         customData: series.customData,
         dataType: series.dataType,
-        seriesData: JSON.parse(JSON.stringify(series.seriesData)),
+        seriesData: deepClone(series.seriesData),
       })
     });
     res.push(oneEchartInfo);
@@ -1000,7 +970,7 @@ const getTemplateTagsOption = (): Array<Array<DragItemType>> => {
     });
     res.push(oneEchartInfo);
   });
-  return JSON.parse(JSON.stringify(res));
+  return deepClone(res);
 }
 
 /**
@@ -1122,7 +1092,7 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
     echart.data.forEach((series: OneDataType) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
-      let linkData: LinkDataType[] = JSON.parse(JSON.stringify(seriesTag.seriesLink?.linkData as LinkDataType[]));
+      let linkData: LinkDataType[] = deepClone(seriesTag.seriesLink?.linkData as LinkDataType[]);
       if (linkData.length === 0) {
         // 无关联数据，置空直接返回
         series.seriesData = [];
@@ -1378,7 +1348,7 @@ const packageMarkLineOnLink = (linkDataPre: LinkDataType[], linkDataPost: LinkDa
 
 // 首尾相连数据转series数据
 const linkToSeries = (linkData: LinkDataType[]) => {
-  const primaryData = JSON.parse(JSON.stringify(linkData)); // 深拷贝数据，避免修改原数据导致相互关联
+  const primaryData = deepClone(linkData); // 深拷贝数据，避免修改原数据导致相互关联
   let arrays: Array<SeriesDataType> = []; // 三维数组，所有连接线的数据
   const markLineData: Array<any> = []; // 标记线数据
   primaryData.forEach((item: LinkDataType, index: number) => {
@@ -1653,7 +1623,7 @@ const setExcelView = async (e: any, id: string) => {
   const seriesData = data.data.filter((item: OneDataType) => item.seriesLink?.isLinkMode && item.seriesLink!.linkData.length > 0);
   const params: ListenerExcelViewType = { id: id };
   if (seriesData.length > 0) {
-    params.seriesLink = JSON.parse(JSON.stringify(seriesData[0].seriesLink)); // 深拷贝数据，避免修改原数据导致相互关联
+    params.seriesLink = deepClone(seriesData[0].seriesLink); // 深拷贝数据，避免修改原数据导致相互关联
     params.seriesLink?.linkData.forEach((item: LinkDataType) => item.data = []); // 将关联的series数据置空，减少数据量
   }
   let extraData: excelViewType | undefined = undefined;
@@ -1719,6 +1689,7 @@ watch(() => props.isLinkage, (isLinkage) => {
   changeLinkageOrGroups();
 });
 
+// 监听useGraphicLocation的变化（开启和关闭图形定位），重新初始化echarts
 watch(() => props.useGraphicLocation, (useGraphicLocation) => {
   changeUseGraphicLocation(useGraphicLocation);
 });
