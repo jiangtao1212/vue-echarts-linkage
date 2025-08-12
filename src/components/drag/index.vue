@@ -1,64 +1,60 @@
 <template>
   <div class="drag-container">
     <div class="main" :class="id">
-      <TransitionGroup name="drag-list" tag="div" class="flex justify-center items-start flex-wrap gap-5px">
-        <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
-          class="flex flex-col items-start gap-1 drag-column"
-          :data-info="data.value.length > 0 ? data.value[0].name : ''"
-          :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
-          v-model="dataAbout.list[index].value" :animation="isDragging ? 0 : 150" :sort="false" ghostClass="ghost"
-          :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
-          @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
-          <div v-for="item in dataAbout.list[index].value" :key="item.id" :data-id="item.id"
-            class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center drag-item"
-            :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
-            @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)"
-            @click="handleItemClick(item.name, item.id)">
-            <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
-              :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
-              trigger="contextmenu">
-              <template #reference>
-                <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
-                  :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
-                  <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
-                  <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">
-                    {{ item.name }}
-                  </span>
-                </div>
-              </template>
-              <div class="flex flex-col justify-center items-start gap-1">
-                <div class="flex justify-start items-center gap-1">
-                  <span>重置：</span>
-                  <!-- 重置(列) -->
-                  <el-button type="primary" size="small" class="!ml-0"
-                    @click="popoverClickObj.resetItemDefault(item.id)">
-                    重置
-                  </el-button>
-                  <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.resetAllItemsDefault">
-                    全部
-                  </el-button>
-                </div>
-                <el-divider border-style="dashed" />
-                <div class="flex justify-start items-center gap-1">
-                  <span>移除：</span>
-                  <el-button type="primary" size="small" class="!ml-0"
-                    @click="popoverClickObj.deleteItemDefault(item.id)">
-                    自身
-                  </el-button>
-                  <el-button type="primary" size="small" class="!ml-0"
-                    @click="popoverClickObj.deleteItemColumnDefault(item.id)">
-                    本列
-                  </el-button>
-                  <el-button type="primary" size="small" class="!ml-0"
-                    @click="popoverClickObj.deleteItemsAllDefault(item.id)">
-                    全部
-                  </el-button>
-                </div>
+      <VueDraggable v-for="(data, index) in dataAbout.list" :key="data.key" v-show="data.value.length > 0"
+        class="flex flex-col items-start gap-1 drag-column" :data-info="data.value.length > 0 ? data.value[0].name : ''"
+        :style="{ height: data.value.length * 20 + (data.value.length - 1) * 4 + 'px', minwidth: '20px' }"
+        v-model="dataAbout.list[index].value" :animation="isDragging ? 0 : 150" :sort="true" ghostClass="ghost"
+        :group="groupComputed(data)" :disabled="groupComputed(data) !== group" @update="onUpdate" @add="onAdd"
+        @start="onStart" @end="onEnd" @remove="remove" @sort="sore" @move="move" @change="change">
+        <div v-for="item in dataAbout.list[index].value" :key="item.id" :data-id="item.id"
+          class="cursor-move h-5 line-height-5 pl-3px pr-3px border-rd-1 text-2.7 flex justify-center items-center drag-item"
+          :class="{ 'vague': !item.isShow, 'no-drag': groupComputed(data) !== group }"
+          @contextmenu.prevent="popoverClickObj.handleContextMenu($event, item.id)"
+          @click="handleItemClick(item.name, item.id)">
+          <el-popover fixed="right" placement="right" width="auto" v-if="!dataAbout.isDeleteItemHandle"
+            :popper-style="{ 'min-width': '80px', 'display': dataAbout.visible === item.id ? 'block' : 'none' }"
+            trigger="contextmenu">
+            <template #reference>
+              <div class="flex justify-center items-center gap-1" :class="{ 'dark': theme === 'dark' }"
+                :style="{ '--color': colors[(+item.id - 1) % colors.length] }">
+                <div class="w-6 h-2px line" style="--height: 1.5rem;"></div>
+                <span class="cursor-move-item" :style="{ '--move-item-font-size': computedItemFontSize }">
+                  {{ item.name }}
+                </span>
               </div>
-            </el-popover>
-          </div>
-        </VueDraggable>
-      </TransitionGroup>
+            </template>
+            <div class="flex flex-col justify-center items-start gap-1">
+              <div class="flex justify-start items-center gap-1">
+                <span>重置：</span>
+                <!-- 重置(列) -->
+                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.resetItemDefault(item.id)">
+                  重置
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0" @click="popoverClickObj.resetAllItemsDefault">
+                  全部
+                </el-button>
+              </div>
+              <el-divider border-style="dashed" />
+              <div class="flex justify-start items-center gap-1">
+                <span>移除：</span>
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemDefault(item.id)">
+                  自身
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemColumnDefault(item.id)">
+                  本列
+                </el-button>
+                <el-button type="primary" size="small" class="!ml-0"
+                  @click="popoverClickObj.deleteItemsAllDefault(item.id)">
+                  全部
+                </el-button>
+              </div>
+            </div>
+          </el-popover>
+        </div>
+      </VueDraggable>
     </div>
   </div>
 </template>
@@ -120,7 +116,7 @@ const dataConst = {
   dropEffect: 'move', // 拖动的实时效果
   dataCache: [] as Array<DragListDataType>, // 缓存数据
 }
- 
+
 // 是否在拖动
 const isDragging = ref(false);
 
@@ -346,9 +342,10 @@ function delay(time = 100) {
  * @param e 事件对象
  */
 const onEnd = async (e: any) => {
-  // console.group('end');
-  emit('isDragging', false); // 发送拖动结束事件
+  console.group('end');
   await delay(100); // 停顿100ms，注：这里必须进行停顿，因为此时监听的drag事件中的数据由于使用了防抖函数，可能还未更新到最新数据。（测试下来，这里快了50ms左右，所以这里设置100ms停顿）
+  console.log('e', e);
+  emit('isDragging', false); // 发送拖动结束事件
   // 设置拖拽状态，确保过渡效果正常
   isDragging.value = false;
   if (dataConst.dropEffect === 'none') {
@@ -360,15 +357,16 @@ const onEnd = async (e: any) => {
   }
   if (!e.pullMode && e.originalEvent.toElement.nodeName.toLowerCase() === 'canvas') {
     // pullMode为false（代表未移动到其他列），并且是拖拽到画布上，则进行重置操作
-    // 注意：pullMode为false是有两种情况：1.未移动到其他列，移动到外部容器中；2.在本列中移动。
+    // 注意：pullMode为false是有两种情况：1.未移动到其他列，移动到外部容器中；2.在本列中移动
+    // 在本列内部移动，但落点在画布上，则进行重置操作
     const id = e.item.dataset.id; // 拖动的元素id
     popoverClickObj.resetItemDefault(id);
     return;
   }
-  sortEnd(e);
+  // sortEnd(e);  // 这里的重新排序可以去除
   adjustOrder();
   // console.log('dataAbout.list', dataAbout.list);
-  // console.groupEnd();
+  console.groupEnd();
   emit('update', deepClone(dataAbout.list)); // 发送更新数据事件
 }
 
@@ -589,7 +587,7 @@ watch(() => props.data, (newVal, oldVal) => {
     // 清空数据，保留echarts实例
     dataAbout.list = [];
     return;
-  } else if (newVal.length > 0) {
+  } else if (newVal.length > 0 && (!oldVal || oldVal.length === 0)) {
     // 初始化数据，新增实例时不进行
     dataAbout.list = initDataList(newVal);
     if (oldVal?.length === 0) {
@@ -714,33 +712,12 @@ onBeforeUnmount(() => {
 </style>
 
 <style scoped lang="less">
-/* 列级过渡效果 */
-.drag-list-enter-active,
-.drag-list-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.drag-list-enter-from {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.9);
-}
-
-.drag-list-leave-to {
-  opacity: 0;
-  transform: translateY(20px) scale(0.9);
-}
-
-.drag-list-move {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.drag-list-leave-active {
-  position: absolute;
-}
-
 /* 拖拽项过渡效果 */
 .drag-item {
   transition: all 0.2s ease;
+  border: 1px dashed transparent;
+  border-style: dashed;
+  border-width: 1px;
 
   &:hover {
     transform: translateX(2px);
@@ -751,24 +728,6 @@ onBeforeUnmount(() => {
     opacity: 0.7;
     background: rgba(0, 123, 255, 0.05);
     border: 1px dashed #007bff;
-    border-style: dashed;
-    border-width: 1px;
-  }
-}
-
-/* 拖拽状态下的列样式 */
-.drag-column {
-  transition: all 0.5s ease;
-}
-
-/* 拖拽时的整体容器效果 */
-.drag-container {
-  transition: all 0.3s ease;
-
-  &.dragging {
-    .drag-column {
-      opacity: 0.8;
-    }
   }
 }
 </style>
