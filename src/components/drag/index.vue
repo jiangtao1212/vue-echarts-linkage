@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, onBeforeUnmount, watch, watchEffect, nextTick, computed } from 'vue';
+import { reactive, ref, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import { useDebounceFn } from "@vueuse/core";
 import { VueDraggable } from 'vue-draggable-plus';
 import { type DragExposedMethods, type DragItemType, type DragListDataType } from "./type/index";
@@ -186,7 +186,7 @@ const initPopoverClickObjFun = () => {
     dataOrigin.forEach((item: DragListDataType) => item.value = item.value.filter((value: DragItemType) => value.id !== itemId));
     // 2.调整各个子项id，大于当前子项的id减1，使其保持连续
     dataOrigin.forEach((item: DragListDataType) => {
-      item.value.forEach((value: DragItemType, index: number) => {
+      item.value.forEach((value: DragItemType) => {
         if (value.id > itemId) {
           value.id = (+value.id - 1).toString();
         }
@@ -200,7 +200,7 @@ const initPopoverClickObjFun = () => {
     }
     resetData.forEach((item1: DragListDataType) => {
       const key = item1.key;
-      dataOrigin.forEach((item2: DragListDataType, index: number) => {
+      dataOrigin.forEach((item2: DragListDataType) => {
         if (item2.value.length > 0 && item2.value[0].id === key) {
           item1.value = item2.value;
         }
@@ -235,7 +235,7 @@ const initPopoverClickObjFun = () => {
     idArr.sort((a: string, b: string) => +a - +b);
     console.log('tt', idArr);
     dataOrigin.forEach((item: DragListDataType) => {
-      item.value.forEach((value: DragItemType, index: number) => {
+      item.value.forEach((value: DragItemType) => {
         idArr.findIndex(item => item === value.id);
         value.id = (idArr.findIndex(item => item === value.id) + 1).toString(); // 重新从1开始排序
       });
@@ -248,7 +248,7 @@ const initPopoverClickObjFun = () => {
     }
     resetData.forEach((item1: DragListDataType) => {
       const key = item1.key;
-      dataOrigin.forEach((item2: DragListDataType, index: number) => {
+      dataOrigin.forEach((item2: DragListDataType) => {
         if (item2.value.length > 0 && item2.value[0].id === key) {
           item1.value = item2.value;
         }
@@ -291,15 +291,15 @@ const groupComputed = (data: DragListDataType) => {
   return data.value.length > 0 && data.value[0].isDrag ? props.group : props.group + '-no-drag';
 };
 
-function change(e: any) {
+function change() {
   // console.log('change', e);
 }
 
-function move(e: any) {
+function move() {
   // console.log('move', e);
 }
 
-function sore(e: any) {
+function sore() {
   // console.log('sort')
   // return false;
 }
@@ -308,7 +308,7 @@ function onUpdate() {
   console.log('update')
 }
 
-function onAdd(e: any) {
+function onAdd() {
   // console.log('add')
 }
 
@@ -317,7 +317,7 @@ function remove() {
 }
 
 // 开始拖动时，缓存数据，为了在拖动结束时还原数据做准备
-const onStart = (e: any) => {
+const onStart = () => {
   // console.log('start');
   isDragging.value = true;
   dataConst.dataCache = deepClone(dataAbout.list); // 深拷贝
@@ -384,9 +384,9 @@ const sortEnd = (e: any) => {
   // console.log('sortEnd', listData);
   // console.log('e', e);
   const dragText = e.item.innerText; // 拖动的元素文本，A1
-  const from_innerText = e.from.innerText; // 拖动的元素原始所在的列表文本（已去除拖动元素） B1\nC3
-  const to_innerText = e.to.innerText; // 拖动的元素目标所在的列表文本（已添加拖动元素）  A1\nD4\nE5
-  const tt = to_innerText.split('\n');
+  // const from_innerText = e.from.innerText; // 拖动的元素原始所在的列表文本（已去除拖动元素） B1\nC3
+  // const to_innerText = e.to.innerText; // 拖动的元素目标所在的列表文本（已添加拖动元素）  A1\nD4\nE5
+  // const tt = to_innerText.split('\n');
   // 处理数据, 找到拖动的元素，拖动到数组最后
   handleData: for (let i = 0; i < listData.length; i++) {
     let itemArray = listData[i].value;
@@ -417,7 +417,7 @@ const adjustOrder = () => {
   // console.log(dataAbout.list);
   // console.log('JSON.stringify(copyData1)', JSON.stringify(copyData1));
   copyData1.forEach(item => item.value.length = 0); // 模拟清空
-  copyData2.forEach((itemArray: any, index: number) => {
+  copyData2.forEach((itemArray: any) => {
     if (itemArray.value.length === 0) return;
     copyData1.forEach(item => {
       if (item.key === itemArray.value[0].id) {

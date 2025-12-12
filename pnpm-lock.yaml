@@ -96,6 +96,9 @@ importers:
       vite-plugin-dts:
         specifier: ^3.9.1
         version: 3.9.1(@types/node@20.17.30)(rollup@4.40.0)(typescript@5.4.5)(vite@5.4.18(@types/node@20.17.30)(less@4.3.0))
+      vite-plugin-remove-console:
+        specifier: ^2.2.0
+        version: 2.2.0
       vite-plugin-static-copy:
         specifier: ^1.0.6
         version: 1.0.6(vite@5.4.18(@types/node@20.17.30)(less@4.3.0))
@@ -2442,6 +2445,9 @@ packages:
     peerDependenciesMeta:
       vite:
         optional: true
+
+  vite-plugin-remove-console@2.2.0:
+    resolution: {integrity: sha512-qgjh5pz75MdE9Kzs8J0kBwaCfifHV0ezRbB9rpGsIOxam+ilcGV7WOk91vFJXquzRmiKrFh3Hxlh0JJWAmXTbQ==}
 
   vite-plugin-static-copy@1.0.6:
     resolution: {integrity: sha512-3uSvsMwDVFZRitqoWHj0t4137Kz7UynnJeq1EZlRW7e25h2068fyIZX4ORCCOAkfp1FklGxJNVJBkBOD+PZIew==}
@@ -5024,6 +5030,8 @@ snapshots:
       - '@types/node'
       - rollup
       - supports-color
+
+  vite-plugin-remove-console@2.2.0: {}
 
   vite-plugin-static-copy@1.0.6(vite@5.4.18(@types/node@20.17.30)(less@4.3.0)):
     dependencies:

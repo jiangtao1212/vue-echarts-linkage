@@ -9,7 +9,8 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import UnoCSS from 'unocss/vite'
 import dts from 'vite-plugin-dts'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import removeConsole from 'vite-plugin-remove-console';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,6 +24,7 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()]
     }),
     UnoCSS(),
+    removeConsole(), // 添加这一行来移除 console 语句
     viteStaticCopy({ // 复制文件到打包目录下
       targets: [
         {
@@ -122,12 +124,5 @@ export default defineConfig({
       //   },
       // ]
     },
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // 移除所有 console 语句
-        drop_debugger: true // 移除 debugger 语句
-      }
-    }
   }
 })
