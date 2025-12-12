@@ -121,6 +121,13 @@ export default defineConfig({
       //     }
       //   },
       // ]
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // 移除所有 console 语句
+        drop_debugger: true // 移除 debugger 语句
+      }
     }
   }
 })
