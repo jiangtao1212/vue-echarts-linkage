@@ -24,7 +24,9 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()]
     }),
     UnoCSS(),
-    removeConsole(), // 添加这一行来移除 console 语句
+    removeConsole({  // 添加这一行来移除 console 语句
+      includes: ['log', 'time', 'timeEnd', 'error', 'info', 'debug', 'table', 'group', 'groupEnd', 'groupCollapsed']
+    }),
     viteStaticCopy({ // 复制文件到打包目录下
       targets: [
         {
