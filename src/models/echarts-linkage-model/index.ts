@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-09 14:26:58
+ * @LastEditTime: 2025-12-26 14:44:27
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -18,7 +18,9 @@ import type {
   TooltipComponentOption,
   YAXisComponentOption,
   GraphicComponentOption,
-  MarkLineComponentOption
+  MarkLineComponentOption,
+  TooltipFormatterCallback,
+  TooltipFormatterCallbackParams
 } from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "./staticTemplates"
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
@@ -72,18 +74,22 @@ export type SeriesOptionType = {
  * @param {number} segment - 图表分段数
  * @param {Array<string>} colors - 颜色数组
  * @param {boolean} useMergedLegend - 是否使用合并图例
- * @param {boolean} useSeriesDataSetYAxisMinMax - 是否使用series数据来设置对应Y轴的上下限
+ * @param {boolean} useSeriesDataSetYAxisMinMax - 是否使用series数据来设置对应Y轴的上下限，逻辑暂未使用
  */
 export type EchartsLinkageModelType = {
-  seriesOptionArray: Array<SeriesOptionType>,
-  theme: ThemeType,
   segment?: SegementType,
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
   useSeriesDataSetYAxisMinMax: boolean,
+  seriesOptionArray: Array<SeriesOptionType>,
+  theme: ThemeType,
   extraTooltip?: ExtraTooltipType,
   enlargeShrink?: EnlargeShrinkType,
+  tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,
 }
+
+// EchartsLinkageModelType 去除 segment、echartsColors、useMergedLegend、useSeriesDataSetYAxisMinMax
+export type OmittedEchartsLinkageModelType = Omit<EchartsLinkageModelType, 'segment' | 'echartsColors' | 'useMergedLegend' | 'useSeriesDataSetYAxisMinMax'>;
 
 type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
 
@@ -101,6 +107,7 @@ export class EchartsLinkageModel {
   private echartsColors = ECHARTS_COLORS; // 颜色数组
   private legendShow = true; // 是否显示图例
   private extraTootip: ExtraTooltipType | undefined; // 额外的tooltip
+  private tooltipFormatter: string | TooltipFormatterCallback<TooltipFormatterCallbackParams> | undefined; // tooltip formatter
   private xAxisData: Array<string> = []; // x轴数据
   private usedStandards = {}; // 标准配置，适配高度尺寸自适应
   private lineSeriesMarkLineTemplate = JSON.parse(JSON.stringify(lineSeriesMarkLineTemplate)) as MarkLineComponentOption; // 标记线模板
@@ -122,6 +129,7 @@ export class EchartsLinkageModel {
     this.echartsColors = param.echartsColors || ECHARTS_COLORS;
     this.legendShow = param.useMergedLegend === false ? true : false; // 不使用合并图例时，默认显示echarts原生图例
     this.extraTootip = param.extraTooltip;
+    this.tooltipFormatter = param.tooltipFormatter;
     this.init();
     console.groupEnd();
   }
@@ -321,6 +329,16 @@ export class EchartsLinkageModel {
   setToolTip = () => {
     const tooltip = this.resultOption.tooltip as TooltipComponentOption;
     this.setBaseLineOnToolTip(tooltip);
+    this.setCustomTooltipFormatter(tooltip);
+  }
+
+  // 设置自定义tooltip formatter
+  setCustomTooltipFormatter = (tooltip: TooltipComponentOption) => {
+    // 使用外界传进来的tooltip formatter
+    if (this.tooltipFormatter) {
+      tooltip.formatter = this.tooltipFormatter;
+    }
+    return this;
   }
 
   // 设置基准线值在tooltip中显示
@@ -359,7 +377,7 @@ export class EchartsLinkageModel {
     });
     console.log("someIsShowOnToolTip", someIsShowOnToolTip);
     // 没有series的isShowOnToolTip为true，则返回；有，则组装tooltip的formatter；并且没有额外的tooltip数据，则返回
-    if (!someIsShowOnToolTip && (!this.extraTootip?.show || this.extraTootip?.data.length === 0)) return;
+    if (!someIsShowOnToolTip && (!this.extraTootip?.show || this.extraTootip?.data.length === 0)) return this;
     tooltip.formatter = (params: any) => {
       let tooltipHtml = '';
       // console.log("params", params);
@@ -403,6 +421,7 @@ export class EchartsLinkageModel {
       }
       return tooltipHtml;
     }
+    return this;
   }
 
   // 设置主题按钮图标

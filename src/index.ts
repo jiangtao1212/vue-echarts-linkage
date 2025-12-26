@@ -6,7 +6,8 @@ export type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   SeriesDataType, DropEchartType, DeleteEchartType, ListenerGrapicLocationType, MarkLineDataType,
   VisualMapSeriesType, SeriesLinkType, LinkDataType, ListenerExcelViewType, excelViewType, excelViewHeadType, ThemeType,
-  ExtraTooltipType, ExtraTooltipDataItemType, SeriesType, SeriesClassType, CustomContentHtmlType,
+  ExtraTooltipType, ExtraTooltipDataItemType, SeriesType, SeriesClassType, CustomContentHtmlType, 
+  TooltipFormatterCallback, TooltipFormatterCallbackParams,
 } from '@/components/echarts-linkage/types/index';
 export { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from '@/components/echarts-linkage/types/index';
 

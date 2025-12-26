@@ -47,6 +47,8 @@
       <div class="drag-rect drag-rect-line" draggable="true"><span>可拖拽系列(折线)</span></div>
       <div class="drag-rect drag-rect-line-extra" draggable="true"><span>可拖拽系列(折线-额外信息)</span></div>
       <div class="drag-rect drag-rect-line-custom" draggable="true"><span>可拖拽系列(折线-自定义内容)</span></div>
+      <div class="drag-rect drag-rect-line-custom-tooltip-formatter" draggable="true"><span>可拖拽系列(折线-自定义tooltip
+          formatter)</span></div>
       <div class="drag-rect drag-rect-bar" draggable="true"><span>可拖拽系列(柱状)</span></div>
       <div class="drag-rect drag-rect-switch" draggable="true"><span>可拖拽系列(开关量)</span></div>
     </div>
@@ -81,9 +83,8 @@
     :empty-echart-count="3" :segment="{ mode: 'percent', value: 50 }" background="#fff"
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
     :theme="theme" :is-linkage="isLinkage" :use-graphic-location="useGraphic" :use-graphic-group="[1]"
-    :is-echarts-height-change="false" :echarts-height-fixed-count="4"
-    :extra-option="extraOption" :groups="groups" @drop-echart="dropEchart"
-    @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
+    :is-echarts-height-change="false" :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups"
+    @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
 </template>
@@ -105,6 +106,7 @@ let seriesType = 'line' as SeriesClassType;
 let switchFlag = false;
 let extraTooltipFlag = false;
 let customContentFlag = false;
+let customTooltipFormatterFlag = false;
 const theme = ref<ThemeType>('light');
 let groups = ref<Array<Array<number>>>([[1, 3], [2, 4]]);
 let isLinkage = ref<boolean>(true);
@@ -717,6 +719,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
   }
   echartsLinkageRef.value!.addEchartSeries(id, oneDataType);
   if (extraTooltipFlag) {
+    // 额外信息
     echartsLinkageRef.value!.addExtraTooltip([
       { label: '额外信息1', value: RandomUtil.getSeriesData(1000) },
       { label: '额外信息2', value: RandomUtil.getSeriesData(1000) },
@@ -731,6 +734,25 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     // 方法3
     // echartsLinkageRef.value!.updateCustomContentById({id, html: `<div style="font-size: .8rem; color: red;">自定义内容id</div>`});
     customContentFlag = false;
+  }
+  if (customTooltipFormatterFlag) {
+    // 自定义tooltip formatter
+    echartsLinkageRef.value!.addCustomTooltipFormatter((params: any) => {
+      let tooltipHtml = '';
+      // console.log("params", params);
+      if (params && params.length > 0) {
+        tooltipHtml += `${params[0].name}</br>`;
+        params.forEach((item: any) => {
+          // const index = item.componentIndex; // 未被隐藏系列的索引，params中不含有隐藏系列的数据
+          // const dataIndex = item.dataIndex; // x轴数据索引
+          let value = Array.isArray(item.value) ? item.value[1] : item.value; // 实际值
+          value = `${value}&nbsp;<span style="color: green;">(差值: ${value - 500})<span>`;
+          tooltipHtml += `<div>${item.marker}&nbsp;${item.seriesName}&nbsp;&nbsp;&nbsp;&nbsp;<span style="float: right;">${value}</span></div>`;
+        });
+      }
+      return tooltipHtml;
+    }, id);
+    customTooltipFormatterFlag = false;
   }
 }
 
@@ -752,6 +774,7 @@ const initLisener = () => {
   const dragRectLine: HTMLElement = document.querySelector('.drag-rect-line') as HTMLElement;
   const dragRectLineExtra: HTMLElement = document.querySelector('.drag-rect-line-extra') as HTMLElement;
   const dragRectLineCustom: HTMLElement = document.querySelector('.drag-rect-line-custom') as HTMLElement;
+  const dragRectLineCustomTooltipFormatter: HTMLElement = document.querySelector('.drag-rect-line-custom-tooltip-formatter') as HTMLElement;
   const dragRectBar: HTMLElement = document.querySelector('.drag-rect-bar') as HTMLElement;
   const dragSwitch: HTMLElement = document.querySelector('.drag-rect-switch') as HTMLElement;
 
@@ -774,6 +797,13 @@ const initLisener = () => {
     e.dataTransfer!.setData('text', "123");
     e.dataTransfer!.dropEffect = 'move';
     customContentFlag = true;
+  });
+  dragRectLineCustomTooltipFormatter.addEventListener('dragstart', (e: DragEvent) => {
+    console.log("dragstart");
+    seriesType = 'line';
+    e.dataTransfer!.setData('text', "123");
+    e.dataTransfer!.dropEffect = 'move';
+    customTooltipFormatterFlag = true;
   });
   dragRectBar.addEventListener('dragstart', (e: DragEvent) => {
     console.log("dragstart");

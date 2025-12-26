@@ -31,5 +31,7 @@ export type {
   TooltipComponentOption,
   YAXisComponentOption,
   GraphicComponentOption,
-  MarkLineComponentOption
+  MarkLineComponentOption,
+  TooltipComponentFormatterCallback as TooltipFormatterCallback,
+  TooltipComponentFormatterCallbackParams as TooltipFormatterCallbackParams
 } from "echarts";

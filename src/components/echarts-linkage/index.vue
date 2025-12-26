@@ -31,16 +31,16 @@ import { ref, reactive, onMounted, nextTick, watch, onBeforeUnmount, onBeforeMou
 import 'element-plus/es/components/message/style/css';
 import { ElMessage } from 'element-plus';
 import echarts from "@/models/my-echarts/index";
-import type { EChartsOption, ToolboxComponentOption, GridComponentOption } from "@/models/my-echarts/index";
+import type { EChartsOption, ToolboxComponentOption, GridComponentOption, TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
-import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
+import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type OmittedEchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
 import { THEME, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, ThemeType,
-  ExtraTooltipDataItemType, ExtraTooltipType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType
+  ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType
 } from './types/index';
 import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -320,16 +320,16 @@ const deleteItemsAll = async (echartsIndex: number) => {
  * @param data 系列数据
  * @returns EchartsLinkageModel 实例
  */
-const getEchartsLikageModel = (data: SeriesOptionType[], theme: ThemeType, extraTooltip?: ExtraTooltipType, enlargeShrink?: EnlargeShrinkType) => {
-  const echartsLinkageModel = new EchartsLinkageModel({
-    seriesOptionArray: data,
-    theme,
+const getEchartsLikageModel = (options: OmittedEchartsLinkageModelType) => {
+  const myOptions: EchartsLinkageModelType = {
     segment: props.segment,
-    echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? null : props.echartsColors,
+    echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? undefined : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
-    extraTooltip: extraTooltip,
-    enlargeShrink: enlargeShrink,
-  } as EchartsLinkageModelType);
+    useSeriesDataSetYAxisMinMax: false,
+    // 初始化数据
+    ...options,
+  }
+  const echartsLinkageModel = new EchartsLinkageModel(myOptions);
   return echartsLinkageModel;
 }
 
@@ -685,7 +685,14 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
       seriesLinkMode: item.seriesLink?.isLinkMode,
     });
   });
-  const echartsLinkageModel = getEchartsLikageModel(seriesAllData, dataArray.theme, dataArray.extraTooltip, dataArray.enlargeShrink);
+  const options: OmittedEchartsLinkageModelType = {
+    seriesOptionArray: seriesAllData,
+    theme: dataArray.theme,
+    extraTooltip: dataArray.extraTooltip,
+    enlargeShrink: dataArray.enlargeShrink,
+    tooltipFormatter: dataArray.tooltipFormatter,
+  }
+  const echartsLinkageModel = getEchartsLikageModel(options);
   console.log('数据', dataArray.data);
   // 各种处理
   echartsLinkageModel.setMyDeleteButton(() => deleteEchart(dataArray.id))
@@ -1408,6 +1415,76 @@ const changeAllEchartsTheme = (theme: ThemeType) => {
 
 /**
  * @author jiangtao
+ * @description 添加自定义tooltip formatter，如果id存在，则添加单个图表，否则添加所有图表 --- 导出
+ * @param tooltipFormatterCallback tooltip formatter回调函数
+ * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认false
+ */
+const addCustomTooltipFormatter = (tooltipFormatterCallback: TooltipFormatterCallback<TooltipFormatterCallbackParams>, id?: string, isRender = false) => {
+  if (id) {
+    // 添加单个图表的tooltip formatter
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    if (data.tooltipFormatter) return; // 已设置tooltip formatter，直接返回
+    data.tooltipFormatter = tooltipFormatterCallback;
+  } else {
+    // 设置所有图表的tooltip formatter
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (item.tooltipFormatter) return; // 已设置tooltip formatter，直接返回
+      item.tooltipFormatter = tooltipFormatterCallback;
+    });
+  }
+  isRender && containerResizeFn();
+}
+
+/**
+ * @author jiangtao
+ * @description 更新自定义tooltip formatter，如果id存在，则更新单个图表，否则更新所有图表 --- 导出
+ * @param tooltipFormatterCallback tooltip formatter回调函数
+ * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认false
+ */
+const updateCustomTooltipFormatter = (tooltipFormatterCallback: TooltipFormatterCallback<TooltipFormatterCallbackParams>, id?: string, isRender = false) => {
+  if (id) {
+    // 更新单个图表的tooltip formatter
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    if (!data.tooltipFormatter) return; // 未设置tooltip formatter，直接返回
+    data.tooltipFormatter = tooltipFormatterCallback;
+  } else {
+    // 更新所有图表的tooltip formatter
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!item.tooltipFormatter) return; // 未设置tooltip formatter，直接返回
+      item.tooltipFormatter = tooltipFormatterCallback;
+    });
+  }
+  isRender && containerResizeFn();
+}
+
+/**
+ * @author jiangtao
+ * @description 清除自定义tooltip formatter，如果id存在，则清除单个图表，否则清除所有图表 --- 导出
+ * @param id 图表id
+ * @param isRender 是否重新渲染echarts, 默认true
+ */
+const clearCustomTooltipFormatter = (id?: string, isRender = true) => {
+  dataAbout.currentHandleChartIds = [];
+  if (id) {
+    // 清除单个图表的tooltip formatter
+    const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+    data.tooltipFormatter = undefined;
+    dataAbout.currentHandleChartIds = [id];
+  } else {
+    // 清除所有图表的tooltip formatter
+    dataAbout.data.forEach((item: SeriesIdDataType) => {
+      if (!item.tooltipFormatter) return;
+      item.tooltipFormatter = undefined;
+      dataAbout.currentHandleChartIds.push(item.id);
+    });
+  }
+  isRender && containerResizeFn();
+}
+
+/**
+ * @author jiangtao
  * @description 新增额外的tooltip数据，如果id存在，则添加单个图表，否则添加所有图表 --- 导出
  * @param extraTooltipData 额外的tooltip数据
  * @param id 图表id
@@ -1657,6 +1734,9 @@ const exposedMethods: ExposedMethods = {
   updateOneEchartsVisualMapSeries,
   handleMultipleLinkData,
   changeAllEchartsTheme,
+  addCustomTooltipFormatter,
+  updateCustomTooltipFormatter,
+  clearCustomTooltipFormatter,
   addExtraTooltip,
   updateExtraTooltip,
   clearExtraTooltip,

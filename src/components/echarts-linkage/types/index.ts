@@ -2,12 +2,14 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-06-06 16:37:26
+ * @LastEditTime: 2025-12-26 14:34:50
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
 
 import { type DragItemType } from '@/components/drag/type';
+import type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
+export type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 
 /**
  * @description: 组件暴露的接口类型
@@ -30,6 +32,9 @@ import { type DragItemType } from '@/components/drag/type';
  * @param {Function} updateOneEchartsVisualMapSeries 更新单个echarts图表的视觉映射数据
  * @param {Function} handleMultipleLinkData 处理前后关联数据，多条关联数据进行首尾相连操作，primaryData中必须设置seriesLink，否则不进行处理，直接返回
  * @param {Function} changeAllEchartsTheme 切换所有echarts图表主题
+ * @param {Function} addCustomTooltipFormatter 添加自定义tooltip formatter，默认值为false，不重新渲染echarts
+ * @param {Function} updateCustomTooltipFormatter 更新自定义tooltip formatter，默认值为false，不重新渲染echarts
+ * @param {Function} clearCustomTooltipFormatter 清除自定义tooltip formatter，默认值为true，重新渲染echarts
  * @param {Function} addExtraTooltip 新增额外的tooltip数据，默认值为false，不重新渲染echarts
  * @param {Function} updateExtraTooltip 更新额外的tooltip数据，默认值为false，不重新渲染echarts
  * @param {Function} clearExtraTooltip 清除额外的tooltip数据，默认值为true，重新渲染echarts
@@ -58,6 +63,9 @@ export interface ExposedMethods {
   updateOneEchartsVisualMapSeries: (id: string, data: VisualMapSeriesType[] | VisualMapSeriesType) => void;
   handleMultipleLinkData: (primaryData: OneDataType) => OneDataType;
   changeAllEchartsTheme: (theme: ThemeType) => void;
+  addCustomTooltipFormatter: (tooltipFormatterCallback: TooltipFormatterCallback<TooltipFormatterCallbackParams>, id?: string, isRender?: boolean) => void;
+  updateCustomTooltipFormatter: (tooltipFormatterCallback: TooltipFormatterCallback<TooltipFormatterCallbackParams>, id?: string, isRender?: boolean) => void;
+  clearCustomTooltipFormatter: (id?: string, isRender?: boolean) => void;
   addExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   updateExtraTooltip: (extraTooltipData: Array<ExtraTooltipDataItemType>, id?: string, isRender?: boolean) => void;
   clearExtraTooltip: (id?: string, isRender?: boolean) => void;
@@ -257,6 +265,8 @@ export type ExtraTooltipType = {
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
  * @param {ThemeType} theme 主题
  * @param {ExtraTooltipType} extraTooltip 额外的tooltip数据
+ * @param {EnlargeShrinkType} enlargeShrink 放缩类型
+ * @param {string | TooltipFormatterCallback<TooltipFormatterCallbackParams>} tooltipFormatter tooltip formatter
  */
 export type SeriesIdDataType = {
   id: string;
@@ -268,6 +278,7 @@ export type SeriesIdDataType = {
   theme: ThemeType,
   extraTooltip?: ExtraTooltipType,
   enlargeShrink?: EnlargeShrinkType,
+  tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,
 }
 
 /**
