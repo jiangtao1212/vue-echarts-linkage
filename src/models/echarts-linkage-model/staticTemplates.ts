@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-22 08:45:47
+ * @LastEditTime: 2025-12-27 16:16:28
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -12,6 +12,7 @@ import SaveAsImageSvg from '@/assets/svg/save-image.svg';
 import DeleteSvg from '@/assets/svg/delete.svg';
 import ExcelSvg from "@/assets/svg/file-excel.svg";
 import EnlargeSvg from "@/assets/svg/enlarge.svg";
+import RectionLimitSvg from "@/assets/svg/rection-limit.svg";
 
 // x轴id
 export const XAXIS_ID = 'X1';
@@ -93,7 +94,15 @@ export const optionTemplate: EChartsOption = {
           // 在这里添加你想要执行的代码
         }
       },
-
+      myRectionLimit: {
+        show: true,
+        title: `Y轴区间`,
+        icon: 'image://' + RectionLimitSvg,
+        onclick: (e: any) => {
+          // console.log(e);
+          // 在这里添加你想要执行的代码
+        }
+      },
       mySaveAsImage: { // 自定义的保存图片功能
         show: true,
         title: `保存为图片`,

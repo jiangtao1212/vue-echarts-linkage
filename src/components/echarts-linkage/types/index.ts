@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-26 14:34:50
+ * @LastEditTime: 2025-12-27 16:41:44
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -276,6 +276,12 @@ export type SeriesIdDataType = {
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: ThemeType,
+  // 是否启用Y轴区间限制
+  isYAxisLimitEnabled?: boolean,
+  // 启用Y轴区间限制时，设置的Y轴最小值
+  yAxisMinLimit?: number,
+  // 启用Y轴区间限制时，设置的Y轴最大值
+  yAxisMaxLimit?: number,
   extraTooltip?: ExtraTooltipType,
   enlargeShrink?: EnlargeShrinkType,
   tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,

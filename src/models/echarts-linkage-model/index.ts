@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-26 14:44:27
+ * @LastEditTime: 2025-12-27 16:53:14
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -843,6 +843,25 @@ export class EchartsLinkageModel {
         toolbox.feature.myExcelView.onclick = callback;
       } else {
         console.error("myExcelView is not defined in toolbox feature");
+      }
+    } else {
+      console.error("toolbox is not defined in resultOption");
+    }
+    return this;
+  }
+
+  /**
+   * @description 设置echarts实例的myRectionLimitButton（Y轴区间限制）按钮的点击事件
+   * @param callback myRectionLimitButton（Y轴区间限制）按钮的自定义点击事件回调函数
+   * @returns this 链式调用
+   */
+  setMyRectionLimitButtonClickEvent = (callback: Function) => {
+    if (this.resultOption.toolbox) {
+      const toolbox = this.resultOption.toolbox as ToolboxComponentOption;
+      if (toolbox.feature && toolbox.feature.myRectionLimit) {
+        toolbox.feature.myRectionLimit.onclick = callback;
+      } else {
+        console.error("myRectionLimitButton is not defined in toolbox feature");
       }
     } else {
       console.error("toolbox is not defined in resultOption");

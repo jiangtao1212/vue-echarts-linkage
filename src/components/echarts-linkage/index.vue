@@ -19,9 +19,14 @@
       </div>
     </div>
 
-    <!-- 数据视窗 -->
-    <el-dialog v-model="dialogVisible" title="数据视图">
+    <!-- 数据视图子画面 -->
+    <el-dialog v-model="sheetDialogVisible" title="数据视图">
       <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
+    </el-dialog>
+    <!-- Y轴区间设置子画面 -->
+    <el-dialog v-model="yAxisLimitDialogVisible" title="Y轴区间设置" :width="400" @closed="yAxisLimitDialogCancelHandle" >
+      <MyYAxisLimit v-bind="yAxisLimitAbout" :dialogVisible="yAxisLimitDialogVisible" @cancel="yAxisLimitDialogCancelHandle"
+        @confirm="yAxisLimitDialogConfirmHandle" />
     </el-dialog>
   </div>
 </template>
@@ -46,7 +51,9 @@ import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
+import MyYAxisLimit from "@/components/yAxisLimit/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
+import { type YAxisLimitType } from '@/components/yAxisLimit/type';
 import { ObjUtil } from "@/utils/index";
 import Extension from './extension';
 import HandleGraph from './handleGraph';
@@ -113,7 +120,8 @@ const props = withDefaults(defineProps<PropsType>(), {
   echartsHeightFixedCount: 3, // echarts高度固定数量
 });
 
-const dialogVisible = ref(false);
+const sheetDialogVisible = ref(false); // 数据视窗是否显示
+const yAxisLimitDialogVisible = ref(false); // Y轴区间限制视窗是否显示
 // 验证 props
 ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
@@ -141,10 +149,17 @@ const dataAbout = reactive({
   currentHandleMode: 'normal', // 当前操作模式，normal：正常模式，all-replace：全部替换模式
 }) as DataAboutType;
 
-// 定义子画面中表格数据
+// 定义数据视窗子画面中表格相关数据
 const sheetAbout = reactive({
   head: [] as Array<SheetHeadType>, // 表头数据
   body: [] as Array<any>, // 表格数据
+});
+
+// 定义Y轴区间设置子画面中相关数据
+const yAxisLimitAbout = reactive({
+  isYAxisLimitEnabled: false, // 是否启用Y轴区间限制
+  yAxisMinLimit: 0, // 启用Y轴区间限制时，设置的Y轴最小值
+  yAxisMaxLimit: 0, // 启用Y轴区间限制时，设置的Y轴最大值
 });
 
 // 计算每个echarts的父级容器颜色
@@ -676,8 +691,8 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
       xAxisName: item.xAxisName,
       yAxisName: item.yAxisName,
       yAxisShow: item.yAxisShow,
-      yAxisMin: item.yAxisMin,
-      yAxisMax: item.yAxisMax,
+      yAxisMin: item.yAxisMin ? item.yAxisMin : (dataArray.isYAxisLimitEnabled ? dataArray.yAxisMinLimit : undefined),
+      yAxisMax: item.yAxisMax ? item.yAxisMax : (dataArray.isYAxisLimitEnabled ? dataArray.yAxisMaxLimit : undefined),
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
       dataType: item.dataType || SERIES_TYPE_DEFAULT,
@@ -700,6 +715,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
     .setMyThemeButtonClickEvent((e: any) => switchEchartsTheme(e, dataArray.id))
     .setMyEnlargeShrinkButtonClickEvent((e: any) => switchEchartsEnlargeShrink(e, dataArray.id))
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
+    .setMyRectionLimitButtonClickEvent((e: any) => setRectionLimit(e, dataArray.id))
     .setCustomSeriesMarkLine(dataArray.data)
     .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(dataArray.enlargeShrink), props.useGraphicLocation) // 设置字体大小等自适应
@@ -1707,10 +1723,41 @@ const setExcelView = async (e: any, id: string) => {
   emit('listener-excel-view', params, (excelView: excelViewType) => { extraData = excelView; });
   await Promise.resolve();  // 切换至微任务队列
   // console.log('子组件异步执行后续逻辑');  // 确保在 emit 后执行
-  dialogVisible.value = true;
+  sheetDialogVisible.value = true;
   const { head, body } = HandleExcel.handleExcel(data, extraData, params.seriesLink);
   sheetAbout.head = head;
   sheetAbout.body = body;
+}
+
+// echarts上的Y轴区间限制事件
+const setRectionLimit = async (e: any, id: string) => {
+  console.log('setRectionLimit', id);
+  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  yAxisLimitAbout.isYAxisLimitEnabled = data.isYAxisLimitEnabled || false;
+  yAxisLimitAbout.yAxisMinLimit = data.yAxisMinLimit || 0;
+  yAxisLimitAbout.yAxisMaxLimit = data.yAxisMaxLimit || 0;
+  yAxisLimitDialogVisible.value = true;
+  dataAbout.currentHandleChartIds = [id]; // 设置当前操作的图表id，用于后续确认按钮点击事件中获取当前操作的图表id
+}
+
+// Y轴区间设置子画面中取消按钮点击事件
+const yAxisLimitDialogCancelHandle = () => {
+  console.log('yAxisLimitDialog 取消');
+  yAxisLimitDialogVisible.value = false;
+  dataAbout.currentHandleChartIds = [];
+}
+
+// Y轴区间设置子画面中确认按钮点击事件
+const yAxisLimitDialogConfirmHandle = async (params: YAxisLimitType) => {
+  console.log('yAxisLimitDialog 确认');
+  yAxisLimitDialogVisible.value = false;
+  const id = dataAbout.currentHandleChartIds[0];
+  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  data.isYAxisLimitEnabled = params.isYAxisLimitEnabled; // 启用Y轴区间限制
+  data.yAxisMinLimit = params.yAxisMinLimit; // 设置Y轴最小值
+  data.yAxisMaxLimit = params.yAxisMaxLimit; // 设置Y轴最大值
+  await nextTick();
+  initEcharts();
 }
 
 // 子组件暴露变量和方法
