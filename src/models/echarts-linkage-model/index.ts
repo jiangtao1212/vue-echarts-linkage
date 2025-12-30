@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-27 16:53:14
+ * @LastEditTime: 2025-12-30 15:21:39
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -45,6 +45,7 @@ const COLOR_CACHE_KEY = 'colorCache';
  * @param yAxisMin y轴下限
  * @param yAxisMax y轴上限
  * @param seriesShow series是否显示
+ * @param yAxisAlignTicks y轴对齐方式，默认true
  * @param seriesYAxisIndex series的y轴索引
  * @param visualMapSeries 视觉映射系列
  * @param dataType series数据类型
@@ -61,6 +62,7 @@ export type SeriesOptionType = {
   yAxisShow?: boolean; // y轴是否显示
   yAxisMin?: number; // y轴下限
   yAxisMax?: number; // y轴上限
+  yAxisAlignTicks?: boolean; // y轴对齐方式，默认true
   seriesShow?: boolean; // series是否显示
   seriesYAxisIndex?: number; // series的y轴索引
   visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
@@ -74,13 +76,11 @@ export type SeriesOptionType = {
  * @param {number} segment - 图表分段数
  * @param {Array<string>} colors - 颜色数组
  * @param {boolean} useMergedLegend - 是否使用合并图例
- * @param {boolean} useSeriesDataSetYAxisMinMax - 是否使用series数据来设置对应Y轴的上下限，逻辑暂未使用
  */
 export type EchartsLinkageModelType = {
   segment?: SegementType,
   echartsColors?: Array<string>,
   useMergedLegend?: boolean,
-  useSeriesDataSetYAxisMinMax: boolean,
   seriesOptionArray: Array<SeriesOptionType>,
   theme: ThemeType,
   extraTooltip?: ExtraTooltipType,
@@ -88,8 +88,8 @@ export type EchartsLinkageModelType = {
   tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,
 }
 
-// EchartsLinkageModelType 去除 segment、echartsColors、useMergedLegend、useSeriesDataSetYAxisMinMax
-export type OmittedEchartsLinkageModelType = Omit<EchartsLinkageModelType, 'segment' | 'echartsColors' | 'useMergedLegend' | 'useSeriesDataSetYAxisMinMax'>;
+// EchartsLinkageModelType 去除 segment、echartsColors、useMergedLegend
+export type OmittedEchartsLinkageModelType = Omit<EchartsLinkageModelType, 'segment' | 'echartsColors' | 'useMergedLegend'>;
 
 type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
 
@@ -275,14 +275,14 @@ export class EchartsLinkageModel {
         show, // 注：只有当数据不为空时才显示Y轴
         position: 'left',
         offset: 0,
-        alignTicks: true,
+        alignTicks: item.yAxisAlignTicks === false ? false : true, // 默认是true设置Y轴对齐，只有外部传入false才设置Y轴不对齐
         scale: true, // 坐标刻度不强制包含零刻度
         axisLine: { show: true, lineStyle: { color: this.echartsColors[index % this.echartsColors.length] } },
         nameTextStyle: { align: 'center', padding: [0, 0, -7, 0] },
         axisLabel: { margin: 2 },
       }
-      if (item.yAxisMin || item.yAxisMin === 0) yAxisObj.min = item.yAxisMin;
-      if (item.yAxisMax || item.yAxisMax === 0) yAxisObj.max = item.yAxisMax;
+      yAxisObj.min = item.yAxisMin;
+      yAxisObj.max = item.yAxisMax;
       if (item.dataType === 'switch') { // 开关量
         yAxisObj.show = true;
         yAxisObj.name = '';

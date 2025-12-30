@@ -154,6 +154,9 @@ const addLinkageBtnClick = () => {
   const oneDataType: OneDataType = {
     name: `新增图表${maxEchartsIdSeq + 1}`,
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+    // yAxisMin: 500,
+    // yAxisMax: 1000,
+    // yAxisAlignTicks: false,
     // xAxisName: '[mm]',
     xAxisName: '[时间]',
     type: 'line',
@@ -252,6 +255,7 @@ const updateAllLinkageBtnClick = () => {
       // };
       // item.yAxisMin = 600;
       // item.yAxisMax = 800;
+      // item.yAxisAlignTicks = false;
     }
   });
   echartsLinkageRef.value?.updateAllEcharts(allDistinctSeriesTagInfo);
@@ -340,6 +344,9 @@ const replaceAllEchartsData = () => {
         customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
         xAxisName: '[m]',
         yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+        // yAxisMin: 5000,
+        // yAxisMax: 10000,
+        // yAxisAlignTicks: false,
       };
       oneDataTypeArray.push(oneDataType);
     }
@@ -673,6 +680,7 @@ const addLinkageSeriesCommon = (type: 'line' | 'bar' = 'line', id?: string) => {
     yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
     // yAxisMin: 100,
     // yAxisMax: 1000,
+    // yAxisAlignTicks: false,
     type: type,
     markLineArray: [
       { label: { show: true, position: 'insideMiddleTop', formatter: aaa }, xAxis: aaa },

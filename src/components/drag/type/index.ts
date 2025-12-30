@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-14 10:16:52
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-04-03 09:06:04
+ * @LastEditTime: 2025-12-29 15:25:07
  * @FilePath: \vue-echarts-linkage\src\components\drag\type\index.ts
  * @Description: 拖拽组件的类型定义
  */

@@ -11,10 +11,7 @@
 export class ChartUtils {
   // 组装Y轴显示状态数据
   static packageYAxisShowData(data: Array<any>): boolean[] {
-    return data.map(item =>
-      item.value.length > 0 && item.value.some((item: any) => item.isShow ===      
-true)
-    );
+    return data.map(item => item.value.length > 0 && item.value.some((item: any) => item.isShow === true));
   }
 
   // 组装系列透明度数据

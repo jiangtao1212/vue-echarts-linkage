@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-27 16:41:44
+ * @LastEditTime: 2025-12-30 15:15:08
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -134,6 +134,7 @@ export const SERIES_CLASS_TYPE_DEFAULT = 'line';
  * @param {boolean} yAxisShow 是否显示y轴
  * @param {number} yAxisMin y轴最小值
  * @param {number} yAxisMax y轴最大值
+ * @param {boolean} yAxisAlignTicks y轴对齐方式，默认true
  * @param {boolean} seriesShow 是否显示系列
  * @param {number} seriesYAxisIndex 系列y轴索引
  * @param {SeriesType} dataType 数据类型
@@ -153,6 +154,7 @@ export type OneDataType = {
   yAxisShow?: boolean;
   yAxisMin?: number;
   yAxisMax?: number;
+  yAxisAlignTicks?: boolean;
   seriesShow?: boolean;
   seriesYAxisIndex?: number;
   dataType?: SeriesType;
@@ -256,6 +258,20 @@ export type ExtraTooltipType = {
 }
 
 /**
+ * @description: Y轴区间限制数据类型
+ * @param {string} seriesName 系列名称
+ * @param {boolean} isYAxisLimitEnabled 是否启用Y轴区间限制
+ * @param {number} yAxisMinLimit 启用Y轴区间限制时，设置的Y轴最小值
+ * @param {number} yAxisMaxLimit 启用Y轴区间限制时，设置的Y轴最大值
+ */
+export type YAxisLimitType = {
+  seriesName: string,
+  isYAxisLimitEnabled: boolean,
+  yAxisMinLimit: number,
+  yAxisMaxLimit: number,
+}
+
+/**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
@@ -264,6 +280,7 @@ export type ExtraTooltipType = {
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
  * @param {ThemeType} theme 主题
+ * @param {Array<YAxisLimitType>} yAxisLimits Y轴区间限制数据数组，用于设置一个图表中多个系列的Y轴区间限制
  * @param {ExtraTooltipType} extraTooltip 额外的tooltip数据
  * @param {EnlargeShrinkType} enlargeShrink 放缩类型
  * @param {string | TooltipFormatterCallback<TooltipFormatterCallbackParams>} tooltipFormatter tooltip formatter
@@ -276,12 +293,7 @@ export type SeriesIdDataType = {
   isDeleteItem?: boolean, // 是否删除数据项状态
   graphics?: Array<GraphicLocationInfoType>,
   theme: ThemeType,
-  // 是否启用Y轴区间限制
-  isYAxisLimitEnabled?: boolean,
-  // 启用Y轴区间限制时，设置的Y轴最小值
-  yAxisMinLimit?: number,
-  // 启用Y轴区间限制时，设置的Y轴最大值
-  yAxisMaxLimit?: number,
+  yAxisLimits?: Array<YAxisLimitType>,
   extraTooltip?: ExtraTooltipType,
   enlargeShrink?: EnlargeShrinkType,
   tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,
@@ -325,7 +337,7 @@ export type DataAboutType = {
  * @param {SeriesLinkType} seriesLink 多条数据进行首尾相连
  * @param {Array<VisualMapSeriesType> | undefined} visualMapSeries 视觉映射数据，设置echarts的visualMap数据，自定义每个series中不同报警区间，默认报警色为红色
  */
-export type SeriesTagType = Pick<OneDataType, 'name' | 'type' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries' | 'yAxisMin' | 'yAxisMax'>;
+export type SeriesTagType = Pick<OneDataType, 'name' | 'type' | 'customData' | 'seriesData' | 'dataType' | 'seriesLink' | 'visualMapSeries' | 'yAxisMin' | 'yAxisMax' | 'yAxisAlignTicks'>;
 
 /**
  * @description 指定echarts图表的标签信息类型

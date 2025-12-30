@@ -24,9 +24,9 @@
       <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
     </el-dialog>
     <!-- Y轴区间设置子画面 -->
-    <el-dialog v-model="yAxisLimitDialogVisible" title="Y轴区间设置" :width="400" @closed="yAxisLimitDialogCancelHandle" >
-      <MyYAxisLimit v-bind="yAxisLimitAbout" :dialogVisible="yAxisLimitDialogVisible" @cancel="yAxisLimitDialogCancelHandle"
-        @confirm="yAxisLimitDialogConfirmHandle" />
+    <el-dialog v-model="yAxisLimitDialogVisible" title="Y轴区间设置" :width="500" @closed="yAxisLimitDialogCancelHandle">
+      <MyYAxisLimit :yAxisLimits="yAxisLimitsAbout" :dialogVisible="yAxisLimitDialogVisible"
+        @cancel="yAxisLimitDialogCancelHandle" @confirm="yAxisLimitDialogConfirmHandle" />
     </el-dialog>
   </div>
 </template>
@@ -45,7 +45,7 @@ import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, ThemeType,
-  ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType
+  ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType, YAxisLimitType
 } from './types/index';
 import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
 import Drag from "@/components/drag/index.vue";
@@ -53,7 +53,6 @@ import { type DragItemType, type DragListDataType } from "@/components/drag/type
 import MySheet from "@/components/sheet/index.vue";
 import MyYAxisLimit from "@/components/yAxisLimit/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
-import { type YAxisLimitType } from '@/components/yAxisLimit/type';
 import { ObjUtil } from "@/utils/index";
 import Extension from './extension';
 import HandleGraph from './handleGraph';
@@ -121,7 +120,7 @@ const props = withDefaults(defineProps<PropsType>(), {
 });
 
 const sheetDialogVisible = ref(false); // 数据视窗是否显示
-const yAxisLimitDialogVisible = ref(false); // Y轴区间限制视窗是否显示
+const yAxisLimitDialogVisible = ref(false); // Y轴区间视窗是否显示
 // 验证 props
 ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
@@ -156,11 +155,7 @@ const sheetAbout = reactive({
 });
 
 // 定义Y轴区间设置子画面中相关数据
-const yAxisLimitAbout = reactive({
-  isYAxisLimitEnabled: false, // 是否启用Y轴区间限制
-  yAxisMinLimit: 0, // 启用Y轴区间限制时，设置的Y轴最小值
-  yAxisMaxLimit: 0, // 启用Y轴区间限制时，设置的Y轴最大值
-});
+const yAxisLimitsAbout = ref<YAxisLimitType[]>([]);
 
 // 计算每个echarts的父级容器颜色
 const computedBackgroundColor = (data: SeriesIdDataType) => {
@@ -281,13 +276,15 @@ const debounceDragUpdateHandle = useDebounceFn(() => {
  */
 const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsIndex: number) => {
   console.groupCollapsed('deleteItem', data, deleteItemsIndex, echartsIndex);
+  const chart = dataAbout.data[echartsIndex];
   setDragItemOption(data, echartsIndex);
-  dataAbout.data[echartsIndex].data.splice(deleteItemsIndex, 1);
-  dataAbout.data[echartsIndex].isDeleteItem = true;
-  dataAbout.data[echartsIndex].data.length === 0 && HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id); // 如果删除后数据为空，则清除图形数据
+  deleteYAxisLimitCommon(chart.id, chart.data[deleteItemsIndex].name);
+  chart.data.splice(deleteItemsIndex, 1);
+  chart.isDeleteItem = true;
+  chart.data.length === 0 && HandleGraph.clearGraphicData(dataAbout, chart.id); // 如果删除后数据为空，则清除图形数据
   dragUpdateHandle(data, echartsIndex);
   await nextTick();
-  dataAbout.data[echartsIndex].isDeleteItem = false;
+  chart.isDeleteItem = false;
   console.groupEnd();
 }
 
@@ -299,14 +296,16 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
  */
 const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[], echartsIndex: number) => {
   console.groupCollapsed('deleteItemColumn', data, deleteItemsIndexArray, echartsIndex);
+  const chart = dataAbout.data[echartsIndex];
   setDragItemOption(data, echartsIndex);
-  dataAbout.data[echartsIndex].data = dataAbout.data[echartsIndex].data.filter((_, index) => !deleteItemsIndexArray.includes(index));
-  console.log('dataAbout.data', dataAbout.data[echartsIndex]);
-  dataAbout.data[echartsIndex].isDeleteItem = true;
-  dataAbout.data[echartsIndex].data.length === 0 && HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id); // 如果删除后数据为空，则清除图形数据
+  deleteYAxisLimitCommon(chart.id, deleteItemsIndexArray.map(deleteItemsIndex => chart.data[deleteItemsIndex].name));
+  chart.data = chart.data.filter((_, index) => !deleteItemsIndexArray.includes(index));
+  console.log('dataAbout.data', chart);
+  chart.isDeleteItem = true;
+  chart.data.length === 0 && HandleGraph.clearGraphicData(dataAbout, chart.id); // 如果删除后数据为空，则清除图形数据
   dragUpdateHandle(data, echartsIndex);
   await nextTick();
-  dataAbout.data[echartsIndex].isDeleteItem = false;
+  chart.isDeleteItem = false;
   console.groupEnd();
 }
 
@@ -321,12 +320,14 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
  */
 const deleteItemsAll = async (echartsIndex: number) => {
   console.groupCollapsed('deleteItemsAll', echartsIndex);
-  dataAbout.data[echartsIndex].data = [];
-  dataAbout.data[echartsIndex].isDeleteItem = true;
-  HandleGraph.clearGraphicData(dataAbout, dataAbout.data[echartsIndex].id);
+  const chart = dataAbout.data[echartsIndex];
+  deleteYAxisLimitCommon(chart.id, chart.data.map((item: OneDataType) => item.name));
+  chart.data = [];
+  chart.isDeleteItem = true;
+  HandleGraph.clearGraphicData(dataAbout, chart.id);
   initEcharts();
   await nextTick();
-  dataAbout.data[echartsIndex].isDeleteItem = false;
+  chart.isDeleteItem = false;
   console.groupEnd();
 }
 
@@ -340,7 +341,6 @@ const getEchartsLikageModel = (options: OmittedEchartsLinkageModelType) => {
     segment: props.segment,
     echartsColors: (!props.echartsColors || props?.echartsColors.length < 1) ? undefined : props.echartsColors,
     useMergedLegend: props.useMergedLegend,
-    useSeriesDataSetYAxisMinMax: false,
     // 初始化数据
     ...options,
   }
@@ -418,6 +418,7 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, data: dataAll, theme, graphics };
   dataAbout.data.push(obj);
+  dataAbout.data[dataAbout.data.length - 1].yAxisLimits = packageYAxisLimits(dataAll, [], 'insert');
   judgeOverEchartsMaxCountHandle();
   if (!isRender) return;
   Extension.setStyleProperty(props, dataAbout.data.length);
@@ -473,9 +474,9 @@ const deleteEchart = async (id: string) => {
 /**
  * @description 新增echarts系列
  * @param id echarts id
- * @param oneDataType 
+ * @param seriesDataAbout 一个系列数据对象
  */
-const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
+const addEchartSeries = async (id: string, seriesDataAbout: OneDataType) => {
 
   // 判断series是否已存在，存在则不新增
   const judgeSeriesExist = (echart: SeriesIdDataType, oneData: OneDataType) => {
@@ -484,26 +485,28 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
     return isExist;
   }
   const index = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
-  oneDataType = judgeAndPackageLinkData(oneDataType, dataAbout.data[index]) as OneDataType;
+  const chart = dataAbout.data[index];
+  seriesDataAbout = judgeAndPackageLinkData(seriesDataAbout, chart) as OneDataType;
   if (dataAbout.data.length < 1) {
     ElMessage.warning('请先添加1个echart图表！');
     return;
   }
   dataAbout.currentHandleChartIds = [id];
-  if (judgeSeriesExist(dataAbout.data[index], oneDataType)) {
+  if (judgeSeriesExist(chart, seriesDataAbout)) {
     ElMessage.warning('该子项已存在，请选择其他子项！');
     return;
   }
   //注意：这里有两种空数据情况
   // 情况1是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，除了type属性基本上都是空数据
   // 情况2是初始化了3个空echarts，每个echarts数据数组中有一个数据对象，有name等数据，只是seriesData数据为空
-  if (dataAbout.data[index].data.length > 0 && dataAbout.data[index].data[0].name === '') {
+  if (chart.data.length > 0 && chart.data[0].name === '') {
     // 情况1，直接赋值
-    dataAbout.data[index].data[0] = oneDataType;
+    chart.data[0] = seriesDataAbout;
   } else {
     // 情况2，新增数据; 其他为正常新增
-    dataAbout.data[index].data.push(oneDataType);
+    chart.data.push(seriesDataAbout);
   }
+  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'insert');
   await nextTick();
   initEcharts();
   await nextTick();
@@ -513,9 +516,10 @@ const addEchartSeries = async (id: string, oneDataType: OneDataType) => {
 // 初始化某个echarts中所有series
 const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) => {
   const echartsIndex = dataAbout.data.findIndex((item: SeriesIdDataType) => item.id === id);
+  const chart = dataAbout.data[echartsIndex];
   if (oneDataArray.length === 0) {
     // 空数据，则新增一个空数据进行占位
-    dataAbout.data[echartsIndex].data = [setOneDataEmpty()];
+    chart.data = [setOneDataEmpty()];
     return;
   }
   oneDataArray.forEach((item: OneDataType, index: number) => {
@@ -525,7 +529,8 @@ const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) =
     }
     item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
   });
-  dataAbout.data[echartsIndex].data = oneDataArray;
+  chart.data = oneDataArray;
+  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'normal');
   // 注：这里不需要渲染，因为drag组件中已经监听了data中dragItemOption数据的变化，会自动渲染
 }
 
@@ -683,6 +688,14 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
   const seriesAllData: SeriesOptionType[] = [];
   dataArray.data.forEach((item: OneDataType) => {
     item.seriesData.forEach((point: Array<number | string>) => point[0] += ''); // 解决数据类型问题，将数字类型转为字符串类型
+    const yAxisLimit = dataArray.yAxisLimits?.find((yAxisLimit: YAxisLimitType) => yAxisLimit.seriesName === item.name);
+    if (yAxisLimit?.isYAxisLimitEnabled) {
+      item.yAxisMin = Number(yAxisLimit!.yAxisMinLimit);
+      item.yAxisMax = Number(yAxisLimit!.yAxisMaxLimit);
+    } else {
+      item.yAxisMin = undefined;
+      item.yAxisMax = undefined;
+    }
     seriesAllData.push({
       type: item.type,
       name: item.name,
@@ -691,8 +704,9 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
       xAxisName: item.xAxisName,
       yAxisName: item.yAxisName,
       yAxisShow: item.yAxisShow,
-      yAxisMin: item.yAxisMin ? item.yAxisMin : (dataArray.isYAxisLimitEnabled ? dataArray.yAxisMinLimit : undefined),
-      yAxisMax: item.yAxisMax ? item.yAxisMax : (dataArray.isYAxisLimitEnabled ? dataArray.yAxisMaxLimit : undefined),
+      yAxisMin: item.yAxisMin,
+      yAxisMax: item.yAxisMax,
+      yAxisAlignTicks: item.yAxisAlignTicks,
       seriesShow: item.seriesShow,
       seriesYAxisIndex: item.seriesYAxisIndex,
       dataType: item.dataType || SERIES_TYPE_DEFAULT,
@@ -1104,15 +1118,15 @@ const judgeTagIsSame = (tag1: SeriesTagType, tag2: OneDataType) => {
 
 /**
  * @description 更新单个图表数据的公共方法
- * @param echart 单个echarts图表数据
+ * @param chart 单个chart图表数据
  * @param updateSeries 单个echarts图表的更新数据集合 
  * @param isLink 首尾相连模式，true：首尾相连，false：非首尾相连
  */
-const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<SeriesTagType>, isLink: boolean) => {
+const updateOneEchartCommon = (chart: SeriesIdDataType, updateSeries: Array<SeriesTagType>, isLink: boolean) => {
   let isNeedHandle = false;
   if (isLink) {
     // 首尾相连模式
-    echart.data.forEach((series: OneDataType) => {
+    chart.data.forEach((series: OneDataType) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
       let linkData: LinkDataType[] = deepClone(seriesTag.seriesLink?.linkData as LinkDataType[]);
@@ -1136,29 +1150,41 @@ const updateOneEchartCommon = (echart: SeriesIdDataType, updateSeries: Array<Ser
       const { packageData, markLineData } = linkToSeries(linkData);
       series.seriesData = packageData;
       series.markLineArray = packageMarkLineOnLink(seriesTag.seriesLink!.linkData, linkData, markLineData);
+      if (seriesTag.yAxisAlignTicks !== undefined) {
+        series.yAxisAlignTicks = seriesTag.yAxisAlignTicks;
+      }
+      if (seriesTag.yAxisMin || seriesTag.yAxisMax) {
+        // 如果外部传入的Y轴区间数据有值，则更新Y轴区间数据，外部传入的值优先级高于内部默认值
+        series.yAxisMin = seriesTag.yAxisMin;
+        series.yAxisMax = seriesTag.yAxisMax;
+      }
       // visualMapSeries数据为空，tooltip中需要恢复默认显示
       !seriesTag.visualMapSeries && (isNeedHandle = true);
       series.visualMapSeries = seriesTag.visualMapSeries;
-      (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
-      (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
   } else {
     // 非首尾相连模式
-    echart.data.forEach((series: OneDataType) => {
+    chart.data.forEach((series: OneDataType) => {
       const seriesTag: SeriesTagType = updateSeries.filter(item => judgeTagIsSame(item, series))[0];
       if (!seriesTag) return; // 未找到匹配的标签，跳过
-      const newSeriesData = seriesTag.seriesData;
-      newSeriesData && (series.seriesData = newSeriesData);
+      seriesTag.seriesData && (series.seriesData = seriesTag.seriesData);
+      if (seriesTag.yAxisAlignTicks !== undefined) {
+        series.yAxisAlignTicks = seriesTag.yAxisAlignTicks;
+      }
+      if (seriesTag.yAxisMin || seriesTag.yAxisMax) {
+        // 如果外部传入的Y轴区间数据有值，则更新Y轴区间数据，外部传入的值优先级高于内部默认值
+        series.yAxisMin = seriesTag.yAxisMin;
+        series.yAxisMax = seriesTag.yAxisMax;
+      }
       // visualMapSeries数据为空，tooltip中需要恢复默认显示
       !seriesTag.visualMapSeries && (isNeedHandle = true);
       series.visualMapSeries = seriesTag.visualMapSeries;
-      (seriesTag.yAxisMin || seriesTag.yAxisMin === 0) && (series.yAxisMin = seriesTag.yAxisMin);
-      (seriesTag.yAxisMax || seriesTag.yAxisMax === 0) && (series.yAxisMax = seriesTag.yAxisMax);
     });
   }
+  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'update');
   if (isNeedHandle) {
     // 需要重新渲染，因为visualMapSeries数据为空，tooltip中需要恢复默认显示
-    !dataAbout.currentHandleChartIds.includes(echart.id) && (dataAbout.currentHandleChartIds.push(echart.id));
+    !dataAbout.currentHandleChartIds.includes(chart.id) && (dataAbout.currentHandleChartIds.push(chart.id));
   }
 }
 
@@ -1729,13 +1755,130 @@ const setExcelView = async (e: any, id: string) => {
   sheetAbout.body = body;
 }
 
-// echarts上的Y轴区间限制事件
+/**
+ * @description 根据外部传入的Y轴区间数据，设置echarts的Y轴区间
+ * @param id 图表id
+ * @param name 系列名称
+ * @param yAxisMin 外部传入的Y轴最小值
+ * @param yAxisMax 外部传入的Y轴最大值
+ */
+const setYAxisLimitByData = (id: string, name: string, yAxisMin?: number, yAxisMax?: number) => {
+  if (!yAxisMin || !yAxisMax) return;
+  const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  const yAxisLimit = yAxisLimitsAbout.value.find((item: YAxisLimitType) => item.seriesName === name);
+  if (yAxisLimit) {
+    yAxisLimit.isYAxisLimitEnabled = true;
+    yAxisLimit.yAxisMinLimit = yAxisMin;
+    yAxisLimit.yAxisMaxLimit = yAxisMax;
+  }
+  chart.yAxisLimits = deepClone(yAxisLimitsAbout.value);
+}
+
+/**
+ * @description 删除Y轴区间数据 --- 公共方法
+ * @param id 图表id
+ * @param seriesNames 系列名称
+ * @returns 
+ */
+const deleteYAxisLimitCommon = (id: string, seriesNames: string[] | string) => {
+  function deleteYAxisLimit(seriesName: string) {
+    const yAxisLimitIndex = yAxisLimitsAbout.value.findIndex((item: YAxisLimitType) => item.seriesName === seriesName);
+    if (yAxisLimitIndex !== -1) {
+      yAxisLimitsAbout.value.splice(yAxisLimitIndex, 1);
+    }
+  }
+  if (Array.isArray(seriesNames)) {
+    seriesNames.forEach((seriesName: string) => {
+      deleteYAxisLimit(seriesName);
+    });
+  } else {
+    deleteYAxisLimit(seriesNames);
+  }
+  const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  chart.yAxisLimits = deepClone(yAxisLimitsAbout.value);
+}
+
+/**
+ * @description 组装Y轴区间数据
+ * @param seriesNames 系列名称
+ * @param data Y轴区间数据
+ * @param mode 模式，insert: 新增模式，update: 更新模式，normal: 正常模式
+ * @returns Y轴区间数据
+ */
+const packageYAxisLimits = (seriesDataArray: OneDataType[], data: YAxisLimitType[], mode: 'insert' | 'update' | 'normal' = 'normal'): YAxisLimitType[] => {
+  let result: YAxisLimitType[] = [];
+  if (mode === 'insert') {
+    // 新增模式
+    result = deepClone(data);
+    seriesDataArray.forEach((series) => {
+      if (series.name === '') return;
+      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
+      if (!item) {
+        // 如果是新增模式，先使用外部传入的Y轴区间数据，如果外部没有传入Y轴区间数据，则新增一个Y轴区间数据
+        result.push({
+          seriesName: series.name,
+          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : false,
+          yAxisMinLimit: series.yAxisMin || 0,
+          yAxisMaxLimit: series.yAxisMax || 0,
+        });
+      }
+    });
+  }
+  if (mode === 'update') {
+    // 更新模式
+    seriesDataArray.forEach((series) => {
+      if (series.name === '') return;
+      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
+      if (item) {
+        // 如果外部传入的Y轴区间数据有值，则更新Y轴区间数据，外部传入的值优先级高于内部默认值
+        if (series.yAxisMin) {
+          item.isYAxisLimitEnabled = true;
+          item.yAxisMinLimit = series.yAxisMin;
+        }
+        if (series.yAxisMax) {
+          item.isYAxisLimitEnabled = true;
+          item.yAxisMaxLimit = series.yAxisMax;
+        }
+        result.push(item);
+      }
+    });
+  }
+  if (mode === 'normal') {
+    // 正常模式，存在则更新，不存在则新增
+    seriesDataArray.forEach((series) => {
+      if (series.name === '') return;
+      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
+      if (item) {
+        // 存在，如果外部传入了Y轴区间数据，则更新Y轴区间数据；否则，复用原始的Y轴区间数据
+        result.push({
+          seriesName: series.name,
+          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : item.isYAxisLimitEnabled,
+          yAxisMinLimit: series.yAxisMin || item.yAxisMinLimit,
+          yAxisMaxLimit: series.yAxisMax || item.yAxisMaxLimit,
+        });
+      } else {
+        // 如果不存在，则新增一个Y轴区间数据，如果外部传入了Y轴区间数据，则启用，否则不启用
+        result.push({
+          seriesName: series.name,
+          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : false,
+          yAxisMinLimit: series.yAxisMin || 0,
+          yAxisMaxLimit: series.yAxisMax || 0,
+        });
+      }
+    });
+  }
+  return result;
+}
+
+// echarts上的Y轴区间设置事件
 const setRectionLimit = async (e: any, id: string) => {
   console.log('setRectionLimit', id);
-  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  yAxisLimitAbout.isYAxisLimitEnabled = data.isYAxisLimitEnabled || false;
-  yAxisLimitAbout.yAxisMinLimit = data.yAxisMinLimit || 0;
-  yAxisLimitAbout.yAxisMaxLimit = data.yAxisMaxLimit || 0;
+  const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  if (chart.data.length === 0) {
+    ElMessage.warning('当前图表没有系列名称，无法设置Y轴区间');
+    return;
+  }
+  yAxisLimitsAbout.value = chart.yAxisLimits || [];
   yAxisLimitDialogVisible.value = true;
   dataAbout.currentHandleChartIds = [id]; // 设置当前操作的图表id，用于后续确认按钮点击事件中获取当前操作的图表id
 }
@@ -1748,14 +1891,13 @@ const yAxisLimitDialogCancelHandle = () => {
 }
 
 // Y轴区间设置子画面中确认按钮点击事件
-const yAxisLimitDialogConfirmHandle = async (params: YAxisLimitType) => {
+const yAxisLimitDialogConfirmHandle = async (params: YAxisLimitType[]) => {
   console.log('yAxisLimitDialog 确认');
   yAxisLimitDialogVisible.value = false;
   const id = dataAbout.currentHandleChartIds[0];
-  const data: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  data.isYAxisLimitEnabled = params.isYAxisLimitEnabled; // 启用Y轴区间限制
-  data.yAxisMinLimit = params.yAxisMinLimit; // 设置Y轴最小值
-  data.yAxisMaxLimit = params.yAxisMaxLimit; // 设置Y轴最大值
+  const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
+  yAxisLimitsAbout.value = params;
+  chart.yAxisLimits = params;
   await nextTick();
   initEcharts();
 }
