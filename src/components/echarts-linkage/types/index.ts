@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-31 11:09:56
+ * @LastEditTime: 2025-12-31 16:23:25
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -11,7 +11,13 @@ import { type DragItemType } from '@/components/drag/type';
 import type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 export type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 import type { YAxisLimitType } from '@/components/yAxisLimit/type';
-import { LANGUAGE_ZH_CN, LANGUAGE_EN_US, THEME_LIGHT, THEME_DARK, MODE_ENLARGE, MODE_SHRINK } from "@/components/echarts-linkage/common";
+import { 
+  LANGUAGE_ZH_CN, LANGUAGE_EN_US, 
+  THEME_LIGHT, THEME_DARK, 
+  MODE_ENLARGE, MODE_SHRINK,
+  SERIES_TYPE_PULSE, SERIES_TYPE_SWITCH, SERIES_TYPE_MARK_LINE,
+  SERIES_CLASS_TYPE_LINE, SERIES_CLASS_TYPE_BAR,
+} from "@/components/echarts-linkage/common";
 
 /**
  * @description: 组件暴露的接口类型
@@ -113,14 +119,14 @@ export type SeriesLinkType = {
  * @description: series数据类型
  * @param {'switch' | 'pulse' | 'markLine'} SeriesType series数据类型：switch 开关量， pulse 脉冲量， markLine 标记线 --- 默认值为pulse
  */
-export type SeriesType = 'switch' | 'pulse' | 'markLine';
+export type SeriesType = typeof SERIES_TYPE_SWITCH | typeof SERIES_TYPE_PULSE | typeof SERIES_TYPE_MARK_LINE;
 
 
 /**
  * @description: series图表类型
  * @param {'line' | 'bar'} SeriesClassType series图表类型：line 折线图， bar 柱状图 --- 默认值为line
  */
-export type SeriesClassType = 'line' | 'bar';
+export type SeriesClassType = typeof SERIES_CLASS_TYPE_LINE | typeof SERIES_CLASS_TYPE_BAR;
 
 /**
  * @description: echarts图表中单个系列数据类型

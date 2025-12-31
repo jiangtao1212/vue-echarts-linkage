@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:08:34
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-31 11:32:36
+ * @LastEditTime: 2025-12-31 16:56:49
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\staticTemplate.ts
  * @Description: 单个echarts图表模型类中使用的静态模板
  */
@@ -16,7 +16,6 @@ import RectionLimitSvg from "@/assets/svg/rection-limit.svg";
 
 // x轴id
 export const XAXIS_ID = 'X1';
-
 
 // 颜色数组
 export const ECHARTS_COLORS = ['#0078FF', '#FFAA2E', '#00FF00', '#9D2EFF', '#DA1D80', '#DA4127'];

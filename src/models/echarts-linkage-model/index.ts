@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-31 14:16:38
+ * @LastEditTime: 2025-12-31 17:04:53
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -23,76 +23,24 @@ import type {
   TooltipFormatterCallbackParams
 } from "@/models/my-echarts/index";
 import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates";
-import { THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/components/echarts-linkage/common";
+import { 
+  THEME_DARK, THEME_LIGHT, 
+  LANGUAGE_ZH_CN,
+  MODE_ENLARGE, MODE_SHRINK,
+  SERIES_TYPE_SWITCH, SERIES_TYPE_MARK_LINE,
+  SERIES_CLASS_TYPE_LINE, SERIES_CLASS_TYPE_BAR,
+} from "@/components/echarts-linkage/common";
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
 import type {
-  GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType,
-  ThemeType, SeriesType, OneDataType, ExtraTooltipType, ExtraTooltipDataItemType, EnlargeShrinkType
+  GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, 
+  ThemeType, OneDataType, ExtraTooltipType, ExtraTooltipDataItemType, EnlargeShrinkType, LanguageType
 } from "@/components/echarts-linkage/types/index";
+import type { SeriesOptionType, EchartsLinkageModelType, VisualMapShowOnToolTipModeType } from "./type";
 
 let mergedOptionTemplate: EChartsOption = optionTemplate; // 合并后的option模板
 const COLOR_KEY = 'color';
 const COLOR_CACHE_KEY = 'colorCache';
 
-/**
- * @description 图表数据类型
- * @param type 图表类型, maybe 'line' or 'bar', default is 'line'
- * @param name 图表名称
- * @param smooth 是否平滑曲线
- * @param seriesData 数据系列
- * @param xAxisName x轴名称
- * @param yAxisName y轴名称
- * @param yAxisShow y轴是否显示
- * @param yAxisMin y轴下限
- * @param yAxisMax y轴上限
- * @param seriesShow series是否显示
- * @param yAxisAlignTicks y轴对齐方式，默认true
- * @param seriesYAxisIndex series的y轴索引
- * @param visualMapSeries 视觉映射系列
- * @param dataType series数据类型
- * @param seriesLinkMode 是否为连接模式
- */
-export type SeriesOptionType = {
-  type?: 'line' | 'bar', // 图表类型, maybe 'line' or 'bar', default is 'line'
-  name?: string, // 图表名称
-  smooth?: true,
-  seriesData: SeriesDataType, // 数据系列
-  seriesDataCache: SeriesDataType, // 缓存数据系列
-  xAxisName?: string, // x轴名称
-  yAxisName?: string, // y轴名称
-  yAxisShow?: boolean; // y轴是否显示
-  yAxisMin?: number; // y轴下限
-  yAxisMax?: number; // y轴上限
-  yAxisAlignTicks?: boolean; // y轴对齐方式，默认true
-  seriesShow?: boolean; // series是否显示
-  seriesYAxisIndex?: number; // series的y轴索引
-  visualMapSeries?: VisualMapSeriesType; // 视觉映射系列
-  dataType: SeriesType // series数据类型
-  seriesLinkMode?: boolean // 是否为连接模式
-}
-
-/**
- * @param {Array<Array<number>>} originData - 原始数据
- * @param {ThemeType} theme - 主题
- * @param {number} segment - 图表分段数
- * @param {Array<string>} colors - 颜色数组
- * @param {boolean} useMergedLegend - 是否使用合并图例
- */
-export type EchartsLinkageModelType = {
-  segment?: SegementType,
-  echartsColors?: Array<string>,
-  useMergedLegend?: boolean,
-  seriesOptionArray: Array<SeriesOptionType>,
-  theme: ThemeType,
-  extraTooltip?: ExtraTooltipType,
-  enlargeShrink?: EnlargeShrinkType,
-  tooltipFormatter?: string | TooltipFormatterCallback<TooltipFormatterCallbackParams>,
-}
-
-// EchartsLinkageModelType 去除 segment、echartsColors、useMergedLegend
-export type OmittedEchartsLinkageModelType = Omit<EchartsLinkageModelType, 'segment' | 'echartsColors' | 'useMergedLegend'>;
-
-type VisualMapShowOnToolTipModeType = 'pieces' | 'baseLine' | 'not';
 
 // 联动图表模型 ----------- 实体类
 export class EchartsLinkageModel {
@@ -268,7 +216,7 @@ export class EchartsLinkageModel {
     let switchYCount = 0; // 开关量Y轴数量
     this.seriesOptionArray.forEach((item: SeriesOptionType, index: number) => {
       // 开关量不计入Y轴显示数量
-      const show = item.seriesData.length > 0 && item.yAxisShow !== false && item.dataType !== 'switch' && item.dataType !== 'markLine' ? true : false;
+      const show = item.seriesData.length > 0 && item.yAxisShow !== false && item.dataType !== SERIES_TYPE_SWITCH && item.dataType !== SERIES_TYPE_MARK_LINE ? true : false;
       yAxisShowArray.push(show);
       const yAxisObj: any = {
         name: item.yAxisName || '',
@@ -284,7 +232,7 @@ export class EchartsLinkageModel {
       }
       yAxisObj.min = item.yAxisMin;
       yAxisObj.max = item.yAxisMax;
-      if (item.dataType === 'switch') { // 开关量
+      if (item.dataType === SERIES_TYPE_SWITCH) { // 开关量
         yAxisObj.show = true;
         yAxisObj.name = '';
         yAxisObj.min = 0 - switchYCount * 1.5;
@@ -294,9 +242,9 @@ export class EchartsLinkageModel {
         yAxisObj.axisLabel.show = false;  // 透明颜色
         switchYCount++;
       }
-      if (item.dataType === 'markLine') { // series竖行标记线类型
+      if (item.dataType === SERIES_TYPE_MARK_LINE) { // series竖行标记线类型
         yAxisObj.show = true;
-        yAxisObj.name = 'markLine';
+        yAxisObj.name = SERIES_TYPE_MARK_LINE;
         yAxisObj.axisLine.show = true;  // 透明颜色
         yAxisObj.axisLabel.show = true;  // 透明颜色
       }
@@ -513,17 +461,17 @@ export class EchartsLinkageModel {
     // 合并参数
     function addOneSeries(option: EChartsOption, param: SeriesOptionType, yAxisIndex: number): EChartsOption {
       const defaultParams = {
-        type: 'line',
+        type: SERIES_CLASS_TYPE_LINE,
         name: 'demo',
         smooth: true,
         ...param,
       } as SeriesOptionType;
       let series: SeriesOption | SeriesOption[] | undefined = [];
       switch (defaultParams.type) {
-        case 'line':
+        case SERIES_CLASS_TYPE_LINE:
           series = option.series as LineSeriesOption[];
           break;
-        case 'bar':
+        case SERIES_CLASS_TYPE_BAR:
           series = option.series as BarSeriesOption[];
           break;
         default:
@@ -543,7 +491,7 @@ export class EchartsLinkageModel {
         itemStyle: { color },
         data: defaultParams.seriesData,
       };
-      if (defaultParams.dataType === 'switch') { // 开关量
+      if (defaultParams.dataType === SERIES_TYPE_SWITCH) { // 开关量
         obj.smooth = false;
         obj.step = 'start';
         obj.areaStyle = { origin: 0 };
@@ -875,15 +823,15 @@ export class EchartsLinkageModel {
    * @param lang 语言类型，zh-cn | en (中文 | 英文)，默认中文
    * @returns this 链式调用 
    */
-  setLanguage = (lang: 'zh-cn' | 'en') => {
+  setLanguage = (lang: LanguageType) => {
     const feature = (this.resultOption?.toolbox as any).feature;
-    feature.dataZoom.title = { zoom: lang === 'zh-cn' ? '区域缩放' : 'Zoom', back: lang === 'zh-cn' ? '区域缩放还原' : 'Zoom Reset' };
-    feature.restore.title = lang === 'zh-cn' ? '还原' : 'Restore';
-    feature.myThemeButton.title = lang === 'zh-cn' ? '切换到' + (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : 'switch to ' + (this.swichThemeIcon === THEME_DARK ? 'dark' : 'light');
-    feature.myEnlargeShrinkButton.title = lang === 'zh-cn' ? (this.enlargeShrink === MODE_ENLARGE ? '缩小' : '放大') : (this.enlargeShrink === MODE_ENLARGE ? 'Shrink' : 'Enlarge');
-    feature.myExcelView.title = lang === 'zh-cn' ? '数据视图' : 'Data View';
-    feature.myDeleteButton.title = lang === 'zh-cn' ? '删除' : 'Delete';
-    feature.mySaveAsImage.title = lang === 'zh-cn' ? '' : ''; // 这里不写按钮名称，否则保存的图片上会显示按钮名称
+    feature.dataZoom.title = { zoom: lang === LANGUAGE_ZH_CN ? '区域缩放' : 'Zoom', back: lang === LANGUAGE_ZH_CN ? '区域缩放还原' : 'Zoom Reset' };
+    feature.restore.title = lang === LANGUAGE_ZH_CN ? '还原' : 'Restore';
+    feature.myThemeButton.title = lang === LANGUAGE_ZH_CN ? '切换到' + (this.swichThemeIcon === THEME_DARK ? '黑夜' : '白天') : 'switch to ' + (this.swichThemeIcon === THEME_DARK ? THEME_DARK : THEME_LIGHT);
+    feature.myEnlargeShrinkButton.title = lang === LANGUAGE_ZH_CN ? (this.enlargeShrink === MODE_ENLARGE ? '缩小' : '放大') : (this.enlargeShrink === MODE_ENLARGE ? MODE_SHRINK : MODE_ENLARGE);
+    feature.myExcelView.title = lang === LANGUAGE_ZH_CN ? '数据视图' : 'Data View';
+    feature.myDeleteButton.title = lang === LANGUAGE_ZH_CN ? '删除' : 'Delete';
+    feature.mySaveAsImage.title = lang === LANGUAGE_ZH_CN ? '' : ''; // 这里不写按钮名称，否则保存的图片上会显示按钮名称
     return this;
   }
 

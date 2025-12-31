@@ -38,7 +38,8 @@ import { ElMessage } from 'element-plus';
 import echarts from "@/models/my-echarts/index";
 import type { EChartsOption, ToolboxComponentOption, GridComponentOption, TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
-import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type OmittedEchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
+import { EchartsLinkageModel, setMergedOptionTemplate } from "@/models/echarts-linkage-model/index";
+import type { EchartsLinkageModelType, OmittedEchartsLinkageModelType, SeriesOptionType } from "@/models/echarts-linkage-model/type";
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
@@ -46,11 +47,15 @@ import type {
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, ThemeType,
   ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType, LanguageType
 } from './types/index';
-import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT, 
+import {
+  SERIES_TYPE_DEFAULT, SERIES_TYPE_SWITCH,
+  SERIES_CLASS_TYPE_DEFAULT, 
   THEME_DEFAULT, LANGUAGE_DEFAULT,
   THEME_DARK, THEME_LIGHT, THEME_COLOR,
+  LANGUAGE_ZH_CN, LANGUAGE_EN_US,
   MODE_ENLARGE, MODE_SHRINK,
-  USE_GRAPHIC_GROUP_DEFAULT } from './common';
+  USE_GRAPHIC_GROUP_DEFAULT
+ } from './common';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
@@ -122,11 +127,12 @@ const props = withDefaults(defineProps<PropsType>(), {
   isGraphicZoom: false, // 默认图形不跟随echarts缩放从而修改横坐标值
   isEchartsHeightChange: true, // 默认改变echarts的高度
   echartsHeightFixedCount: 3, // echarts高度固定数量
+  useYAxisLimitsCache: false, // 默认不使用Y轴区间缓存
 });
 
 const sheetDialogVisible = ref(false); // 数据视窗是否显示
 const yAxisLimitDialogVisible = ref(false); // Y轴区间视窗是否显示
-const yAxisLimitDialogWidth = ref<number | string>(500); // 
+const yAxisLimitDialogWidth = ref<number | string>(500); // Y轴区间设置子画面宽度
 // 验证 props
 ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
@@ -204,16 +210,16 @@ const dragDataComputed = (number: number) => {
   // 初始化空白echarts时，有占位数据，但name为空，legend不显示
   if (originData.length > 0 && originData[0].name === '') return res;
   originData.forEach((item: OneDataType, index: number) => {
-    // switch开关类型不可以拖拽
+    // 开关类型不可以拖拽
     if (item.dragItemOption) {
-      item.dragItemOption.isDrag = item.dataType === 'switch' ? false : true;
+      item.dragItemOption.isDrag = item.dataType === SERIES_TYPE_SWITCH ? false : true;
       res.push(shallowClone(item.dragItemOption));
     } else {
       res.push({
         name: item.name,
         id: (index + 1).toString(),
         followId: (index + 1).toString(),
-        isDrag: item.dataType === 'switch' ? false : true,
+        isDrag: item.dataType === SERIES_TYPE_SWITCH ? false : true,
         isShow: true,
       });
     }
@@ -563,7 +569,7 @@ const computerMaxShowYCount = () => {
 }
 // 判断是否显示Y轴的通用方法
 const judgeShowYAxisCommon = (data: OneDataType) => {
-  return data.yAxisShow === false || data.dataType === 'switch' ? 0 : 1
+  return data.yAxisShow === false || data.dataType === SERIES_TYPE_SWITCH ? 0 : 1;
 }
 
 /**
@@ -734,7 +740,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
     .setMyExcelViewClickEvent((e: any) => setExcelView(e, dataArray.id))
     .setMyRectionLimitButtonClickEvent((e: any) => setRectionLimit(e, dataArray.id))
     .setCustomSeriesMarkLine(dataArray.data)
-    .setLanguage(props.language.toLocaleLowerCase() === 'zh-cn' ? 'zh-cn' : 'en') // 设置语言
+    .setLanguage(props.language === LANGUAGE_ZH_CN ? LANGUAGE_ZH_CN : LANGUAGE_EN_US) // 设置语言
     .setFontSizeAndMoreAuto(computerEchartsHeight(dataArray.enlargeShrink), props.useGraphicLocation) // 设置字体大小等自适应
     .setGridRightByXAxisName(myChart.getWidth())
   props.gridAlign && echartsLinkageModel.setGridLeftAlign(computerMaxShowYCount()) // 设置多echarts图表是否对齐
@@ -1087,7 +1093,7 @@ const updateOneEchartsVisualMapSeries = async (id: string, visualMapData: Visual
   function updateOneSeries(echart: SeriesIdDataType, visualMapSeries: VisualMapSeriesType) {
     const seriesName = visualMapSeries.seriesName;
     echart.data.forEach((series: OneDataType) => {
-      if (series.dataType === 'switch') return; // 跳过开关量
+      if (series.dataType === SERIES_TYPE_SWITCH) return; // 跳过开关量 
       if (seriesName) {
         // 指定系列名称，更新所指定的系列
         if (series.name === seriesName) {
