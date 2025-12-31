@@ -6,7 +6,6 @@
  * @FilePath: \vue-echarts-linkage\src\components\yAxisLimit\store.ts
  * @Description: 存储和更新所有图表的Y轴区间数据到浏览器本地缓存中
  */
-import { ref } from 'vue';
 import type { YAxisLimitType, YAxisLimitsCacheType } from './type';
 
 // 使用localStorage存储Y轴区间缓存数据

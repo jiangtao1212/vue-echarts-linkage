@@ -24,7 +24,7 @@
       <MySheet :head="sheetAbout.head" :body="sheetAbout.body" />
     </el-dialog>
     <!-- Y轴区间设置子画面 -->
-    <el-dialog v-model="yAxisLimitDialogVisible" title="Y轴区间设置" :width="500" @closed="yAxisLimitDialogCancelHandle">
+    <el-dialog v-model="yAxisLimitDialogVisible" title="Y轴区间设置" :width="yAxisLimitDialogWidth" draggable @closed="yAxisLimitDialogCancelHandle">
       <MyYAxisLimit :yAxisLimits="yAxisLimitsAbout" :dialogVisible="yAxisLimitDialogVisible"
         @cancel="yAxisLimitDialogCancelHandle" @confirm="yAxisLimitDialogConfirmHandle" />
     </el-dialog>
@@ -126,6 +126,7 @@ const props = withDefaults(defineProps<PropsType>(), {
 
 const sheetDialogVisible = ref(false); // 数据视窗是否显示
 const yAxisLimitDialogVisible = ref(false); // Y轴区间视窗是否显示
+const yAxisLimitDialogWidth = ref<number | string>(500); // 
 // 验证 props
 ObjUtil.validateCols(props.cols, 'cols 必须是一个正整数');
 // 递归合并自定义option
@@ -283,7 +284,7 @@ const deleteItem = async (data: Array<any>, deleteItemsIndex: number, echartsInd
   console.groupCollapsed('deleteItem', data, deleteItemsIndex, echartsIndex);
   const chart = dataAbout.data[echartsIndex];
   setDragItemOption(data, echartsIndex);
-  deleteYAxisLimitCommon(chart.id, chart.data[deleteItemsIndex].name);
+  // deleteYAxisLimitCommon(chart.id, chart.data[deleteItemsIndex].name);
   chart.data.splice(deleteItemsIndex, 1);
   chart.isDeleteItem = true;
   chart.data.length === 0 && HandleGraph.clearGraphicData(dataAbout, chart.id); // 如果删除后数据为空，则清除图形数据
@@ -303,7 +304,7 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
   console.groupCollapsed('deleteItemColumn', data, deleteItemsIndexArray, echartsIndex);
   const chart = dataAbout.data[echartsIndex];
   setDragItemOption(data, echartsIndex);
-  deleteYAxisLimitCommon(chart.id, deleteItemsIndexArray.map(deleteItemsIndex => chart.data[deleteItemsIndex].name));
+  // deleteYAxisLimitCommon(chart.id, deleteItemsIndexArray.map(deleteItemsIndex => chart.data[deleteItemsIndex].name));
   chart.data = chart.data.filter((_, index) => !deleteItemsIndexArray.includes(index));
   console.log('dataAbout.data', chart);
   chart.isDeleteItem = true;
@@ -326,7 +327,7 @@ const deleteItemColumn = async (data: Array<any>, deleteItemsIndexArray: number[
 const deleteItemsAll = async (echartsIndex: number) => {
   console.groupCollapsed('deleteItemsAll', echartsIndex);
   const chart = dataAbout.data[echartsIndex];
-  deleteYAxisLimitCommon(chart.id, chart.data.map((item: OneDataType) => item.name));
+  // deleteYAxisLimitCommon(chart.id, chart.data.map((item: OneDataType) => item.name));
   chart.data = [];
   chart.isDeleteItem = true;
   HandleGraph.clearGraphicData(dataAbout, chart.id);
@@ -1758,25 +1759,6 @@ const setExcelView = async (e: any, id: string) => {
 }
 
 /**
- * @description 根据外部传入的Y轴区间数据，设置echarts的Y轴区间
- * @param id 图表id
- * @param name 系列名称
- * @param yAxisMin 外部传入的Y轴最小值
- * @param yAxisMax 外部传入的Y轴最大值
- */
-const setYAxisLimitByData = (id: string, name: string, yAxisMin?: number, yAxisMax?: number) => {
-  if (!yAxisMin || !yAxisMax) return;
-  const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  const yAxisLimit = yAxisLimitsAbout.value.find((item: YAxisLimitType) => item.seriesName === name);
-  if (yAxisLimit) {
-    yAxisLimit.isYAxisLimitEnabled = true;
-    yAxisLimit.yAxisMinLimit = yAxisMin;
-    yAxisLimit.yAxisMaxLimit = yAxisMax;
-  }
-  chart.yAxisLimits = deepClone(yAxisLimitsAbout.value);
-}
-
-/**
  * @description 删除Y轴区间数据 --- 公共方法
  * @param id 图表id
  * @param seriesNames 系列名称
@@ -1841,13 +1823,28 @@ const packageYAxisLimits = (seriesDataArray: OneDataType[], chartYAxisLimits?: Y
 const setRectionLimit = async (e: any, id: string) => {
   console.log('setRectionLimit', id);
   const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
-  if (chart.data.length === 0) {
+  if (chart.data.length === 0 || (chart.data.length === 1 && chart.data[0].name === '')) {
     ElMessage.warning('当前图表没有系列名称，无法设置Y轴区间');
     return;
   }
   yAxisLimitsAbout.value = chart.yAxisLimits || [];
+  yAxisLimitDialogWidth.value = getYAxisLimitDialogWidth(yAxisLimitsAbout.value.length);
   yAxisLimitDialogVisible.value = true;
   dataAbout.currentHandleChartIds = [id]; // 设置当前操作的图表id，用于后续确认按钮点击事件中获取当前操作的图表id
+}
+
+/**
+ * @description 通过系列数量设置子画面宽度
+ * @param seriesCount 系列数量
+ * @returns 子画面宽度(rem)
+ */
+const getYAxisLimitDialogWidth = (seriesCount: number) => {
+  let res = 0;
+  const initWidth = 20; // 初始宽度
+  const oneWidth = 10; // 每个系列宽度
+  const maxWidth = 60; // 最大宽度
+  res = Math.min(initWidth + oneWidth * seriesCount, maxWidth);
+  return res + 'rem';
 }
 
 // Y轴区间设置子画面中取消按钮点击事件
