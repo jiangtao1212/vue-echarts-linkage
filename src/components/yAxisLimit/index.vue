@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import { ref, watch, type PropType } from 'vue';
-import type { YAxisLimitType } from '@/components/echarts-linkage/types/index';
+import type { YAxisLimitType } from './type';
 import { ElMessage } from 'element-plus';
 import { CloneUtils } from '@/utils/index';
 

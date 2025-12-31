@@ -84,6 +84,7 @@
     :echarts-colors="['#000', 'blue', 'green', 'yellow', 'goldenrod', 'pink']" language="zh-cn" grid-align
     :theme="theme" :is-linkage="isLinkage" :use-graphic-location="useGraphic" :use-graphic-group="[1]"
     :is-echarts-height-change="false" :echarts-height-fixed-count="4" :extra-option="extraOption" :groups="groups"
+    :useYAxisLimitsCache="true"
     @drop-echart="dropEchart" @listener-graphic-location="listenerGraphicLocation" @delete-echart="deleteEchart"
     @listener-excel-view="listenerExcelView" />
   <!-- </div> -->
@@ -648,6 +649,9 @@ const getTemplateTagsOptionBtnClick = () => {
         customData: `新增图表${maxEchartsIdSeq + 1}-${Math.floor(Math.random() * 1000)}`,
         xAxisName: '[m]',
         yAxisName: `[${Math.floor(Math.random() * 10) > 5 ? 'mm' : '℃'}]`,
+        // yAxisMin: 5000,
+        // yAxisMax: 10000,
+        // yAxisAlignTicks: false,
         dragItemOption: templateTags[j],
       };
       oneDataTypeArray.push(oneDataType);

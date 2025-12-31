@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-09-12 09:05:22
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-30 15:21:39
+ * @LastEditTime: 2025-12-31 14:16:38
  * @FilePath: \vue-echarts-linkage\src\models\echarts-linkage-model\index.ts
  * @Description: 单个echarts图表模型类
  */
@@ -22,7 +22,8 @@ import type {
   TooltipFormatterCallback,
   TooltipFormatterCallbackParams
 } from "@/models/my-echarts/index";
-import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "./staticTemplates"
+import { XAXIS_ID, ECHARTS_COLORS, lineSeriesMarkLineTemplate, optionTemplate } from "./staticTemplates";
+import { THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/components/echarts-linkage/common";
 import { ObjUtil, FileUtil, ArrayUtil } from "@/utils/index";
 import type {
   GraphicLocationInfoType, VisualMapSeriesType, MarkLineDataType, SeriesDataType, SegementType,

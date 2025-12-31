@@ -9,7 +9,7 @@ export type {
   ExtraTooltipType, ExtraTooltipDataItemType, SeriesType, SeriesClassType, CustomContentHtmlType, 
   TooltipFormatterCallback, TooltipFormatterCallbackParams,
 } from '@/components/echarts-linkage/types/index';
-export { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from '@/components/echarts-linkage/types/index';
+export { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from '@/components/echarts-linkage/common';
 
 export type { DragItemType } from '@/components/drag/type/index';
 

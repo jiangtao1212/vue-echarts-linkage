@@ -39,20 +39,25 @@ import echarts from "@/models/my-echarts/index";
 import type { EChartsOption, ToolboxComponentOption, GridComponentOption, TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 import { useDebounceFn } from "@vueuse/core";
 import { EchartsLinkageModel, setMergedOptionTemplate, type EchartsLinkageModelType, type OmittedEchartsLinkageModelType, type SeriesOptionType } from "@/models/index";
-import { THEME, THEME_DARK, THEME_LIGHT, MODE_ENLARGE, MODE_SHRINK } from "@/models/echarts-linkage-model/staticTemplates"
 import { FileUtil } from "@/utils/index";
 import type {
   ExposedMethods, OneDataType, SeriesIdDataType, DataAboutType, SeriesTagType,
   DropEchartType, DeleteEchartType, GraphicLocationInfoType, VisualMapSeriesType, LinkDataType,
   SeriesDataType, SegementType, AppointEchartsTagType, ListenerExcelViewType, excelViewType, ThemeType,
-  ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType, YAxisLimitType
+  ExtraTooltipDataItemType, SeriesClassType, EnlargeShrinkType, CustomContentHtmlType, LanguageType
 } from './types/index';
-import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from './types/index';
+import { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT, 
+  THEME_DEFAULT, LANGUAGE_DEFAULT,
+  THEME_DARK, THEME_LIGHT, THEME_COLOR,
+  MODE_ENLARGE, MODE_SHRINK,
+  USE_GRAPHIC_GROUP_DEFAULT } from './common';
 import Drag from "@/components/drag/index.vue";
 import { type DragItemType, type DragListDataType } from "@/components/drag/type/index";
 import MySheet from "@/components/sheet/index.vue";
 import MyYAxisLimit from "@/components/yAxisLimit/index.vue";
 import { type SheetHeadType } from '@/components/sheet/type/index';
+import type { YAxisLimitType } from '@/components/yAxisLimit/type';
+import { setYAxisLimitsCache } from "@/components/yAxisLimit/store";
 import { ObjUtil } from "@/utils/index";
 import Extension from './extension';
 import HandleGraph from './handleGraph';
@@ -61,7 +66,6 @@ import HandleExcel from './handleExcel';
 import { ChartUtils } from '@/utils/chartUtils';
 import { deepClone, shallowClone } from '@/utils/cloneUtils';
 
-const USE_GRAPHIC_GROUP_DEFAULT = 'all' as const;
 /**
  * @description 组件props类型
  * @property {number} [cols=1] - 列数
@@ -69,7 +73,7 @@ const USE_GRAPHIC_GROUP_DEFAULT = 'all' as const;
  * @property {number} [emptyEchartCount] - 初始化空白echarts数量
  * @property {string[]} [echartsColors] - echarts颜色数组
  * @property {SegementType} [segment] - 标线分段数 
- * @property {string} [language='zh-cn'] - 语言
+ * @property {LanguageType} [language='zh-cn'] - 语言
  * @property {boolean} [gridAlign=false] - 多echarts图表是否对齐
  * @property {string} [theme='light'] - 主题
  * @property {string} [background] - 背景色
@@ -88,7 +92,7 @@ export type PropsType = {
   emptyEchartCount?: number;
   echartsColors?: string[];
   segment?: SegementType;
-  language?: 'zh-cn' | 'en-us';
+  language?: LanguageType;
   gridAlign?: boolean, // 多echarts图表是否对齐
   theme?: ThemeType, // 主题
   background?: string, // 背景色
@@ -101,15 +105,16 @@ export type PropsType = {
   echartsHeightFixedCount?: number, // echarts高度固定数量
   extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
   groups?: Array<Array<number>>, // 分组属性，二维数组：第一维表示分组，第二维表示该分组下的chart序号（序号从1开始）
+  useYAxisLimitsCache?: boolean, // 使用Y轴区间缓存，默认false不使用，为true时，使用Y轴区间缓存，存储所有图表的Y轴区间数据到浏览器本地缓存中
 }
 
 // 定义 props
 const props = withDefaults(defineProps<PropsType>(), {
   cols: 1,
   echartsMaxCount: 7,
-  language: 'zh-cn',
+  language: LANGUAGE_DEFAULT,
   gridAlign: false,
-  theme: 'light',
+  theme: THEME_DEFAULT,
   isLinkage: true, // 默认联动
   useMergedLegend: true, // 默认使用合并图例
   useGraphicLocation: false, // 默认不使用图形定位
@@ -162,8 +167,8 @@ const computedBackgroundColor = (data: SeriesIdDataType) => {
   // const echartsId = data.id;
   const echartsTheme = data.theme;
   let res = '';
-  let light_bg = THEME.LIGHT.BACKGROUND_COLOR;
-  let dark_bg = THEME.DARK.BACKGROUND_COLOR;
+  let light_bg = THEME_COLOR.LIGHT.BACKGROUND_COLOR;
+  let dark_bg = THEME_COLOR.DARK.BACKGROUND_COLOR;
   if (props.background) {
     // 外部传入了背景色，根据初始化主题，赋给对应主题的背景色
     if (props.theme === THEME_LIGHT) {
@@ -418,7 +423,6 @@ const addEchart = async (oneDataType?: OneDataType | OneDataType[], isRender: bo
   const { theme, graphics } = addEchartJudgeLinkage();
   const obj = { id, data: dataAll, theme, graphics };
   dataAbout.data.push(obj);
-  dataAbout.data[dataAbout.data.length - 1].yAxisLimits = packageYAxisLimits(dataAll, [], 'insert');
   judgeOverEchartsMaxCountHandle();
   if (!isRender) return;
   Extension.setStyleProperty(props, dataAbout.data.length);
@@ -506,7 +510,6 @@ const addEchartSeries = async (id: string, seriesDataAbout: OneDataType) => {
     // 情况2，新增数据; 其他为正常新增
     chart.data.push(seriesDataAbout);
   }
-  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'insert');
   await nextTick();
   initEcharts();
   await nextTick();
@@ -530,7 +533,6 @@ const initOneEchartAllSeries = async (id: string, oneDataArray: OneDataType[]) =
     item = judgeAndPackageLinkData(item, dataAbout.data[index]) as OneDataType;
   });
   chart.data = oneDataArray;
-  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'normal');
   // 注：这里不需要渲染，因为drag组件中已经监听了data中dragItemOption数据的变化，会自动渲染
 }
 
@@ -748,7 +750,7 @@ const initOneEcharts = (dataArray: SeriesIdDataType, echartsIndex: number) => {
   myChart.resize();
   // 图形设置，必须在myChart.resize()之后，否则会导致图形位置不正确
   props.useGraphicLocation
-    && (props.useGraphicGroup === 'all' || props.useGraphicGroup.includes(echartsIndex + 1))
+    && (props.useGraphicGroup === USE_GRAPHIC_GROUP_DEFAULT || props.useGraphicGroup.includes(echartsIndex + 1))
     && dataArray.data[0].seriesData.length > 0
     && (dataArray.graphics = echartsLinkageModel.setGraphic(myChart, dataArray.graphics,
       (params: GraphicLocationInfoType) => HandleGraph.graphicDragLinkage(params, dataArray.id, dataAbout, props)
@@ -803,6 +805,7 @@ const initEcharts = async () => {
   // disposeEcharts(); // 清除之前的分组实例
   dataAbout.usedGroupNames = []; // 已使用的组名
   dataAbout.data.forEach((item: SeriesIdDataType, index: number) => {
+    item.yAxisLimits = packageYAxisLimits(item.data, item.yAxisLimits);
     const myChart = initOneEcharts(item, index);
     // 给echarts实例分组，并且记录已使用的组名
     const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName);
@@ -1181,7 +1184,6 @@ const updateOneEchartCommon = (chart: SeriesIdDataType, updateSeries: Array<Seri
       series.visualMapSeries = seriesTag.visualMapSeries;
     });
   }
-  chart.yAxisLimits = packageYAxisLimits(chart.data, chart.yAxisLimits || [], 'update');
   if (isNeedHandle) {
     // 需要重新渲染，因为visualMapSeries数据为空，tooltip中需要恢复默认显示
     !dataAbout.currentHandleChartIds.includes(chart.id) && (dataAbout.currentHandleChartIds.push(chart.id));
@@ -1802,71 +1804,36 @@ const deleteYAxisLimitCommon = (id: string, seriesNames: string[] | string) => {
  * @description 组装Y轴区间数据
  * @param seriesNames 系列名称
  * @param data Y轴区间数据
- * @param mode 模式，insert: 新增模式，update: 更新模式，normal: 正常模式
  * @returns Y轴区间数据
  */
-const packageYAxisLimits = (seriesDataArray: OneDataType[], data: YAxisLimitType[], mode: 'insert' | 'update' | 'normal' = 'normal'): YAxisLimitType[] => {
+const packageYAxisLimits = (seriesDataArray: OneDataType[], chartYAxisLimits?: YAxisLimitType[]): YAxisLimitType[] => {
   let result: YAxisLimitType[] = [];
-  if (mode === 'insert') {
-    // 新增模式
-    result = deepClone(data);
-    seriesDataArray.forEach((series) => {
-      if (series.name === '') return;
-      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
-      if (!item) {
-        // 如果是新增模式，先使用外部传入的Y轴区间数据，如果外部没有传入Y轴区间数据，则新增一个Y轴区间数据
-        result.push({
-          seriesName: series.name,
-          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : false,
-          yAxisMinLimit: series.yAxisMin || 0,
-          yAxisMaxLimit: series.yAxisMax || 0,
-        });
-      }
-    });
-  }
-  if (mode === 'update') {
-    // 更新模式
-    seriesDataArray.forEach((series) => {
-      if (series.name === '') return;
-      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
-      if (item) {
-        // 如果外部传入的Y轴区间数据有值，则更新Y轴区间数据，外部传入的值优先级高于内部默认值
-        if (series.yAxisMin) {
-          item.isYAxisLimitEnabled = true;
-          item.yAxisMinLimit = series.yAxisMin;
-        }
-        if (series.yAxisMax) {
-          item.isYAxisLimitEnabled = true;
-          item.yAxisMaxLimit = series.yAxisMax;
-        }
-        result.push(item);
-      }
-    });
-  }
-  if (mode === 'normal') {
-    // 正常模式，存在则更新，不存在则新增
-    seriesDataArray.forEach((series) => {
-      if (series.name === '') return;
-      const item = data.find((item: YAxisLimitType) => item.seriesName === series.name);
-      if (item) {
-        // 存在，如果外部传入了Y轴区间数据，则更新Y轴区间数据；否则，复用原始的Y轴区间数据
-        result.push({
-          seriesName: series.name,
-          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : item.isYAxisLimitEnabled,
-          yAxisMinLimit: series.yAxisMin || item.yAxisMinLimit,
-          yAxisMaxLimit: series.yAxisMax || item.yAxisMaxLimit,
-        });
-      } else {
-        // 如果不存在，则新增一个Y轴区间数据，如果外部传入了Y轴区间数据，则启用，否则不启用
-        result.push({
-          seriesName: series.name,
-          isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : false,
-          yAxisMinLimit: series.yAxisMin || 0,
-          yAxisMaxLimit: series.yAxisMax || 0,
-        });
-      }
-    });
-  }
+  // series数据不存在时，直接
+  if (seriesDataArray.length === 0) return chartYAxisLimits || [];
+  // 存在则更新，不存在则新增
+  seriesDataArray.forEach((series) => {
+    if (series.name === '') return;
+    const item = chartYAxisLimits?.find((item: YAxisLimitType) => item.seriesName === series.name);
+    if (item) {
+      // 存在，如果外部传入了Y轴区间数据，则更新Y轴区间数据；否则，复用原始的Y轴区间数据
+      result.push({
+        seriesName: series.name,
+        isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : item.isYAxisLimitEnabled,
+        yAxisMinLimit: series.yAxisMin || item.yAxisMinLimit,
+        yAxisMaxLimit: series.yAxisMax || item.yAxisMaxLimit,
+      });
+    } else {
+      // 如果不存在，则新增一个Y轴区间数据，如果外部传入了Y轴区间数据，则启用，否则不启用
+      result.push({
+        seriesName: series.name,
+        isYAxisLimitEnabled: (series.yAxisMin || series.yAxisMax) ? true : false,
+        yAxisMinLimit: series.yAxisMin || 0,
+        yAxisMaxLimit: series.yAxisMax || 0,
+      });
+    }
+  });
+  // 存储更新Y轴区间
+  props.useYAxisLimitsCache && setYAxisLimitsCache(result);
   return result;
 }
 
@@ -1898,6 +1865,18 @@ const yAxisLimitDialogConfirmHandle = async (params: YAxisLimitType[]) => {
   const chart: SeriesIdDataType = dataAbout.data.find((item: SeriesIdDataType) => item.id === id) as SeriesIdDataType;
   yAxisLimitsAbout.value = params;
   chart.yAxisLimits = params;
+  chart.data.forEach(item => {
+    const yAxisLimit = params.find(yAxisLimit => yAxisLimit.seriesName === item.name);
+    if (yAxisLimit && yAxisLimit.isYAxisLimitEnabled) {
+      item.yAxisMin = yAxisLimit.yAxisMinLimit;
+      item.yAxisMax = yAxisLimit.yAxisMaxLimit;
+    } else {
+      item.yAxisMin = undefined;
+      item.yAxisMax = undefined;
+    }
+  });
+  // 存储更新Y轴区间
+  props.useYAxisLimitsCache && setYAxisLimitsCache(params);
   await nextTick();
   initEcharts();
 }

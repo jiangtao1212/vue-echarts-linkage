@@ -2,7 +2,7 @@
  * @Author: jiangtao 1106950092@qq.com
  * @Date: 2024-08-22 15:28:16
  * @LastEditors: jiangtao 1106950092@qq.com
- * @LastEditTime: 2025-12-30 15:15:08
+ * @LastEditTime: 2025-12-31 11:09:56
  * @FilePath: \vue-echarts-linkage\src\components\echartsLinkage\types\index.d.ts
  * @Description: 类型定义
  */
@@ -10,6 +10,8 @@
 import { type DragItemType } from '@/components/drag/type';
 import type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
 export type { TooltipFormatterCallback, TooltipFormatterCallbackParams } from "@/models/my-echarts/index";
+import type { YAxisLimitType } from '@/components/yAxisLimit/type';
+import { LANGUAGE_ZH_CN, LANGUAGE_EN_US, THEME_LIGHT, THEME_DARK, MODE_ENLARGE, MODE_SHRINK } from "@/components/echarts-linkage/common";
 
 /**
  * @description: 组件暴露的接口类型
@@ -113,11 +115,12 @@ export type SeriesLinkType = {
  */
 export type SeriesType = 'switch' | 'pulse' | 'markLine';
 
-export const SERIES_TYPE_DEFAULT = 'pulse';
 
+/**
+ * @description: series图表类型
+ * @param {'line' | 'bar'} SeriesClassType series图表类型：line 折线图， bar 柱状图 --- 默认值为line
+ */
 export type SeriesClassType = 'line' | 'bar';
-
-export const SERIES_CLASS_TYPE_DEFAULT = 'line';
 
 /**
  * @description: echarts图表中单个系列数据类型
@@ -232,10 +235,13 @@ export type excelViewType = {
 }
 
 // 主题类型
-export type ThemeType = 'dark' | 'light';
+export type ThemeType = typeof THEME_LIGHT | typeof THEME_DARK;
 
 // 放缩类型
-export type EnlargeShrinkType = 'enlarge' | 'shrink';
+export type EnlargeShrinkType = typeof MODE_ENLARGE | typeof MODE_SHRINK;
+
+// 语言类型
+export type LanguageType = typeof LANGUAGE_ZH_CN | typeof LANGUAGE_EN_US;
 
 /**
  * @description: 额外的tooltip数据项类型
@@ -258,20 +264,6 @@ export type ExtraTooltipType = {
 }
 
 /**
- * @description: Y轴区间限制数据类型
- * @param {string} seriesName 系列名称
- * @param {boolean} isYAxisLimitEnabled 是否启用Y轴区间限制
- * @param {number} yAxisMinLimit 启用Y轴区间限制时，设置的Y轴最小值
- * @param {number} yAxisMaxLimit 启用Y轴区间限制时，设置的Y轴最大值
- */
-export type YAxisLimitType = {
-  seriesName: string,
-  isYAxisLimitEnabled: boolean,
-  yAxisMinLimit: number,
-  yAxisMaxLimit: number,
-}
-
-/**
  * @description: 单个echarts图表数据类型
  * @param {string} id 图表id
  * @param {Array<OneDataType>} data 图表数据
@@ -280,7 +272,7 @@ export type YAxisLimitType = {
  * @param {boolean} isDeleteItem 是否删除数据项状态
  * @param {Array<GraphicLocationType>} graphics 图形位置信息
  * @param {ThemeType} theme 主题
- * @param {Array<YAxisLimitType>} yAxisLimits Y轴区间限制数据数组，用于设置一个图表中多个系列的Y轴区间限制
+ * @param {Array<YAxisLimitType>} yAxisLimits Y轴区间数据数组，用于设置一个图表中多个系列的Y轴区间数据
  * @param {ExtraTooltipType} extraTooltip 额外的tooltip数据
  * @param {EnlargeShrinkType} enlargeShrink 放缩类型
  * @param {string | TooltipFormatterCallback<TooltipFormatterCallbackParams>} tooltipFormatter tooltip formatter
