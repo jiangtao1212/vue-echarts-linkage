@@ -13,6 +13,8 @@ export { SERIES_TYPE_DEFAULT, SERIES_CLASS_TYPE_DEFAULT } from '@/components/ech
 
 export type { DragItemType } from '@/components/drag/type/index';
 
+export { Y_AXIS_LIMITS_CACHE_KEY } from '@/components/yAxisLimit/store';
+
 /** 
  * 1.按需引入组件
  * ...

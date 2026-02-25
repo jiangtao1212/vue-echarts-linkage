@@ -8,8 +8,8 @@
  */
 import type { YAxisLimitType, YAxisLimitsCacheType } from './type';
 
-// 使用localStorage存储Y轴区间缓存数据
-const Y_AXIS_LIMITS_CACHE_KEY = 'ECHARTS_LINKAGE_yAxis_limits_cache';
+// 使用localStorage存储Y轴区间缓存数据，键名
+export const Y_AXIS_LIMITS_CACHE_KEY = 'ECHARTS_LINKAGE_yAxis_limits_cache';
 
 // 获取Y轴区间缓存数据
 export const getYAxisLimitsCache = (): YAxisLimitsCacheType => {
