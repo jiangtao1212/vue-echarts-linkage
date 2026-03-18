@@ -105,12 +105,13 @@ const setDragPosition = (height: number) => {
 /**
  * @description 初始化分组数据
  * @param groups 图表序号分组数组(序号从1开始) 
+ * @param groupDefaultName 分组默认名称
  * @returns string[] 组名数组
  */
-const initGroupData = (groups: number[][] | undefined) => {
+const initGroupData = (groups: number[][] | undefined, groupDefaultName: string = GROUP_DEFAULT) => {
   let groupsName = [];
   if (!groups) {
-    groupsName = [GROUP_DEFAULT];
+    groupsName = [groupDefaultName];
   } else {
     const flatGroups = groups.flat();
     const seen = new Set(flatGroups);
@@ -132,11 +133,11 @@ const initGroupData = (groups: number[][] | undefined) => {
  * @param groupsName 组名数组 
  * @returns string 组名 
  */
-const getGroupNameByChartSeq = (chartSeq: number, groups: number[][] | undefined, groupsName: string[]) => {
+const getGroupNameByChartSeq = (chartSeq: number, groups: number[][] | undefined, groupsName: string[], groupDefaultName: string = GROUP_DEFAULT) => {
   let groupName = '';
   if (!groups) {
     // 外部未传入组名，则使用默认的组名
-    groupName = GROUP_DEFAULT;
+    groupName = groupDefaultName;
   } else {
     // 外部传入组名，则使用传入的组名
     const seq = chartSeq + 1;
@@ -146,7 +147,7 @@ const getGroupNameByChartSeq = (chartSeq: number, groups: number[][] | undefined
       }
     });
     // 如果没有匹配到组名，则使用默认的组名
-    groupName = groupName || GROUP_DEFAULT;
+    groupName = groupName || groupDefaultName;
   }
   return groupName;
 }

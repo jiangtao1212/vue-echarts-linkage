@@ -110,6 +110,7 @@ export type PropsType = {
   isEchartsHeightChange?: boolean, // 是否根据数量，改变echarts的高度
   echartsHeightFixedCount?: number, // echarts高度固定数量
   extraOption?: { [key: string]: any }, // 额外的echarts配置项，主要是grid、toolbox、xAxis等属性的合并
+  groupDefaultName?: string, // 自定义分组默认名称，组件内部会优先使用该自定义名称，如果未传入，则使用组件内部默认的名称（在extension.ts中定义）
   groups?: Array<Array<number>>, // 分组属性，二维数组：第一维表示分组，第二维表示该分组下的chart序号（序号从1开始）
   useYAxisLimitsCache?: boolean, // 使用Y轴区间缓存，默认false不使用，为true时，使用Y轴区间缓存，存储所有图表的Y轴区间数据到浏览器本地缓存中
 }
@@ -816,7 +817,7 @@ const initEcharts = async () => {
     item.yAxisLimits = packageYAxisLimits(item.data, item.yAxisLimits);
     const myChart = initOneEcharts(item, index);
     // 给echarts实例分组，并且记录已使用的组名
-    const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName);
+    const groupName = Extension.getGroupNameByChartSeq(index, props.groups, dataAbout.groupsName, dataAbout.groupDefault);
     myChart.group = groupName;
     !dataAbout.usedGroupNames.includes(groupName) && dataAbout.usedGroupNames.push(groupName);
   });
@@ -828,8 +829,8 @@ const initEcharts = async () => {
 
 // 初始化组名数据
 const initGroupData = () => {
-  dataAbout.groupsName = Extension.initGroupData(props.groups);
-  dataAbout.groupDefault = Extension.GROUP_DEFAULT;
+  dataAbout.groupsName = Extension.initGroupData(props.groups, props.groupDefaultName);
+  dataAbout.groupDefault = props.groupDefaultName || Extension.GROUP_DEFAULT;
 }
 
 // echarts分组连接
